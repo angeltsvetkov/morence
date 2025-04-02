@@ -149,7 +149,7 @@ function App() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <div className="relative h-[70vh] bg-cover bg-center" style={{ backgroundImage: 'url("photos/10040698_135550664_big.jpg")' }}>
+      <div className="relative h-[70vh] bg-cover bg-center" style={{ backgroundImage: 'url("/photos/10040698_135550664_big.jpg")' }}>
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/80" />
         <div className="relative h-full flex items-center justify-center">
           <div className="text-center text-white max-w-4xl px-4">
@@ -293,7 +293,7 @@ function App() {
         >
           <div className="relative max-w-7xl w-full h-full flex items-center justify-center">
             <img
-              src="photos/map.jpg"
+              src="/photos/map.jpg"
               alt="Карта на разположението на Greenlife Каваци"
               className="max-w-full max-h-full object-contain"
             />
@@ -502,7 +502,7 @@ function App() {
                 onClick={() => handleImageClick(item.imagePath)}
               >
                 <img
-                  src={item.imagePath}
+                  src={`/${item.imagePath}`}
                   alt={item.title}
                   className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
                 />
