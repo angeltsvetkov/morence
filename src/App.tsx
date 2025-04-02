@@ -502,7 +502,7 @@ function App() {
                 onClick={() => handleImageClick(item.imagePath)}
               >
                 <img
-                  src={`/${item.imagePath}`}
+                  src={`/photos/${item.imagePath.split('/').pop()}`}
                   alt={item.title}
                   className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
                 />
