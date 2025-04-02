@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Calendar, MapPin, Users, Waves, Wifi, Car, Twitch as Kitchen, Star, ChevronRight, ChevronLeft, Check, X, Gift, Clock, Percent, Baby, Shield, Microwave, Coffee, Refrigerator, WashingMachine, Maximize2, Phone, Crosshair, Tv, Snowflake } from 'lucide-react';
+import { useState } from 'react';
+import { MapPin, Waves, Wifi, Car, ChevronRight, ChevronLeft, X, Baby, Shield, Microwave, Coffee, Refrigerator, WashingMachine, Maximize2, Phone, Crosshair, Tv, Snowflake } from 'lucide-react';
 
 function App() {
   const [selectedMonth, setSelectedMonth] = useState(new Date("2025-07-01"));
