@@ -427,7 +427,7 @@ function App() {
             <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
               <div className="text-center mb-6">
                 <h3 className="text-2xl font-semibold mb-2">Над 14 Нощувки</h3>
-                <p className="text-gray-600">Специални цени за дълъг престой</p>
+                <p className="text-gray-600">Специални цени за дълъг престой - 25% отстъпка</p>
               </div>
               <div className="bg-green-50 p-6 rounded-lg text-center">
                 <div className="text-4xl font-bold text-green-600 mb-2">150 лв.</div>
@@ -439,54 +439,21 @@ function App() {
       </div>
 
         {/* Promo Offers Section */}
-        <div className="bg-blue-50 py-12 mb-16">
-          <div className="max-w-7xl mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12">Специални Оферти</h2>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mb-4">
-                  <Gift className="text-blue-600 h-6 w-6" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Ранно Записване</h3>
-                <p className="text-gray-600 mb-4">Резервирайте до 30 април 2025 и получете безплатно паркомясто</p>
-                <div className="flex items-center text-blue-600">
-                  <Clock className="h-5 w-5 mr-2" />
-                  <span className="font-medium">Валидно до 30 април 2025</span>
-                </div>
-              </div>
+        <div className="mt-8 bg-white p-8 rounded-xl shadow-sm">
+          <h3 className="text-2xl font-semibold text-center mb-8">Специални Оферти</h3>
+          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <div className="flex flex-col items-center gap-3 p-6  rounded-lg text-center">
 
-              <div className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mb-4">
-                  <Calendar className="text-blue-600 h-6 w-6" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Дълъг Престой</h3>
-                <p className="text-gray-600 mb-4">Останете 14 или повече нощувки и получете 25% отстъпка от целия престой</p>
-                <div className="flex items-center text-green-600">
-                  <Check className="h-5 w-5 mr-2" />
-                  <span className="font-medium">Валидно целогодишно</span>
-                </div>
-              </div>
-
-              {/* <div className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mb-4">
-                  <Percent className="text-blue-600 h-6 w-6" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Последна Минута</h3>
-                <p className="text-gray-600 mb-4">25% отстъпка за резервации направени до 3 дни преди настаняване</p>
-                <div className="flex items-center text-blue-600">
-                  <Clock className="h-5 w-5 mr-2" />
-                  <span className="font-medium">За избрани дати</span>
-                </div>
-              </div> */}
             </div>
-            <div className="mt-8 text-center">
-              <a
-                href="tel:+359883460715"
-                className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
-              >
-                <Phone className="h-5 w-5" />
-                Обадете се: +359883460715
-              </a>
+            <div className="flex flex-col items-center gap-3 p-6 bg-blue-50 rounded-lg text-center">
+            <Car className="h-8 w-8 text-blue-600" />
+              <div>
+                <p className="font-medium text-lg">Безплатно паркомясто</p>
+                <p className="text-sm text-gray-600">При ранно Записване до 30 Април</p>
+              </div>
+            </div>
+            <div className="flex flex-col items-center gap-3 p-6  rounded-lg text-center">
+     
             </div>
           </div>
         </div>
