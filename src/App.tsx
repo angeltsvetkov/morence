@@ -200,7 +200,7 @@ function App() {
             <div className="bg-gray-50 p-6 rounded-lg">
               <Waves className="text-blue-600 mb-4 h-8 w-8" />
               <h3 className="text-xl font-semibold mb-2">Всичко на крачка разстояние</h3>
-              <p className="text-gray-600">Два басейна, детски площадки, ресторант и тенис кортове са буквално на няколко метра – без нужда от шофиране или дълги разходки с децата.</p>
+              <p className="text-gray-600">Два басейна, детски площадки, ресторант и тенис кортове са буквално на няколко метра – без нужда от шофиране.</p>
             </div>
             <div className="bg-gray-50 p-6 rounded-lg">
               <Shield className="text-blue-600 mb-4 h-8 w-8" />
