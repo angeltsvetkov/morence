@@ -130,6 +130,7 @@ function App() {
   ];
 
   const handleImageClick = (imagePath: string) => {
+    sa_event("image_clicked");
     setSelectedImage(imagePath);
     setCurrentImageIndex(galleryItems.findIndex(item => item.imagePath === imagePath));
   };
