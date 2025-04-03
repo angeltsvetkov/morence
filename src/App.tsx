@@ -1,11 +1,24 @@
 import { useState } from 'react';
 import { MapPin, Waves, Wifi, Car, ChevronRight, ChevronLeft, X, Baby, Shield, Microwave, Coffee, Refrigerator, WashingMachine, Maximize2, Phone, Crosshair, Tv, Snowflake } from 'lucide-react';
+import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
+import { translations } from './translations';
+import { LanguageSwitcher } from './components/LanguageSwitcher';
 
-function App() {
+function AppContent() {
+  const { language } = useLanguage();
   const [selectedMonth, setSelectedMonth] = useState(new Date("2025-07-01"));
   const [isMapFullscreen, setIsMapFullscreen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
+
+  const weekDays = translations.weekDays[language] as string[];
+  const rooms = translations.rooms[language] as { [key: string]: string };
+
+  // Helper function to get translated text
+  const t = (key: keyof typeof translations) => {
+    const value = translations[key][language];
+    return typeof value === 'string' ? value : '';
+  };
 
   // Mock available dates (in a real app, this would come from an API)
   const availableDates = [
@@ -59,196 +72,196 @@ function App() {
     'Юли', 'Август', 'Септември', 'Октомври', 'Ноември', 'Декември'
   ];
 
-  const weekDays = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-
   type GalleryItem = {
-    imagePath: string;
+    path: string;
     title: string;
   };
 
   const galleryItems: GalleryItem[] = [
     {
-      imagePath: 'photos/10040698_135550663_big.jpg',
-      title: 'Двор'
+      path: '/photos/10040698_135550663_big.jpg',
+      title: rooms.yard
     },
     {
-      imagePath: 'photos/10040698_135550664_big.jpg',
-      title: 'Хол с кухня'
+      path: '/photos/10040698_135550664_big.jpg',
+      title: rooms.livingRoomKitchen
     },
     {
-      imagePath: 'photos/10040698_135550668_big.jpg',
-      title: 'Хол'
+      path: 'photos/10040698_135550668_big.jpg',
+      title: rooms.livingRoom
     },
     {
-      imagePath: 'photos/10040698_135550669_big.jpg',
-      title: 'Хол'
+      path: 'photos/10040698_135550669_big.jpg',
+      title: rooms.livingRoom
     },
     {
-      imagePath: 'photos/10040698_135550671_big.jpg',
-      title: 'Хол'
+      path: 'photos/10040698_135550671_big.jpg',
+      title: rooms.livingRoom
     },
     {
-      imagePath: 'photos/10040698_135550665_big.jpg',
-      title: 'Спалня'
+      path: 'photos/10040698_135550665_big.jpg',
+      title: rooms.bedroom
     },
     {
-      imagePath: 'photos/10040698_135550685_big.jpg',
-      title: 'Спалня с гардероб'
+      path: 'photos/10040698_135550685_big.jpg',
+      title: rooms.bedroom
     },
     {
-      imagePath: 'photos/10040698_135550666_big.jpg',
-      title: 'Баня с душ кабина'
+      path: 'photos/10040698_135550666_big.jpg',
+      title: rooms.bathroom
     },
     {
-      imagePath: 'photos/10040698_135550667_big.jpg',
-      title: 'Пералня'
+      path: 'photos/10040698_135550667_big.jpg',
+      title: rooms.washingMachine
     },
     {
-      imagePath: 'photos/13.jpg',
-      title: 'Централна пътека'
+      path: 'photos/13.jpg',
+      title: rooms.centralPath
     },
     {
-      imagePath: 'photos/Borissov-Green-Life-Apartment-Sozopol-Exterior.jpeg',
-      title: 'Кръгъл басейн'
+      path: 'photos/Borissov-Green-Life-Apartment-Sozopol-Exterior.jpeg',
+      title: rooms.roundPool
     },
     {
-      imagePath: 'photos/green-life-beach-resort-appartment-sozopol-photo-9.jpeg',
-      title: 'Кръгъл басейн'
+      path: 'photos/green-life-beach-resort-appartment-sozopol-photo-9.jpeg',
+      title: rooms.roundPool
     },
     {
-      imagePath: 'photos/Green-Life-Sozopol-Antares-Hotel-Exterior.jpeg',
-      title: 'Каскаден басейн'
+      path: 'photos/Green-Life-Sozopol-Antares-Hotel-Exterior.jpeg',
+      title: rooms.cascadePool
     },
     {
-      imagePath: 'photos/apartamenti-v-griin-laif-v-sozopol-7689577_116902639.jpg',
-      title: 'Каскаден басейн'
+      path: 'photos/apartamenti-v-griin-laif-v-sozopol-7689577_116902639.jpg',
+      title: rooms.cascadePool
     },
     {
-      imagePath: 'photos/img-greenlife-beach-apartments-kavatzite-sozopol-9.jpeg',
-      title: 'Детска площадка'
+      path: 'photos/img-greenlife-beach-apartments-kavatzite-sozopol-9.jpeg',
+      title: rooms.playground
     }
   ];
 
   const handleImageClick = (imagePath: string) => {
-    sa_event("image_clicked");
     setSelectedImage(imagePath);
-    setCurrentImageIndex(galleryItems.findIndex(item => item.imagePath === imagePath));
+    setCurrentImageIndex(galleryItems.findIndex(item => item.path === imagePath));
   };
 
   const handleNextImage = () => {
     const nextIndex = (currentImageIndex + 1) % galleryItems.length;
-    setSelectedImage(galleryItems[nextIndex].imagePath);
+    setSelectedImage(galleryItems[nextIndex].path);
     setCurrentImageIndex(nextIndex);
   };
 
   const handlePrevImage = () => {
     const prevIndex = (currentImageIndex - 1 + galleryItems.length) % galleryItems.length;
-    setSelectedImage(galleryItems[prevIndex].imagePath);
+    setSelectedImage(galleryItems[prevIndex].path);
     setCurrentImageIndex(prevIndex);
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
+      <LanguageSwitcher />
+      
       {/* Hero Section */}
       <div className="relative min-h-[60vh] sm:h-[70vh] bg-cover bg-center" style={{ backgroundImage: 'url("/photos/10040698_135550664_big.jpg")' }}>
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/80" />
         <div className="relative h-full flex items-center justify-center py-12 sm:py-0">
           <div className="text-center text-white max-w-4xl px-4">
-            <h1 className="text-4xl sm:text-6xl font-extrabold mb-4 sm:mb-6 text-shadow-2xl drop-shadow-2xl">С деца на Каваци</h1>
-            <p className="text-xl sm:text-2xl font-semibold mb-6 sm:mb-8 text-shadow-xl drop-shadow-xl">Мястото, където децата играят, а родителите си почиват</p>
+            <h1 className="text-4xl sm:text-6xl font-extrabold mb-4 sm:mb-6 text-shadow-2xl drop-shadow-2xl">{t('title')}</h1>
+            <p className="text-xl sm:text-2xl font-semibold mb-6 sm:mb-8 text-shadow-xl drop-shadow-xl">{t('subtitle')}</p>
             <div className="flex flex-wrap justify-center gap-3 sm:gap-6 mb-6 sm:mb-8">
               <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-white/20">
-                <span className="text-sm sm:text-base text-shadow-sm">Партерен етаж</span>
+                <span className="text-sm sm:text-base text-shadow-sm">{t('groundFloor')}</span>
               </div>
               <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-white/20">
-                <span className="text-sm sm:text-base text-shadow-sm">Хол с Кухня</span>
+                <span className="text-sm sm:text-base text-shadow-sm">{t('livingRoomKitchen')}</span>
               </div>
               <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-white/20">
-                <span className="text-sm sm:text-base text-shadow-sm">1 х Спалня</span>
+                <span className="text-sm sm:text-base text-shadow-sm">{t('bedroom')}</span>
               </div>
               <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-white/20">
-                <span className="text-sm sm:text-base text-shadow-sm">Разтегателен диван</span>
+                <span className="text-sm sm:text-base text-shadow-sm">{t('sofaBed')}</span>
               </div>
             </div>
             <div className="bg-white/10 backdrop-blur-sm p-4 sm:p-6 rounded-xl mb-6 sm:mb-8 border border-white/20">
-              <div className="text-3xl sm:text-4xl font-bold mb-2">150 лв. <span className='text-base sm:text-lg opacity-90'>/ нощувка</span></div>
-              <div className="text-base sm:text-lg opacity-90">при повече от 14 нощувки</div>
+              <div className="text-3xl sm:text-4xl font-bold mb-2">150 лв. <span className='text-base sm:text-lg opacity-90'>{t('perNight')}</span></div>
+              <div className="text-base sm:text-lg opacity-90">{t('for14Nights')}</div>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <a
                 href='#overview'
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg shadow-lg text-sm sm:text-base"
               >
-                Проверете свободни дати
+                {t('checkAvailability')}
               </a>
               <a href='#gallery' className="bg-white/20 hover:bg-white/30 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-white shadow-lg text-sm sm:text-base">
-                Галерия
+                {t('gallery')}
               </a>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Features */}
-      <div className="bg-white py-16">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-gray-50 p-6 rounded-lg">
-              <Baby className="text-blue-600 mb-4 h-8 w-8" />
-              <h3 className="text-xl font-semibold mb-2">Простор и безопасност за децата</h3>
-              <p className="text-gray-600">Апартаментът се намира на партерен етаж с директен достъп до зелена поляна, където децата могат да играят спокойно, докато вие си почивате на терасата.</p>
-            </div>
-            <div className="bg-gray-50 p-6 rounded-lg">
-              <Waves className="text-blue-600 mb-4 h-8 w-8" />
-              <h3 className="text-xl font-semibold mb-2">Всичко на крачка разстояние</h3>
-              <p className="text-gray-600">Два басейна, детски площадки, ресторант и тенис кортове са буквално на няколко метра – без нужда от шофиране.</p>
-            </div>
-            <div className="bg-gray-50 p-6 rounded-lg">
-              <Shield className="text-blue-600 mb-4 h-8 w-8" />
-              <h3 className="text-xl font-semibold mb-2">Спокойствие и сигурност</h3>
-              <p className="text-gray-600">Комплексът Greenlife е ограден и охраняем, което го прави идеален за семейства, търсещи безопасна и тиха почивка.</p>
-            </div>
+      {/* Features Section */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+        <h2 className="text-3xl sm:text-4xl font-bold text-center mb-8 sm:mb-12">
+          {t('features')}
+        </h2>
+        <div className="grid md:grid-cols-3 gap-8">
+          <div className="bg-gray-50 p-6 rounded-lg">
+            <Baby className="text-blue-600 mb-4 h-8 w-8" />
+            <h3 className="text-xl font-semibold mb-2">{t('spaceAndSafety')}</h3>
+            <p className="text-gray-600">{t('spaceAndSafetyDesc')}</p>
           </div>
-          <div className="mt-8 text-center">
-            <a
-              href="tel:+359883460715"
-              className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
-            >
-              <Phone className="h-5 w-5" />
-              Обадете се: +359883460715
-            </a>
+          <div className="bg-gray-50 p-6 rounded-lg">
+            <Waves className="text-blue-600 mb-4 h-8 w-8" />
+            <h3 className="text-xl font-semibold mb-2">{t('everythingNearby')}</h3>
+            <p className="text-gray-600">{t('everythingNearbyDesc')}</p>
           </div>
+          <div className="bg-gray-50 p-6 rounded-lg">
+            <Shield className="text-blue-600 mb-4 h-8 w-8" />
+            <h3 className="text-xl font-semibold mb-2">{t('peaceAndSecurity')}</h3>
+            <p className="text-gray-600">{t('peaceAndSecurityDesc')}</p>
+          </div>
+        </div>
+        <div className="mt-8 text-center">
+          <a
+            href="tel:+359883460715"
+            className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+          >
+            <Phone className="h-5 w-5" />
+            {t('callUs')}: +359883460715
+          </a>
         </div>
       </div>
 
       {/* Location Section */}
       <div className="bg-gray-50 py-16">
         <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-3xl font-bold mb-8 text-center">Разположение</h2>
+          <h2 className="text-3xl font-bold mb-8 text-center">{t('location')}</h2>
           <div className="grid md:grid-cols-2 gap-12">
             <div className="space-y-8">
               <div>
-                <h3 className="text-2xl font-semibold mb-4">Greenlife Каваци</h3>
+                <h3 className="text-2xl font-semibold mb-4">{t('greenlifeKavaci')}</h3>
                 <p className="text-gray-600 mb-6">
-                  Апартаментът се намира в комплекса Greenlife Каваци, разположен в сърцето на курорта.
-                  В непосредствена близост ще откриете:
+                  {t('locationDesc')}
+                  {t('nearby')}
                 </p>
                 <ul className="space-y-3 text-gray-600">
                   <li className="flex items-center gap-2">
                     <MapPin className="text-blue-600" />
-                    <span>2 минути пеша до плажа</span>
+                    <span>{t('beach')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <MapPin className="text-blue-600" />
-                    <span>Детски площадки в комплекса</span>
+                    <span>{t('playgrounds')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <MapPin className="text-blue-600" />
-                    <span>5 басейна в комплекса</span>
+                    <span>{t('pools')}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <MapPin className="text-blue-600" />
-                    <span>Ресторанти и магазини наблизо</span>
+                    <span>{t('restaurants')}</span>
                   </li>
                 </ul>
               </div>
@@ -259,14 +272,14 @@ function App() {
                   onClick={() => setIsMapFullscreen(true)}
                 >
                   <Maximize2 className="h-5 w-5" />
-                  Покажи карта на комплекса
+                  {t('showMap')}
                 </button>
                 <a
                   href="tel:+359883460715"
                   className="flex items-center justify-center gap-2 w-full bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
                 >
                   <Phone className="h-5 w-5" />
-                  Обадете се: +359883460715
+                  {t('callUs')}: +359883460715
                 </a>
               </div>
             </div>
@@ -313,42 +326,42 @@ function App() {
         {/* Overview */}
         <div className="grid md:grid-cols-2 gap-12 mb-16">
           <div>
-            <h2 className="text-3xl font-bold mb-6">Уютен семеен апартамент в сърцето на Greenlife Каваци – идеалното място за почивка с деца.</h2>
+            <h2 className="text-3xl font-bold mb-6">{t('overviewTitle')}</h2>
             <p className="text-gray-600 mb-6">
-              Разположен на партерен етаж с директен излаз към зелена поляна, апартаментът предлага свобода за игра и спокойствие за родителите. В непосредствена близост ще откриете детски площадки, два басейна (от общо 5), ресторант, тенис кортове и прохладна горичка – всичко необходимо за безгрижна семейна ваканция на морето. Комфорт като у дома, само на крачка от плажа.
+              {t('overviewDesc')}
             </p>
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center gap-2">
                 <Microwave className="text-blue-600" />
-                <span>Фурна</span>
+                <span>{rooms.oven}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Refrigerator className="text-blue-600" />
-                <span>Хладилник</span>
+                <span>{rooms.fridge}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Crosshair className="text-blue-600" />
-                <span>Котлони</span>
+                <span>{rooms.fireplace}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Coffee className="text-blue-600" />
-                <span>Кафе машина</span>
+                <span>{rooms.coffeeMachine}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Tv className="text-blue-600" />
-                <span>Телевизор</span>
+                <span>{rooms.tv}</span>
               </div>
               <div className="flex items-center gap-2">
                 <WashingMachine className="text-blue-600" />
-                <span>Пералня</span>
+                <span>{rooms.washingMachine}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Snowflake className="text-blue-600" />
-                <span>Климатик</span>
+                <span>{rooms.airConditioner}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Wifi className="text-blue-600" />
-                <span>WiFi</span>
+                <span>{rooms.wifi}</span>
               </div>
             </div>
           </div>
@@ -398,11 +411,11 @@ function App() {
               <div className="mt-4 space-y-2">
                 <div className="flex items-center gap-2 text-sm">
                   <div className="w-3 h-3 bg-blue-50 border border-blue-600 rounded-full"></div>
-                  <span>Свободни дати</span>
+                  <span>{t('availableDates')}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <div className="w-3 h-3 bg-gray-100 border border-gray-300 rounded-full"></div>
-                  <span>Заети дати</span>
+                  <span>{t('bookedDates')}</span>
                 </div>
               </div>
             </div>
@@ -410,73 +423,71 @@ function App() {
         </div>
 
         {/* Pricing Section */}
-      <div className="bg-gray-50 py-16">
-        <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Цени</h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-              <div className="text-center mb-6">
-                <h3 className="text-2xl font-semibold mb-2">До 14 Нощувки</h3>
-                <p className="text-gray-600">Минимален престой: 3 нощувки</p>
+        <div className="bg-gray-50 py-16">
+          <div className="max-w-7xl mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-12">{t('pricing')}</h2>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                <div className="text-center mb-6">
+                  <h3 className="text-2xl font-semibold mb-2">{t('upTo14Nights')}</h3>
+                  <p className="text-gray-600">{t('minStay')}</p>
+                </div>
+                <div className="bg-blue-50 p-6 rounded-lg text-center">
+                  <div className="text-4xl font-bold mb-2">200 лв.</div>
+                  <p className="text-gray-600">{t('perNightPrice')}</p>
+                </div>
               </div>
-              <div className="bg-blue-50 p-6 rounded-lg text-center">
-                <div className="text-4xl font-bold mb-2">200 лв.</div>
-                <p className="text-gray-600">за нощувка</p>
-              </div>
-            </div>
 
-            <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-              <div className="text-center mb-6">
-                <h3 className="text-2xl font-semibold mb-2">Над 14 Нощувки</h3>
-                <p className="text-gray-600">Специални цени за дълъг престой - 25% отстъпка</p>
-              </div>
-              <div className="bg-green-50 p-6 rounded-lg text-center">
-                <div className="text-4xl font-bold text-green-600 mb-2">150 лв.</div>
-                <p className="text-gray-600">за нощувка</p>
+              <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                <div className="text-center mb-6">
+                  <h3 className="text-2xl font-semibold mb-2">{t('over14Nights')}</h3>
+                  <p className="text-gray-600">{t('specialPricing')}</p>
+                </div>
+                <div className="bg-green-50 p-6 rounded-lg text-center">
+                  <div className="text-4xl font-bold text-green-600 mb-2">150 лв.</div>
+                  <p className="text-gray-600">{t('perNightPrice')}</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
         {/* Promo Offers Section */}
         <div className="mt-8 bg-white p-8 rounded-xl shadow-sm">
-          <h3 className="text-2xl font-semibold text-center mb-8">Специални Оферти</h3>
+          <h3 className="text-2xl font-semibold text-center mb-8">{t('specialOffers')}</h3>
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            <div className="flex flex-col items-center gap-3 p-6  rounded-lg text-center">
-
+            <div className="flex flex-col items-center gap-3 p-6 rounded-lg text-center">
             </div>
             <div className="flex flex-col items-center gap-3 p-6 bg-blue-50 rounded-lg text-center">
-            <Car className="h-8 w-8 text-blue-600" />
+              <Car className="h-8 w-8 text-blue-600" />
               <div>
-                <p className="font-medium text-lg">Безплатно паркомясто</p>
-                <p className="text-sm text-gray-600">При ранно записване до 30 Април</p>
+                <p className="font-medium text-lg">{t('freeParking')}</p>
+                <p className="text-sm text-gray-600">{t('earlyBooking')}</p>
               </div>
             </div>
-            <div className="flex flex-col items-center gap-3 p-6  rounded-lg text-center">
-     
+            <div className="flex flex-col items-center gap-3 p-6 rounded-lg text-center">
             </div>
           </div>
         </div>
 
         {/* Gallery Section */}
         <div id='gallery' className="mb-16">
-          <h2 className="text-3xl font-bold mb-8">Галерия</h2>
+          <h2 className="text-3xl font-bold mb-8">{t('gallery')}</h2>
           <div className="grid md:grid-cols-3 gap-6">
             {galleryItems.map((item, index) => (
               <div
                 key={index}
                 className="relative group overflow-hidden rounded-xl cursor-pointer"
-                onClick={() => handleImageClick(item.imagePath)}
+                onClick={() => handleImageClick(item.path)}
               >
                 <img
-                  src={`/photos/${item.imagePath.split('/').pop()}`}
+                  src={item.path}
                   alt={item.title}
                   className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center flex-col">
                   <p className="text-white font-semibold">{item.title}</p>
-                  <p className="text-white/80 text-sm mt-2">Кликни за преглед</p>
+                  <p className="text-white/80 text-sm mt-2">{t('clickToView')}</p>
                 </div>
               </div>
             ))}
@@ -487,7 +498,7 @@ function App() {
               className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
             >
               <Phone className="h-5 w-5" />
-              Обадете се: +359883460715
+              {t('callUs')}: +359883460715
             </a>
           </div>
         </div>
@@ -515,7 +526,7 @@ function App() {
 
               <img
                 src={selectedImage}
-                alt="Галерия"
+                alt={t('gallery')}
                 className="max-w-full max-h-full object-contain"
               />
 
@@ -545,43 +556,6 @@ function App() {
             </div>
           </div>
         )}
-
-        {/* Reviews */}
-        {/* <div>
-          <h2 className="text-3xl font-bold mb-8">Отзиви от Гости</h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="border p-6 rounded-lg">
-              <div className="flex items-center mb-4">
-                <div className="flex text-yellow-400">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-5 w-5 fill-current" />
-                  ))}
-                </div>
-                <span className="ml-2 text-gray-600">5.0</span>
-              </div>
-              <p className="text-gray-600 mb-4">
-                "Невероятен апартамент със зашеметяваща гледка! Локацията е перфектна, а удобствата са от най-високо 
-                качество. Със сигурност ще се върнем отново!"
-              </p>
-              <p className="font-semibold">Мария С.</p>
-            </div>
-            <div className="border p-6 rounded-lg">
-              <div className="flex items-center mb-4">
-                <div className="flex text-yellow-400">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-5 w-5 fill-current" />
-                  ))}
-                </div>
-                <span className="ml-2 text-gray-600">5.0</span>
-              </div>
-              <p className="text-gray-600 mb-4">
-                "Перфектното място за почивка! Чисто, модерно и точно на плажа. Домакинът беше много отзивчив
-                и направи престоя ни незабравим."
-              </p>
-              <p className="font-semibold">Михаил Р.</p>
-            </div>
-          </div>
-        </div> */}
       </div>
 
       {/* Footer */}
@@ -589,25 +563,25 @@ function App() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid md:grid-cols-3 gap-8">
             <div>
-              <h3 className="text-xl font-semibold mb-4">Свържете се с Нас</h3>
-              <p className="text-gray-400">Телефон: +359 883 460 715</p>
+              <h3 className="text-xl font-semibold mb-4">{t('contactUs')}</h3>
+              <p className="text-gray-400">{t('phone')}: +359 883 460 715</p>
             </div>
             <div>
-              <h3 className="text-xl font-semibold mb-4">Локация</h3>
-              <p className="text-gray-400">м.Каваци, Созопол</p>
+              <h3 className="text-xl font-semibold mb-4">{t('location')}</h3>
+              <p className="text-gray-400">{t('address')}</p>
             </div>
-            {/* <div>
-              <h3 className="text-xl font-semibold mb-4">Последвайте ни</h3>
-              <div className="flex space-x-4">
-                <a href="#" className="text-gray-400 hover:text-white transition">Instagram</a>
-                <a href="#" className="text-gray-400 hover:text-white transition">Facebook</a>
-                <a href="#" className="text-gray-400 hover:text-white transition">Twitter</a>
-              </div>
-            </div> */}
           </div>
         </div>
       </footer>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <LanguageProvider>
+      <AppContent />
+    </LanguageProvider>
   );
 }
 
