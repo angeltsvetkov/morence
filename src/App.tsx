@@ -149,38 +149,38 @@ function App() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <div className="relative h-[70vh] bg-cover bg-center" style={{ backgroundImage: 'url("/photos/10040698_135550664_big.jpg")' }}>
+      <div className="relative min-h-[60vh] sm:h-[70vh] bg-cover bg-center" style={{ backgroundImage: 'url("/photos/10040698_135550664_big.jpg")' }}>
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/80" />
-        <div className="relative h-full flex items-center justify-center">
+        <div className="relative h-full flex items-center justify-center py-12 sm:py-0">
           <div className="text-center text-white max-w-4xl px-4">
-            <h1 className="text-6xl font-extrabold mb-6 text-shadow-2xl drop-shadow-2xl">С деца на Каваци</h1>
-            <p className="text-2xl font-semibold mb-8 text-shadow-xl drop-shadow-xl">Мястото, където децата играят, а родителите си почиват</p>
-            <div className="flex flex-wrap justify-center gap-6 mb-8">
-              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
-                <span className="text-shadow-sm">Партерен етаж</span>
+            <h1 className="text-4xl sm:text-6xl font-extrabold mb-4 sm:mb-6 text-shadow-2xl drop-shadow-2xl">С деца на Каваци</h1>
+            <p className="text-xl sm:text-2xl font-semibold mb-6 sm:mb-8 text-shadow-xl drop-shadow-xl">Мястото, където децата играят, а родителите си почиват</p>
+            <div className="flex flex-wrap justify-center gap-3 sm:gap-6 mb-6 sm:mb-8">
+              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-white/20">
+                <span className="text-sm sm:text-base text-shadow-sm">Партерен етаж</span>
               </div>
-              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
-                <span className="text-shadow-sm">Хол с Кухня</span>
+              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-white/20">
+                <span className="text-sm sm:text-base text-shadow-sm">Хол с Кухня</span>
               </div>
-              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
-                <span className="text-shadow-sm">1 х Спалня</span>
+              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-white/20">
+                <span className="text-sm sm:text-base text-shadow-sm">1 х Спалня</span>
               </div>
-              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
-                <span className="text-shadow-sm">Разтегателен диван</span>
+              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-white/20">
+                <span className="text-sm sm:text-base text-shadow-sm">Разтегателен диван</span>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl mb-8 border border-white/20">
-              <div className="text-4xl font-bold mb-2">150 лв. <span className='text-lg opacity-90'>/ нощувка</span></div>
-              <div className="text-lg opacity-90">при повече от 14 нощувки</div>
+            <div className="bg-white/10 backdrop-blur-sm p-4 sm:p-6 rounded-xl mb-6 sm:mb-8 border border-white/20">
+              <div className="text-3xl sm:text-4xl font-bold mb-2">150 лв. <span className='text-base sm:text-lg opacity-90'>/ нощувка</span></div>
+              <div className="text-base sm:text-lg opacity-90">при повече от 14 нощувки</div>
             </div>
-            <div className="flex gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <a
                 href='#overview'
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg shadow-lg"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg shadow-lg text-sm sm:text-base"
               >
                 Проверете свободни дати
               </a>
-              <a href='#gallery' className="bg-white/20 hover:bg-white/30 text-white px-8 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-white shadow-lg">
+              <a href='#gallery' className="bg-white/20 hover:bg-white/30 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-white shadow-lg text-sm sm:text-base">
                 Галерия
               </a>
             </div>
