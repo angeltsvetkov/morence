@@ -474,11 +474,20 @@ function AppContent() {
             <div className="flex flex-col items-center gap-3 p-6 rounded-lg text-center">
             </div>
           </div>
+          <div className="mt-8 text-center">
+            <a
+              href="tel:+359883460715"
+              className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+            >
+              <Phone className="h-5 w-5" />
+              {t('callUs')}: +359883460715
+            </a>
+          </div>
         </div>
 
         {/* Gallery Section */}
         <div id='gallery' className="mb-16">
-          <h2 className="text-3xl font-bold mb-8">{t('gallery')}</h2>
+          <h2 className="text-3xl font-bold mb-8"></h2>
           <div className="grid md:grid-cols-3 gap-6">
             {galleryItems.map((item, index) => (
               <div
