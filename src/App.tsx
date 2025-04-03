@@ -589,7 +589,6 @@ function App() {
           <div className="grid md:grid-cols-3 gap-8">
             <div>
               <h3 className="text-xl font-semibold mb-4">Свържете се с Нас</h3>
-              <p className="text-gray-400">Имейл: angel@kavaci.com</p>
               <p className="text-gray-400">Телефон: +359 883 460 715</p>
             </div>
             <div>
