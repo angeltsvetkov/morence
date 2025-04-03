@@ -449,7 +449,7 @@ function App() {
             <Car className="h-8 w-8 text-blue-600" />
               <div>
                 <p className="font-medium text-lg">Безплатно паркомясто</p>
-                <p className="text-sm text-gray-600">При ранно Записване до 30 Април</p>
+                <p className="text-sm text-gray-600">При ранно записване до 30 Април</p>
               </div>
             </div>
             <div className="flex flex-col items-center gap-3 p-6  rounded-lg text-center">
