@@ -195,7 +195,7 @@ export const translations: Translations = {
     en: 'Free Parking'
   },
   earlyBooking: {
-    bg: 'При ранно Записване до 30 Април',
+    bg: 'При ранно записване до 30 Април',
     en: 'For Early Booking until April 30th'
   },
   clickToView: {
@@ -325,5 +325,29 @@ export const translations: Translations = {
   petsDesc: {
     bg: 'Не са разрешени',
     en: 'Not allowed'
+  },
+  smokingRule: {
+    bg: 'Пушене',
+    en: 'Smoking'
+  },
+  smokingDesc: {
+    bg: 'Пушенето е забранено',
+    en: 'Smoking is not allowed'
+  },
+  standardPrice: {
+    bg: 'Стандартна цена',
+    en: 'Standard Price'
+  },
+  discountedPrice: {
+    bg: 'Специална цена',
+    en: 'Special Price'
+  },
+  totalSavings: {
+    bg: 'Спестявате',
+    en: 'Total Savings'
+  },
+  week: {
+    bg: 'седмица',
+    en: 'week'
   }
 }; 

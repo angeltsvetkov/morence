@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { MapPin, Waves, Wifi, Car, ChevronRight, ChevronLeft, X, Baby, Shield, Microwave, Coffee, Refrigerator, WashingMachine, Maximize2, Phone, Crosshair, Tv, Snowflake } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { MapPin, Waves, Wifi, Car, ChevronRight, ChevronLeft, X, Baby, Shield, Microwave, Coffee, Refrigerator, WashingMachine, Maximize2, Phone, Crosshair, Tv, Snowflake, Clock, DoorClosed, CalendarX, DollarSign, PawPrint, Cigarette } from 'lucide-react';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { translations } from './translations';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
@@ -10,6 +10,28 @@ function AppContent() {
   const [isMapFullscreen, setIsMapFullscreen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
+
+  // Add scroll animation
+  useEffect(() => {
+    const handleScroll = () => {
+      const reveals = document.querySelectorAll('.reveal, .reveal-slide-left, .reveal-slide-right, .reveal-slide-up');
+      
+      reveals.forEach((reveal) => {
+        const elementTop = reveal.getBoundingClientRect().top;
+        const elementBottom = reveal.getBoundingClientRect().bottom;
+        const isVisible = (elementTop < window.innerHeight - 100) && (elementBottom > 0);
+        
+        if (isVisible) {
+          reveal.classList.add('active');
+        }
+      });
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Initial check
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const weekDays = translations.weekDays[language] as string[];
   const rooms = translations.rooms[language] as { [key: string]: string };
@@ -174,38 +196,82 @@ function AppContent() {
       </div>
 
       {/* Hero Section */}
-      <div className="relative min-h-[60vh] sm:h-[70vh] bg-cover bg-center" style={{ backgroundImage: 'url("/photos/10040698_135550664_big.jpg")' }}>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/80" />
+      <div className="relative min-h-[80vh] sm:h-[85vh] bg-cover bg-center bg-fixed motion-safe:animate-kenburns" style={{ backgroundImage: 'url("/photos/10040698_135550664_big.jpg")' }}>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black/50 to-black/90" />
         <div className="relative h-full flex items-center justify-center py-12 sm:py-0">
-          <div className="text-center text-white max-w-4xl px-4">
-            <h1 className="text-4xl sm:text-6xl font-extrabold mb-4 sm:mb-6 text-shadow-2xl drop-shadow-2xl">{t('title')}</h1>
-            <p className="text-xl sm:text-2xl font-semibold mb-6 sm:mb-8 text-shadow-xl drop-shadow-xl">{t('subtitle')}</p>
-            <div className="flex flex-wrap justify-center gap-3 sm:gap-6 mb-6 sm:mb-8">
-              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-white/20">
+          <div className="text-center text-white max-w-4xl px-4 animate-fade-in">
+            <div className="mb-8 inline-block">
+              <div className="bg-blue-600/20 backdrop-blur-sm px-4 py-2 rounded-full border border-blue-400/30 mb-4 inline-block">
+                <span className="text-blue-200 font-medium">Greenlife Каваци</span>
+              </div>
+            </div>
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold mb-6 sm:mb-8 text-shadow-2xl drop-shadow-2xl bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
+              {t('title')}
+            </h1>
+            <p className="text-xl sm:text-2xl lg:text-3xl font-semibold mb-8 sm:mb-10 text-shadow-xl drop-shadow-xl text-blue-100">
+              {t('subtitle')}
+            </p>
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mb-8 sm:mb-10">
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-full border border-white/20 hover:bg-white/20 transition-colors">
                 <span className="text-sm sm:text-base text-shadow-sm">{t('groundFloor')}</span>
               </div>
-              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-white/20">
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-full border border-white/20 hover:bg-white/20 transition-colors">
                 <span className="text-sm sm:text-base text-shadow-sm">{t('livingRoomKitchen')}</span>
               </div>
-              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-white/20">
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-full border border-white/20 hover:bg-white/20 transition-colors">
                 <span className="text-sm sm:text-base text-shadow-sm">{t('bedroom')}</span>
               </div>
-              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-white/20">
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-full border border-white/20 hover:bg-white/20 transition-colors">
                 <span className="text-sm sm:text-base text-shadow-sm">{t('sofaBed')}</span>
               </div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm p-4 sm:p-6 rounded-xl mb-6 sm:mb-8 border border-white/20">
-              <div className="text-3xl sm:text-4xl font-bold mb-2">150 лв. <span className='text-base sm:text-lg opacity-90'>{t('perNight')}</span></div>
-              <div className="text-base sm:text-lg opacity-90">{t('for14Nights')}</div>
+            <div className="bg-gradient-to-br from-blue-600/90 via-blue-500/90 to-blue-600/90 backdrop-blur-sm p-6 sm:p-8 rounded-2xl mb-8 sm:mb-10 border border-blue-400/30 transform hover:scale-105 transition-all duration-300 hover:shadow-[0_0_30px_rgba(37,99,235,0.3)] shadow-[0_0_20px_rgba(37,99,235,0.2)]">
+              <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-10">
+                <div className="text-center sm:text-left">
+                  <div className="text-blue-100 text-sm sm:text-base mb-1">{t('standardPrice')}</div>
+                  <div className="text-4xl sm:text-5xl font-bold text-white line-through opacity-80">
+                    200 лв.
+                  </div>
+                  <div className="text-blue-100 text-sm mt-1">{t('perNight')}</div>
+                </div>
+
+                <div className="hidden sm:block w-px h-24 bg-blue-400/30"></div>
+
+                <div className="text-center sm:text-left">
+                  <div className="text-blue-100 text-sm sm:text-base mb-1">{t('discountedPrice')}</div>
+                  <div className="text-5xl sm:text-6xl font-bold text-white">
+                    150 лв.
+                    <span className="text-base sm:text-lg text-blue-100 ml-2 font-normal">{t('perNight')}</span>
+                  </div>
+                  <div className="text-blue-100 text-sm sm:text-base font-medium mt-1">
+                    {t('for14Nights')}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-blue-400/30">
+                <div className="flex justify-between items-center text-sm sm:text-base text-blue-100">
+                  <span>{t('totalSavings')}:</span>
+                  <span className="font-bold text-white">350 лв. / {t('week')}</span>
+                </div>
+              </div>
+
+              <div className="absolute -right-3 -top-3 bg-yellow-400 text-blue-900 px-4 py-1 rounded-full text-sm font-bold transform rotate-12 shadow-lg">
+                -25%
+              </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center">
               <a
                 href='#overview'
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg shadow-lg text-sm sm:text-base"
+                className="group bg-blue-600 hover:bg-blue-700 text-white px-8 sm:px-10 py-3 sm:py-4 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg shadow-lg text-base sm:text-lg relative overflow-hidden"
               >
-                {t('checkAvailability')}
+                <span className="relative z-10">{t('checkAvailability')}</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-800 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
               </a>
-              <a href='#gallery' className="bg-white/20 hover:bg-white/30 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-white shadow-lg text-sm sm:text-base">
+              <a 
+                href='#gallery' 
+                className="group bg-white/10 hover:bg-white/20 text-white px-8 sm:px-10 py-3 sm:py-4 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-white/30 shadow-lg text-base sm:text-lg backdrop-blur-sm"
+              >
                 {t('gallery')}
               </a>
             </div>
@@ -215,25 +281,25 @@ function AppContent() {
 
       {/* Features Section */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-        <h2 className="text-3xl sm:text-4xl font-bold text-center mb-8 sm:mb-12">
+        <h2 className="text-3xl sm:text-4xl font-bold text-center mb-8 sm:mb-12 reveal-slide-up">
           {t('features')}
         </h2>
-        <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
-          <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+        <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto stagger-children">
+          <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow hover-lift">
             <div className="text-center mb-6">
               <Baby className="text-blue-600 mb-4 h-12 w-12 mx-auto" />
               <h3 className="text-2xl font-semibold mb-2">{t('spaceAndSafety')}</h3>
             </div>
             <p className="text-gray-600 text-center">{t('spaceAndSafetyDesc')}</p>
           </div>
-          <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+          <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow hover-lift">
             <div className="text-center mb-6">
               <Waves className="text-blue-600 mb-4 h-12 w-12 mx-auto" />
               <h3 className="text-2xl font-semibold mb-2">{t('everythingNearby')}</h3>
             </div>
             <p className="text-gray-600 text-center">{t('everythingNearbyDesc')}</p>
           </div>
-          <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+          <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow hover-lift">
             <div className="text-center mb-6">
               <Shield className="text-blue-600 mb-4 h-12 w-12 mx-auto" />
               <h3 className="text-2xl font-semibold mb-2">{t('peaceAndSecurity')}</h3>
@@ -246,12 +312,12 @@ function AppContent() {
       {/* Gallery Section */}
       <div id='gallery' className="mb-16">
         <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-3xl font-bold mb-8"></h2>
-          <div className="grid md:grid-cols-3 gap-6">
+          <h2 className="text-3xl font-bold mb-8 reveal-slide-up"></h2>
+          <div className="grid md:grid-cols-3 gap-6 stagger-children">
             {galleryItems.map((item, index) => (
               <div
                 key={index}
-                className="relative group overflow-hidden rounded-xl cursor-pointer"
+                className="relative group overflow-hidden rounded-xl cursor-pointer hover-scale"
                 onClick={() => handleImageClick(item.path)}
               >
                 <img
@@ -272,9 +338,9 @@ function AppContent() {
       {/* Location Section */}
       <div className="bg-gray-50 py-16">
         <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-3xl font-bold mb-8 text-center">{t('location')}</h2>
+          <h2 className="text-3xl font-bold mb-8 text-center reveal-slide-up">{t('location')}</h2>
           <div className="grid md:grid-cols-2 gap-12">
-            <div className="space-y-8">
+            <div className="space-y-8 reveal-slide-left">
               <div>
                 <h3 className="text-2xl font-semibold mb-4">{t('greenlifeKavaci')}</h3>
                 <p className="text-gray-600 mb-6">
@@ -311,7 +377,7 @@ function AppContent() {
                 </button>
               </div>
             </div>
-            <div className="relative rounded-xl overflow-hidden shadow-lg h-[600px] w-full">
+            <div className="relative rounded-xl overflow-hidden shadow-lg h-[600px] w-full reveal-slide-right">
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3437.942389736797!2d27.70108999857333!3d42.38924153115056!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zNDLCsDIzJzE1LjEiTiAyN8KwNDInMDMuNSJF!5e1!3m2!1sbg!2sbg!4v1743623725947!5m2!1sbg!2sbg"
                 width="100%"
@@ -353,12 +419,12 @@ function AppContent() {
       <div id='overview' className="max-w-7xl mx-auto px-4 py-16">
         {/* Overview */}
         <div className="grid md:grid-cols-2 gap-12 mb-16">
-          <div>
+          <div className="reveal-slide-left">
             <h2 className="text-3xl font-bold mb-6">{t('overviewTitle')}</h2>
             <p className="text-gray-600 mb-6">
               {t('overviewDesc')}
             </p>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 stagger-children">
               <div className="flex items-center gap-2">
                 <Microwave className="text-blue-600" />
                 <span>{rooms.oven}</span>
@@ -393,7 +459,7 @@ function AppContent() {
               </div>
             </div>
           </div>
-          <div className="bg-gray-50 p-6 rounded-lg">
+          <div className="bg-gray-50 p-6 rounded-lg reveal-slide-right">
             <div className="space-y-4">
               <div className="flex justify-between items-center mb-4">
                 <button onClick={prevMonth} className="p-2 hover:bg-gray-200 rounded-full">
@@ -453,9 +519,9 @@ function AppContent() {
         {/* Pricing Section */}
         <div className="bg-gray-50 py-16">
           <div className="max-w-7xl mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12">{t('pricing')}</h2>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+            <h2 className="text-3xl font-bold text-center mb-12 reveal-slide-up">{t('pricing')}</h2>
+            <div className="grid md:grid-cols-2 gap-8 stagger-children">
+              <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow hover-lift">
                 <div className="text-center mb-6">
                   <h3 className="text-2xl font-semibold mb-2">{t('upTo14Nights')}</h3>
                   <p className="text-gray-600">{t('minStay')}</p>
@@ -466,7 +532,7 @@ function AppContent() {
                 </div>
               </div>
 
-              <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+              <div className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow hover-lift">
                 <div className="text-center mb-6">
                   <h3 className="text-2xl font-semibold mb-2">{t('over14Nights')}</h3>
                   <p className="text-gray-600">{t('specialPricing')}</p>
@@ -500,31 +566,56 @@ function AppContent() {
 
         {/* Rules Section */}
         <div className="mt-16 bg-white p-8 rounded-xl shadow-sm">
-          <h3 className="text-2xl font-semibold text-center mb-8">{t('rulesTitle')}</h3>
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <h3 className="text-2xl font-semibold text-center mb-8 reveal-slide-up">{t('rulesTitle')}</h3>
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-5xl mx-auto stagger-children">
             <div className="bg-gray-50 p-6 rounded-lg">
-              <h4 className="font-semibold text-lg mb-2">{t('depositRule')}</h4>
+              <div className="flex items-center gap-2 mb-2">
+                <DollarSign className="h-5 w-5 text-blue-600" />
+                <h4 className="font-semibold text-lg">{t('depositRule')}</h4>
+              </div>
               <p className="text-gray-600">{t('depositDesc')}</p>
             </div>
             <div className="bg-gray-50 p-6 rounded-lg">
-              <h4 className="font-semibold text-lg mb-2">{t('minStayRule')}</h4>
+              <div className="flex items-center gap-2 mb-2">
+                <Clock className="h-5 w-5 text-blue-600" />
+                <h4 className="font-semibold text-lg">{t('minStayRule')}</h4>
+              </div>
               <p className="text-gray-600">{t('minStayDesc')}</p>
             </div>
             <div className="bg-gray-50 p-6 rounded-lg">
-              <h4 className="font-semibold text-lg mb-2">{t('checkInRule')}</h4>
+              <div className="flex items-center gap-2 mb-2">
+                <DoorClosed className="h-5 w-5 text-blue-600" />
+                <h4 className="font-semibold text-lg">{t('checkInRule')}</h4>
+              </div>
               <p className="text-gray-600">{t('checkInDesc')}</p>
             </div>
             <div className="bg-gray-50 p-6 rounded-lg">
-              <h4 className="font-semibold text-lg mb-2">{t('checkOutRule')}</h4>
+              <div className="flex items-center gap-2 mb-2">
+                <DoorClosed className="h-5 w-5 text-blue-600" />
+                <h4 className="font-semibold text-lg">{t('checkOutRule')}</h4>
+              </div>
               <p className="text-gray-600">{t('checkOutDesc')}</p>
             </div>
             <div className="bg-gray-50 p-6 rounded-lg">
-              <h4 className="font-semibold text-lg mb-2">{t('cancellationRule')}</h4>
+              <div className="flex items-center gap-2 mb-2">
+                <CalendarX className="h-5 w-5 text-blue-600" />
+                <h4 className="font-semibold text-lg">{t('cancellationRule')}</h4>
+              </div>
               <p className="text-gray-600">{t('cancellationDesc')}</p>
             </div>
             <div className="bg-gray-50 p-6 rounded-lg">
-              <h4 className="font-semibold text-lg mb-2">{t('petsRule')}</h4>
+              <div className="flex items-center gap-2 mb-2">
+                <PawPrint className="h-5 w-5 text-blue-600" />
+                <h4 className="font-semibold text-lg">{t('petsRule')}</h4>
+              </div>
               <p className="text-gray-600">{t('petsDesc')}</p>
+            </div>
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Cigarette className="h-5 w-5 text-blue-600" />
+                <h4 className="font-semibold text-lg">{t('smokingRule')}</h4>
+              </div>
+              <p className="text-gray-600">{t('smokingDesc')}</p>
             </div>
           </div>
         </div>
