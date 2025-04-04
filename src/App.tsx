@@ -161,6 +161,18 @@ function AppContent() {
     <div className="min-h-screen bg-gray-50">
       <LanguageSwitcher />
       
+      {/* Fixed Call to Action Button - Always visible */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <a
+          href="tel:+359883460715"
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+        >
+          <Phone className="h-5 w-5" />
+          <span className="hidden sm:inline">{t('callUs')}: </span>
+          <span>+359883460715</span>
+        </a>
+      </div>
+
       {/* Hero Section */}
       <div className="relative min-h-[60vh] sm:h-[70vh] bg-cover bg-center" style={{ backgroundImage: 'url("/photos/10040698_135550664_big.jpg")' }}>
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/80" />
@@ -229,14 +241,31 @@ function AppContent() {
             <p className="text-gray-600 text-center">{t('peaceAndSecurityDesc')}</p>
           </div>
         </div>
-        <div className="mt-8 text-center">
-          <a
-            href="tel:+359883460715"
-            className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
-          >
-            <Phone className="h-5 w-5" />
-            {t('callUs')}: +359883460715
-          </a>
+      </div>
+
+      {/* Gallery Section */}
+      <div id='gallery' className="mb-16">
+        <div className="max-w-7xl mx-auto px-4">
+          <h2 className="text-3xl font-bold mb-8"></h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            {galleryItems.map((item, index) => (
+              <div
+                key={index}
+                className="relative group overflow-hidden rounded-xl cursor-pointer"
+                onClick={() => handleImageClick(item.path)}
+              >
+                <img
+                  src={item.path}
+                  alt={item.title}
+                  className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center flex-col">
+                  <p className="text-white font-semibold">{item.title}</p>
+                  <p className="text-white/80 text-sm mt-2">{t('clickToView')}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -280,13 +309,6 @@ function AppContent() {
                   <Maximize2 className="h-5 w-5" />
                   {t('showMap')}
                 </button>
-                <a
-                  href="tel:+359883460715"
-                  className="flex items-center justify-center gap-2 w-full bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
-                >
-                  <Phone className="h-5 w-5" />
-                  {t('callUs')}: +359883460715
-                </a>
               </div>
             </div>
             <div className="relative rounded-xl overflow-hidden shadow-lg h-[600px] w-full">
@@ -474,47 +496,36 @@ function AppContent() {
             <div className="flex flex-col items-center gap-3 p-6 rounded-lg text-center">
             </div>
           </div>
-          <div className="mt-8 text-center">
-            <a
-              href="tel:+359883460715"
-              className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
-            >
-              <Phone className="h-5 w-5" />
-              {t('callUs')}: +359883460715
-            </a>
-          </div>
         </div>
 
-        {/* Gallery Section */}
-        <div id='gallery' className="mb-16">
-          <h2 className="text-3xl font-bold mb-8"></h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {galleryItems.map((item, index) => (
-              <div
-                key={index}
-                className="relative group overflow-hidden rounded-xl cursor-pointer"
-                onClick={() => handleImageClick(item.path)}
-              >
-                <img
-                  src={item.path}
-                  alt={item.title}
-                  className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center flex-col">
-                  <p className="text-white font-semibold">{item.title}</p>
-                  <p className="text-white/80 text-sm mt-2">{t('clickToView')}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-8 text-center">
-            <a
-              href="tel:+359883460715"
-              className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
-            >
-              <Phone className="h-5 w-5" />
-              {t('callUs')}: +359883460715
-            </a>
+        {/* Rules Section */}
+        <div className="mt-16 bg-white p-8 rounded-xl shadow-sm">
+          <h3 className="text-2xl font-semibold text-center mb-8">{t('rulesTitle')}</h3>
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <h4 className="font-semibold text-lg mb-2">{t('depositRule')}</h4>
+              <p className="text-gray-600">{t('depositDesc')}</p>
+            </div>
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <h4 className="font-semibold text-lg mb-2">{t('minStayRule')}</h4>
+              <p className="text-gray-600">{t('minStayDesc')}</p>
+            </div>
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <h4 className="font-semibold text-lg mb-2">{t('checkInRule')}</h4>
+              <p className="text-gray-600">{t('checkInDesc')}</p>
+            </div>
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <h4 className="font-semibold text-lg mb-2">{t('checkOutRule')}</h4>
+              <p className="text-gray-600">{t('checkOutDesc')}</p>
+            </div>
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <h4 className="font-semibold text-lg mb-2">{t('cancellationRule')}</h4>
+              <p className="text-gray-600">{t('cancellationDesc')}</p>
+            </div>
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <h4 className="font-semibold text-lg mb-2">{t('petsRule')}</h4>
+              <p className="text-gray-600">{t('petsDesc')}</p>
+            </div>
           </div>
         </div>
 

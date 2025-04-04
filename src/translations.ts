@@ -43,7 +43,7 @@ export const translations: Translations = {
     en: 'for stays longer than 14 nights'
   },
   checkAvailability: {
-    bg: 'Проверете свободни дати',
+    bg: 'Вижте свободните дати',
     en: 'Check Availability'
   },
   gallery: {
@@ -273,5 +273,57 @@ export const translations: Translations = {
   bookedDates: {
     bg: 'Заети дати',
     en: 'Booked Dates'
+  },
+  rulesTitle: {
+    bg: 'Правила за резервация',
+    en: 'Reservation Rules'
+  },
+  depositRule: {
+    bg: 'Депозит',
+    en: 'Deposit'
+  },
+  depositDesc: {
+    bg: '30% от общата сума при резервация',
+    en: '30% of the total amount upon reservation'
+  },
+  minStayRule: {
+    bg: 'Минимален престой',
+    en: 'Minimum Stay'
+  },
+  minStayDesc: {
+    bg: '7 нощувки в активен сезон',
+    en: '7 nights during peak season'
+  },
+  checkInRule: {
+    bg: 'Настаняване',
+    en: 'Check-in'
+  },
+  checkInDesc: {
+    bg: 'След 15:00 часа',
+    en: 'After 3:00 PM'
+  },
+  checkOutRule: {
+    bg: 'Напускане',
+    en: 'Check-out'
+  },
+  checkOutDesc: {
+    bg: 'До 11:00 часа',
+    en: 'Before 11:00 AM'
+  },
+  cancellationRule: {
+    bg: 'Анулации',
+    en: 'Cancellation'
+  },
+  cancellationDesc: {
+    bg: 'Безплатно до 14 дни преди настаняване',
+    en: 'Free up to 14 days before check-in'
+  },
+  petsRule: {
+    bg: 'Домашни любимци',
+    en: 'Pets'
+  },
+  petsDesc: {
+    bg: 'Не са разрешени',
+    en: 'Not allowed'
   }
 }; 
