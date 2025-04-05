@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Waves, Wifi, Car, ChevronRight, ChevronLeft, X, Baby, Shield, Microwave, Coffee, Refrigerator, WashingMachine, Maximize2, Phone, Crosshair, Tv, Snowflake, Clock, DoorClosed, CalendarX, DollarSign, PawPrint, Cigarette } from 'lucide-react';
+import { MapPin, Waves, Wifi, Car, ChevronRight, ChevronLeft, X, Baby, Shield, Microwave, Coffee, Refrigerator, WashingMachine, Maximize2, Phone, Crosshair, Tv, Snowflake, Clock, DoorClosed, CalendarX, DollarSign, PawPrint, Cigarette, Calendar, CalendarDays } from 'lucide-react';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { translations } from './translations';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
@@ -547,21 +547,51 @@ function AppContent() {
         </div>
 
         {/* Promo Offers Section */}
-        <div className="mt-8 bg-white p-8 rounded-xl shadow-sm">
-          <h3 className="text-2xl font-semibold text-center mb-8">{t('specialOffers')}</h3>
-          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            <div className="flex flex-col items-center gap-3 p-6 rounded-lg text-center">
-            </div>
-            <div className="flex flex-col items-center gap-3 p-6 bg-blue-50 rounded-lg text-center">
-              <Car className="h-8 w-8 text-blue-600" />
-              <div>
-                <p className="font-medium text-lg">{t('freeParking')}</p>
-                <p className="text-sm text-gray-600">{t('earlyBooking')}</p>
+        <div className="mt-8 bg-gradient-to-br from-blue-600 to-blue-800 p-8 sm:p-12 rounded-xl shadow-lg relative overflow-hidden">
+          <div className="absolute inset-0 bg-grid-white/[0.1] bg-[size:20px_20px]"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-blue-600/50 to-transparent"></div>
+          
+          <h3 className="text-2xl sm:text-3xl font-semibold text-center mb-12 text-white relative reveal-slide-up">
+            {t('specialOffers')}
+          </h3>
+
+          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto relative stagger-children">
+
+            <div className="group bg-white/10 backdrop-blur-sm p-6 rounded-xl border border-white/20 hover-lift cursor-pointer transition-all duration-300 hover:bg-white/20">
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 mx-auto bg-blue-500/20 rounded-full flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
+                  <Car className="h-8 w-8 text-blue-100" />
+                </div>
+                <p className="font-medium text-lg text-white">
+                  {t('earlyBooking')}
+                </p>
+                <p className="text-sm text-blue-100">
+                  {t('freeParkingDesc')}
+                </p>
+                <div className="text-xl font-bold text-yellow-400">
+                  {t('included')}
+                </div>
               </div>
             </div>
-            <div className="flex flex-col items-center gap-3 p-6 rounded-lg text-center">
+
+            <div className="group bg-white/10 backdrop-blur-sm p-6 rounded-xl border border-white/20 hover-lift cursor-pointer transition-all duration-300 hover:bg-white/20">
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 mx-auto bg-blue-500/20 rounded-full flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
+                  <CalendarDays className="h-8 w-8 text-blue-100" />
+                </div>
+                <p className="font-medium text-lg text-white">
+                  {t('longStay')}
+                </p>
+                <p className="text-sm text-blue-100">
+                  {t('longStayDesc')}
+                </p>
+                <div className="text-2xl font-bold text-yellow-400">-25%</div>
+              </div>
             </div>
           </div>
+
+          <div className="absolute -left-12 -bottom-8 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl"></div>
+          <div className="absolute -right-12 -top-8 w-64 h-64 bg-blue-400/20 rounded-full blur-3xl"></div>
         </div>
 
         {/* Rules Section */}

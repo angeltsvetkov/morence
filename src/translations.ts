@@ -349,5 +349,25 @@ export const translations: Translations = {
   week: {
     bg: 'седмица',
     en: 'week'
+  },
+  earlyBookingDesc: {
+    bg: 'Резервирайте до 30 Април и получете 10% отстъпка',
+    en: 'Book before April 30th and get 10% off'
+  },
+  freeParkingDesc: {
+    bg: 'Безплатно паркомясто за целия престой',
+    en: 'Free parking spot for your entire stay'
+  },
+  included: {
+    bg: 'Включено',
+    en: 'Included'
+  },
+  longStay: {
+    bg: 'Дълъг престой',
+    en: 'Long Stay'
+  },
+  longStayDesc: {
+    bg: 'При престой над 14 нощувки получавате 25% отстъпка',
+    en: 'Stay for more than 14 nights and get 25% off'
   }
 }; 
