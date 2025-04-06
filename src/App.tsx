@@ -101,11 +101,23 @@ function AppContent() {
 
   const galleryItems: GalleryItem[] = [
     {
-      path: '/photos/10040698_135550663_big.jpg',
+      path: 'photos/viber_image_2025-04-06_20-35-45-040.jpg',
+      title: rooms.front
+    },
+    {
+      path: 'photos/10040698_135550663_big.jpg',
       title: rooms.yard
     },
     {
-      path: '/photos/10040698_135550664_big.jpg',
+      path: 'public/photos/2025-04-06_20-35-43-912.jpg',
+      title: rooms.front
+    },
+    {
+      path: 'photos/viber_image_2025-04-06_20-35-42-461.jpg',
+      title: rooms.front
+    },
+    {
+      path: 'photos/10040698_135550664_big.jpg',
       title: rooms.livingRoomKitchen
     },
     {
@@ -137,29 +149,41 @@ function AppContent() {
       title: rooms.washingMachine
     },
     {
-      path: 'photos/13.jpg',
+      path: 'photos/2025-04-06_20-35-40-941.jpg',
+      title: rooms.cascadePool
+    },
+    {
+      path: 'photos/2025-04-06_20-35-42-076.jpg',
+      title: rooms.cascadePool
+    },
+    {
+      path: 'photos/2025-04-06_20-35-44-094.jpg',
+      title: rooms.cascadePool
+    },
+    {
+      path: 'photos/viber_image_2025-04-06_20-35-41-890.jpg',
+      title: rooms.roundPool
+    },
+    {
+      path: 'photos/viber_image_2025-04-06_20-35-43-023.jpg',
+      title: rooms.roundPool
+    },
+    {
+      path: 'photos/viber_image_2025-04-06_20-35-43-206.jpg',
+      title: rooms.roundPool
+    },
+    {
+      path: 'photos/viber_image_2025-04-06_20-35-44-460.jpg',
       title: rooms.centralPath
     },
     {
-      path: 'photos/Borissov-Green-Life-Apartment-Sozopol-Exterior.jpeg',
-      title: rooms.roundPool
+      path: 'photos/viber_image_2025-04-06_20-35-43-389.jpg',
+      title: rooms.beach
     },
     {
-      path: 'photos/green-life-beach-resort-appartment-sozopol-photo-9.jpeg',
-      title: rooms.roundPool
+      path: 'photos/viber_image_2025-04-06_20-35-43-740.jpg',
+      title: rooms.beach
     },
-    {
-      path: 'photos/Green-Life-Sozopol-Antares-Hotel-Exterior.jpeg',
-      title: rooms.cascadePool
-    },
-    {
-      path: 'photos/apartamenti-v-griin-laif-v-sozopol-7689577_116902639.jpg',
-      title: rooms.cascadePool
-    },
-    {
-      path: 'photos/img-greenlife-beach-apartments-kavatzite-sozopol-9.jpeg',
-      title: rooms.playground
-    }
   ];
 
   const handleImageClick = (imagePath: string) => {
@@ -202,7 +226,7 @@ function AppContent() {
           <div className="text-center text-white max-w-4xl px-4 animate-fade-in">
             <div className="mb-8 inline-block">
               <div className="bg-blue-600/20 backdrop-blur-sm px-4 py-2 rounded-full border border-blue-400/30 mb-4 inline-block">
-                <span className="text-blue-200 font-medium">Greenlife Каваци</span>
+                <span className="text-blue-200 font-medium">2-стаем апартамент в затворен комплекс</span>
               </div>
             </div>
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold mb-6 sm:mb-8 text-shadow-2xl drop-shadow-2xl bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">

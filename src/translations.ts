@@ -75,8 +75,8 @@ export const translations: Translations = {
     en: 'Peace and Security'
   },
   peaceAndSecurityDesc: {
-    bg: 'Комплексът Greenlife е ограден и охраняем, което го прави идеален за семейства, търсещи безопасна и тиха почивка.',
-    en: 'The Greenlife complex is fenced and guarded, making it ideal for families seeking a safe and quiet vacation.'
+    bg: 'Комплексът е ограден и охраняем, което го прави идеален за семейства, търсещи безопасна и тиха почивка.',
+    en: 'The complex is fenced and guarded, making it ideal for families seeking a safe and quiet vacation.'
   },
   callUs: {
     bg: 'Обадете се',
@@ -87,12 +87,12 @@ export const translations: Translations = {
     en: 'Location'
   },
   greenlifeKavaci: {
-    bg: 'Greenlife Каваци',
-    en: 'Greenlife Kavaci'
+    bg: 'Затворен комплекс в Каваци',
+    en: 'Premium resort in Kavaci'
   },
   locationDesc: {
-    bg: 'Апартаментът се намира в комплекса Greenlife Каваци, разположен в сърцето на курорта.',
-    en: 'The apartment is located in the Greenlife Kavaci complex, situated in the heart of the resort.'
+    bg: 'Апартаментът се намира в затворен комплекс в Каваци, разположен в сърцето на курорта.',
+    en: 'The apartment is located in a premium resort in Kavaci, situated in the heart of the resort.'
   },
   nearby: {
     bg: 'В непосредствена близост ще откриете:',
@@ -123,8 +123,8 @@ export const translations: Translations = {
     en: 'Overview'
   },
   overviewTitle: {
-    bg: 'Уютен семеен апартамент в сърцето на Greenlife Каваци – идеалното място за почивка с деца.',
-    en: 'A cozy family apartment in the heart of Greenlife Kavaci – the perfect place for a vacation with children.'
+    bg: 'Уютен семеен апартамент в сърцето на Каваци – идеалното място за почивка с деца.',
+    en: 'A cozy family apartment in the heart of Kavaci – the perfect place for a vacation with children.'
   },
   overviewDesc: {
     bg: 'Разположен на партерен етаж с директен излаз към зелена поляна, апартаментът предлага свобода за игра и спокойствие за родителите. В непосредствена близост ще откриете детски площадки, два басейна (от общо 5), ресторант, тенис кортове и прохладна горичка – всичко необходимо за безгрижна семейна ваканция на морето. Комфорт като у дома, само на крачка от плажа.',
@@ -229,13 +229,15 @@ export const translations: Translations = {
   rooms: {
     bg: {
       yard: 'Двор',
+      beach: 'Плаж',
       livingRoomKitchen: 'Хол с кухня',
       livingRoom: 'Хол',
       bedroom: 'Спалня',
       bathroom: 'Баня',
       washingMachine: 'Пералня',
-      centralPath: 'Централна пътека',
+      centralPath: 'Красива пътека',
       roundPool: 'Кръгъл басейн',
+      front: "Зелена поляна",
       cascadePool: 'Каскаден басейн',
       playground: 'Детска площадка',
       oven: 'Фурна',
@@ -248,13 +250,15 @@ export const translations: Translations = {
     },
     en: {
       yard: 'Yard',
+      beach: 'Beach',
       livingRoomKitchen: 'Living Room with Kitchen',
       livingRoom: 'Living Room',
       bedroom: 'Bedroom',
       bathroom: 'Bathroom',
       washingMachine: 'Washing Machine',
-      centralPath: 'Central Path',
+      centralPath: 'Beautiful Path',
       roundPool: 'Round Pool',
+      front: "Green Lawn",
       cascadePool: 'Cascade Pool',
       playground: 'Playground',
       oven: 'Oven',
