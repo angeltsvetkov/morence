@@ -109,7 +109,7 @@ function AppContent() {
       title: rooms.yard
     },
     {
-      path: 'public/photos/2025-04-06_20-35-43-912.jpg',
+      path: 'photos/2025-04-06_20-35-43-912.jpg',
       title: rooms.front
     },
     {
