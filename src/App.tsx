@@ -46,13 +46,7 @@ function AppContent() {
   const availableDates = [
     '2025-07-01', '2025-07-02', '2025-07-03',
     '2025-07-04', '2025-07-05', '2025-07-06',
-    '2025-07-07', 
-    '2025-07-25', '2025-07-26', '2025-07-27',
-    '2025-07-28', '2025-07-29', '2025-07-30',
-    '2025-07-31', '2025-08-01', '2025-08-02',
-    '2025-08-03', '2025-08-04', '2025-08-05',
-    '2025-08-06', '2025-08-07', '2025-08-08',
-    '2025-08-09', '2025-08-10', '2025-08-11',
+    '2025-07-07', '2025-08-10', '2025-08-11',
     '2025-08-12', '2025-08-13', '2025-08-14',
     '2025-08-15', '2025-08-16', '2025-08-17',
     '2025-08-18', '2025-08-19', '2025-08-20',
@@ -249,7 +243,7 @@ function AppContent() {
                 <div className="text-center sm:text-left">
                   <div className="text-blue-100 text-sm sm:text-base mb-1">{t('standardPrice')}</div>
                   <div className="text-4xl sm:text-5xl font-bold text-white line-through opacity-80">
-                    200 лв.
+                    220 лв.
                   </div>
                   <div className="text-blue-100 text-sm mt-1">{t('perNight')}</div>
                 </div>
@@ -259,7 +253,7 @@ function AppContent() {
                 <div className="text-center sm:text-left">
                   <div className="text-blue-100 text-sm sm:text-base mb-1">{t('discountedPrice')}</div>
                   <div className="text-5xl sm:text-6xl font-bold text-white">
-                    150 лв.
+                    180 лв.
                     <span className="text-base sm:text-lg text-blue-100 ml-2 font-normal">{t('perNight')}</span>
                   </div>
                   <div className="text-blue-100 text-sm sm:text-base font-medium mt-1">
@@ -271,12 +265,12 @@ function AppContent() {
               <div className="mt-6 pt-6 border-t border-blue-400/30">
                 <div className="flex justify-between items-center text-sm sm:text-base text-blue-100">
                   <span>{t('totalSavings')}:</span>
-                  <span className="font-bold text-white">350 лв. / {t('week')}</span>
+                  <span className="font-bold text-white">280 лв. / {t('week')}</span>
                 </div>
               </div>
 
               <div className="absolute -right-3 -top-3 bg-yellow-400 text-blue-900 px-4 py-1 rounded-full text-sm font-bold transform rotate-12 shadow-lg">
-                -25%
+                -20%
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center">
@@ -546,7 +540,7 @@ function AppContent() {
                   <p className="text-gray-600">{t('minStay')}</p>
                 </div>
                 <div className="bg-blue-50 p-6 rounded-lg text-center">
-                  <div className="text-4xl font-bold mb-2">200 лв.</div>
+                  <div className="text-4xl font-bold mb-2">220 лв.</div>
                   <p className="text-gray-600">{t('perNightPrice')}</p>
                 </div>
               </div>
@@ -557,7 +551,7 @@ function AppContent() {
                   <p className="text-gray-600">{t('specialPricing')}</p>
                 </div>
                 <div className="bg-green-50 p-6 rounded-lg text-center">
-                  <div className="text-4xl font-bold text-green-600 mb-2">150 лв.</div>
+                  <div className="text-4xl font-bold text-green-600 mb-2">180 лв.</div>
                   <p className="text-gray-600">{t('perNightPrice')}</p>
                 </div>
               </div>
@@ -604,7 +598,7 @@ function AppContent() {
                 <p className="text-sm text-blue-100">
                   {t('longStayDesc')}
                 </p>
-                <div className="text-2xl font-bold text-yellow-400">-25%</div>
+                <div className="text-2xl font-bold text-yellow-400">-20%</div>
               </div>
             </div>
           </div>

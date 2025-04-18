@@ -179,8 +179,8 @@ export const translations: Translations = {
     en: 'Over 14 Nights'
   },
   specialPricing: {
-    bg: 'Специални цени за дълъг престой - 25% отстъпка',
-    en: 'Special prices for long stays - 25% discount'
+    bg: 'Специални цени за дълъг престой - 20% отстъпка',
+    en: 'Special prices for long stays - 20% discount'
   },
   perNightPrice: {
     bg: 'за нощувка',
@@ -371,7 +371,7 @@ export const translations: Translations = {
     en: 'Long Stay'
   },
   longStayDesc: {
-    bg: 'При престой над 14 нощувки получавате 25% отстъпка',
-    en: 'Stay for more than 14 nights and get 25% off'
+    bg: 'При престой над 14 нощувки получавате 20% отстъпка',
+    en: 'Stay for more than 14 nights and get 20% off'
   }
 }; 
