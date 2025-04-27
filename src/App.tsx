@@ -6,7 +6,7 @@ import { LanguageSwitcher } from './components/LanguageSwitcher';
 
 function AppContent() {
   const { language } = useLanguage();
-  const [selectedMonth, setSelectedMonth] = useState(new Date("2025-07-01"));
+  const [selectedMonth, setSelectedMonth] = useState(new Date("2025-08-01"));
   const [isMapFullscreen, setIsMapFullscreen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
@@ -44,9 +44,7 @@ function AppContent() {
 
   // Mock available dates (in a real app, this would come from an API)
   const availableDates = [
-    '2025-07-01', '2025-07-02', '2025-07-03',
-    '2025-07-04', '2025-07-05', '2025-07-06',
-    '2025-07-07', '2025-08-10', '2025-08-11',
+    '2025-08-10', '2025-08-11',
     '2025-08-12', '2025-08-13', '2025-08-14',
     '2025-08-15', '2025-08-16', '2025-08-17',
     '2025-08-18', '2025-08-19', '2025-08-20',
