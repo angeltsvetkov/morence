@@ -566,24 +566,9 @@ function AppContent() {
             {t('specialOffers')}
           </h3>
 
-          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto relative stagger-children">
+          <div className="grid md:grid-cols-1 gap-6 max-w-4xl mx-auto relative stagger-children">
 
-            <div className="group bg-white/10 backdrop-blur-sm p-6 rounded-xl border border-white/20 hover-lift cursor-pointer transition-all duration-300 hover:bg-white/20">
-              <div className="text-center space-y-4">
-                <div className="w-16 h-16 mx-auto bg-blue-500/20 rounded-full flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
-                  <Car className="h-8 w-8 text-blue-100" />
-                </div>
-                <p className="font-medium text-lg text-white">
-                  {t('earlyBooking')}
-                </p>
-                <p className="text-sm text-blue-100">
-                  {t('freeParkingDesc')}
-                </p>
-                <div className="text-xl font-bold text-yellow-400">
-                  {t('included')}
-                </div>
-              </div>
-            </div>
+    
 
             <div className="group bg-white/10 backdrop-blur-sm p-6 rounded-xl border border-white/20 hover-lift cursor-pointer transition-all duration-300 hover:bg-white/20">
               <div className="text-center space-y-4">
