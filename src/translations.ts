@@ -14,6 +14,10 @@ export const translations: Translations = {
     bg: 'С деца на Каваци',
     en: 'With Kids in Kavaci'
   },
+  activities: {
+    bg: 'Забавления',
+    en: 'Activities'
+  },
   subtitle: {
     bg: 'Мястото, където децата играят, а родителите си почиват',
     en: 'Where kids play and parents relax'
@@ -375,68 +379,132 @@ export const translations: Translations = {
     en: 'Stay for more than 14 nights and get 20% off'
   },
   activitiesTitle: {
-    en: 'Things to Do',
-    bg: 'Забавления'
+    en: 'Summer Activities and Attractions',
+    bg: 'Летни атракции и дейности около Созопол'
   },
   activitiesSubtitle: {
-    en: 'Discover the best activities and attractions near your stay',
-    bg: 'Открийте най-добрите забавления и атракции близо до вашия престой'
+    en: 'Welcome to the Sozopol area - rich in entertainment for the whole family. Within a 30 km radius from complex, you will find many suitable summer attractions and activities.',
+    bg: 'Добре дошли в района на Созопол – богат на забавления за цялото семейство. В радиус до 30 км от затворения комплекс ще откриете множество подходящи летни атракции и дейности.'
   },
-  beachActivities: {
-    en: 'Beach Activities',
-    bg: 'Плажни забавления'
+  kidsActivities: {
+    en: 'Kids Activities',
+    bg: 'Детски забавления'
   },
-  beachActivitiesDesc: {
-    en: 'Enjoy the beautiful beaches of Kavaci. Perfect for swimming, sunbathing, and water sports.',
-    bg: 'Насладете се на красивите плажове на Каваци. Перфектни за плуване, слънчеване и водни спортове.'
+  natureActivities: {
+    en: 'Nature & Walks',
+    bg: 'Природа и разходки'
   },
-  restaurantsDesc: {
-    en: 'Discover local cuisine at nearby restaurants. Fresh seafood and traditional Bulgarian dishes.',
-    bg: 'Открийте местната кухня в близките ресторанти. Свежи морски дарове и традиционни български ястия.'
+  culturalActivities: {
+    en: 'Cultural & Historical Sites',
+    bg: 'Културни и исторически забележителности'
   },
-  cafes: {
-    en: 'Cafes & Bars',
-    bg: 'Кафета и барове'
+  foodActivities: {
+    en: 'Restaurants & Food',
+    bg: 'Ресторанти и кулинарни места'
   },
-  cafesDesc: {
-    en: 'Relax at cozy cafes and enjoy refreshing drinks at beach bars.',
-    bg: 'Отпуснете се в уютни кафета и се насладете на освежаващи напитки в плажните барове.'
+  sportsActivities: {
+    en: 'Sports & Adventures',
+    bg: 'Спорт и приключения'
   },
-  parks: {
-    en: 'Parks & Nature',
-    bg: 'Паркове и природа'
+  neptuneAquapark: {
+    en: 'Neptune Aquapark',
+    bg: 'Аквапарк „Нептун"'
   },
-  parksDesc: {
-    en: 'Explore beautiful parks and nature trails perfect for morning walks or evening strolls.',
-    bg: 'Разгледайте красивите паркове и природни пътеки, перфектни за сутрешни разходки или вечерни разходки.'
+  neptuneAquaparkDesc: {
+    en: 'Large modern water park with numerous water slides, green areas, and playgrounds. Features daily animation for children, dining facilities, and free WiFi.',
+    bg: 'Голям модерен воден парк с множество водни пързалки и атракции, зелени площи и игрища. Има целодневна анимация за деца, заведения за хранене и безплатен Wi-Fi.'
   },
-  shopping: {
-    en: 'Shopping',
-    bg: 'Пазаруване'
+  neptuneAquaparkPrice: {
+    en: '~38 BGN adults, ~20 BGN children',
+    bg: '~38 лв. за възрастни, ~20 лв. за деца'
   },
-  shoppingDesc: {
-    en: 'Visit local shops and markets for souvenirs and essentials.',
-    bg: 'Посетете местните магазини и пазари за сувенири и основни нужди.'
+  castleInLoveWithWind: {
+    en: 'Castle "In Love with the Wind"',
+    bg: 'Замъкът „Влюбен във вятъра"'
   },
-  nightlife: {
-    en: 'Nightlife',
-    bg: 'Нощен живот'
+  castleInLoveWithWindDesc: {
+    en: 'A fairy-tale castle built in modern times but with a medieval appearance. Features a park with lakes, animals (swans, peacocks), a chapel, and a winery.',
+    bg: 'Приказен замък в близост, построен в съвременни времена, но с вид на средновековен замък. Разполага с парк с езера, животни (лебеди, пауни), параклис и винарна.'
   },
-  nightlifeDesc: {
-    en: 'Experience the vibrant nightlife with bars and entertainment venues.',
-    bg: 'Изпитайте оживения нощен живот с барове и забавни заведения.'
+  castlePrice: {
+    en: 'Paid entrance',
+    bg: 'Платен вход'
   },
-  needHelp: {
-    en: 'Need Help Planning Your Stay?',
-    bg: 'Нуждаете се от помощ при планирането на престоя си?'
+  goldenFishBeach: {
+    en: 'Golden Fish Beach',
+    bg: 'Плаж „Златна рибка"'
   },
-  needHelpDesc: {
-    en: 'We\'re here to help you make the most of your vacation. Contact us for recommendations and assistance.',
-    bg: 'Тук сме, за да ви помогнем да извлечете максимума от вашата почивка. Свържете се с нас за препоръки и помощ.'
+  goldenFishBeachDesc: {
+    en: 'Wide sandy beach between Sozopol and Gradina camping. Protected and very shallow for dozens of meters, perfect for small children.',
+    bg: 'Широка пясъчна ивица между Созопол и къмпинг „Градина". Плажът е охраняем и много плитък на десетки метри навътре, което го прави отличен за малки деца.'
   },
-  activities: {
-    en: 'Activities',
-    bg: 'Забавления'
+  goldenFishBeachPrice: {
+    en: 'Free access (paid parking)',
+    bg: 'Свободен достъп (платен паркинг)'
+  },
+  ropotamoReserve: {
+    en: 'Ropotamo Nature Reserve',
+    bg: 'Природен резерват „Ропотамо"'
+  },
+  ropotamoReserveDesc: {
+    en: 'Beautiful nature reserve with dense forests along the Ropotamo River. Features boat tours, water lilies, and diverse wildlife.',
+    bg: 'Красив природен резерват с гъсти лонгозни гори по поречието на Ропотамо. Разполага с лодъчни разходки, водни лилии и разнообразна фауна.'
+  },
+  ropotamoReservePrice: {
+    en: '~15 BGN adults, ~5-8 BGN children',
+    bg: '~15 лв. за възрастен, ~5-8 лв. за дете'
+  },
+  oldTownSozopol: {
+    en: 'Old Town Sozopol',
+    bg: 'Старият град Созопол'
+  },
+  oldTownSozopolDesc: {
+    en: 'Architectural reserve with cobblestone streets, preserved Renaissance houses, and ancient churches. Features an amphitheater and panoramic coastal walk.',
+    bg: 'Архитектурен резерват с калдъръмени улички, запазени възрожденски къщи и древни църкви. Разполага с амфитеатър и панорамна крайбрежна алея.'
+  },
+  oldTownSozopolPrice: {
+    en: 'Free access (museums and churches have entrance fees)',
+    bg: 'Свободен достъп (музеите и църквите имат входни такси)'
+  },
+  restaurantMatis: {
+    en: 'Restaurant "Matis"',
+    bg: 'Ресторант „Матис"'
+  },
+  restaurantMatisDesc: {
+    en: 'Spacious family restaurant on the beach with traditional Bulgarian cuisine, fresh seafood, and a free children\'s corner.',
+    bg: 'Просторен семеен ресторант на самия морски бряг с традиционна българска кухня, пресни рибански специалитети и безплатен детски кът.'
+  },
+  restaurantMatisPrice: {
+    en: 'Moderate prices',
+    bg: 'Умерени цени'
+  },
+  boatTour: {
+    en: 'Boat Tour from Sozopol',
+    bg: 'Разходка с лодка от Созопол'
+  },
+  boatTourDesc: {
+    en: 'One-hour sea tour around the islands of St. Kirik and St. Ivan. Features feeding seagulls and beautiful views of the coast.',
+    bg: 'Едночасова морска разходка около островите Св. Кирик и Св. Иван. Включва хранене на чайки и красиви гледки към брега.'
+  },
+  boatTourPrice: {
+    en: '10-15 BGN per person',
+    bg: '10-15 лв. на човек'
+  },
+  horseRiding: {
+    en: 'Horse Riding at Royal Horse Club',
+    bg: 'Конна езда в „Royal Horse Club"'
+  },
+  horseRidingDesc: {
+    en: 'Horse and pony riding lessons, donkey cart rides, and a mini zoo with domestic animals. Features a restaurant with homemade food.',
+    bg: 'Уроци по конна езда, разходки с каручка с магаре и мини зоо-кът с домашни животни. Разполага с ресторант с домашна кухня.'
+  },
+  horseRidingPrice: {
+    en: '5 BGN entrance, activities paid separately',
+    bg: '5 лв. вход, дейностите се заплащат отделно'
+  },
+  visitWebsite: {
+    en: 'Visit Website',
+    bg: 'Посетете уебсайта'
   },
   subscribeTitle: {
     en: 'Stay Updated!',

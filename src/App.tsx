@@ -261,26 +261,7 @@ function AppContent() {
       <div className="min-h-screen bg-gray-50">
         <LanguageSwitcher />
         
-        {/* Navigation */}
-        <nav className="bg-white shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16">
-              <div className="flex">
-                <Link to="/" className="flex items-center">
-                  <span className="text-xl font-semibold text-gray-900">{t('title')}</span>
-                </Link>
-              </div>
-              <div className="flex items-center space-x-4">
-                <Link
-                  to="/activities"
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  {t('activities')}
-                </Link>
-              </div>
-            </div>
-          </div>
-        </nav>
+        
 
         <Routes>
           <Route path="/" element={
@@ -504,7 +485,7 @@ function AppContent() {
                   <div className="relative max-w-7xl w-full h-full flex items-center justify-center">
                     <img
                       src="/photos/map.jpg"
-                      alt="Карта на разположението на Greenlife Каваци"
+                      alt="Карта на разположението на Каваци"
                       className="max-w-full max-h-full object-contain"
                     />
                     <button
