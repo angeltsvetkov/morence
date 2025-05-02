@@ -373,5 +373,109 @@ export const translations: Translations = {
   longStayDesc: {
     bg: 'При престой над 14 нощувки получавате 20% отстъпка',
     en: 'Stay for more than 14 nights and get 20% off'
+  },
+  activitiesTitle: {
+    en: 'Things to Do',
+    bg: 'Забавления'
+  },
+  activitiesSubtitle: {
+    en: 'Discover the best activities and attractions near your stay',
+    bg: 'Открийте най-добрите забавления и атракции близо до вашия престой'
+  },
+  beachActivities: {
+    en: 'Beach Activities',
+    bg: 'Плажни забавления'
+  },
+  beachActivitiesDesc: {
+    en: 'Enjoy the beautiful beaches of Kavaci. Perfect for swimming, sunbathing, and water sports.',
+    bg: 'Насладете се на красивите плажове на Каваци. Перфектни за плуване, слънчеване и водни спортове.'
+  },
+  restaurantsDesc: {
+    en: 'Discover local cuisine at nearby restaurants. Fresh seafood and traditional Bulgarian dishes.',
+    bg: 'Открийте местната кухня в близките ресторанти. Свежи морски дарове и традиционни български ястия.'
+  },
+  cafes: {
+    en: 'Cafes & Bars',
+    bg: 'Кафета и барове'
+  },
+  cafesDesc: {
+    en: 'Relax at cozy cafes and enjoy refreshing drinks at beach bars.',
+    bg: 'Отпуснете се в уютни кафета и се насладете на освежаващи напитки в плажните барове.'
+  },
+  parks: {
+    en: 'Parks & Nature',
+    bg: 'Паркове и природа'
+  },
+  parksDesc: {
+    en: 'Explore beautiful parks and nature trails perfect for morning walks or evening strolls.',
+    bg: 'Разгледайте красивите паркове и природни пътеки, перфектни за сутрешни разходки или вечерни разходки.'
+  },
+  shopping: {
+    en: 'Shopping',
+    bg: 'Пазаруване'
+  },
+  shoppingDesc: {
+    en: 'Visit local shops and markets for souvenirs and essentials.',
+    bg: 'Посетете местните магазини и пазари за сувенири и основни нужди.'
+  },
+  nightlife: {
+    en: 'Nightlife',
+    bg: 'Нощен живот'
+  },
+  nightlifeDesc: {
+    en: 'Experience the vibrant nightlife with bars and entertainment venues.',
+    bg: 'Изпитайте оживения нощен живот с барове и забавни заведения.'
+  },
+  needHelp: {
+    en: 'Need Help Planning Your Stay?',
+    bg: 'Нуждаете се от помощ при планирането на престоя си?'
+  },
+  needHelpDesc: {
+    en: 'We\'re here to help you make the most of your vacation. Contact us for recommendations and assistance.',
+    bg: 'Тук сме, за да ви помогнем да извлечете максимума от вашата почивка. Свържете се с нас за препоръки и помощ.'
+  },
+  activities: {
+    en: 'Activities',
+    bg: 'Забавления'
+  },
+  subscribeTitle: {
+    en: 'Stay Updated!',
+    bg: 'Бъдете информирани!'
+  },
+  subscribeDesc: {
+    en: 'Subscribe to receive exclusive promotions and special offers.',
+    bg: 'Абонирайте се, за да получавате ексклузивни промоции и специални оферти.'
+  },
+  emailPlaceholder: {
+    en: 'Enter your email',
+    bg: 'Въведете вашия имейл'
+  },
+  subscribeButton: {
+    en: 'Subscribe',
+    bg: 'Абонирай се'
+  },
+  subscribeSuccess: {
+    en: 'Thank You!',
+    bg: 'Благодарим ви!'
+  },
+  subscribeSuccessDesc: {
+    en: 'You have been successfully subscribed to our newsletter.',
+    bg: 'Успешно се абонирахте за нашия бюлетин.'
+  },
+  emailRequired: {
+    en: 'Email is required',
+    bg: 'Имейлът е задължителен'
+  },
+  emailInvalid: {
+    en: 'Please enter a valid email address',
+    bg: 'Моля, въведете валиден имейл адрес'
+  },
+  subscriptionError: {
+    en: 'Failed to subscribe. Please try again.',
+    bg: 'Неуспешна абонация. Моля, опитайте отново.'
+  },
+  subscribing: {
+    en: 'Subscribing...',
+    bg: 'Абониране...'
   }
 }; 
