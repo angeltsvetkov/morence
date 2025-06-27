@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Waves, Wifi, ChevronRight, ChevronLeft, X, Baby, Shield, Microwave, Coffee, Refrigerator, WashingMachine, Maximize2, Phone, Crosshair, Tv, Snowflake, Clock, DoorClosed, CalendarX, DollarSign, PawPrint, Cigarette, CalendarDays, Mail } from 'lucide-react';
+import { MapPin, Waves, Wifi, ChevronRight, ChevronLeft, X, Baby, Shield, Microwave, Coffee, Refrigerator, WashingMachine, Maximize2, Phone, Crosshair, Tv, Snowflake, Clock, DoorClosed, CalendarX, DollarSign, PawPrint, Cigarette, CalendarDays } from 'lucide-react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { translations } from './translations';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
 import Activities from './pages/Activities';
-import { db } from './firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 function AppContent() {
   const { language } = useLanguage();
@@ -14,11 +12,6 @@ function AppContent() {
   const [isMapFullscreen, setIsMapFullscreen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
-  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
-  const [email, setEmail] = useState('');
-  const [isSubscribed, setIsSubscribed] = useState(false);
-  const [emailError, setEmailError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Add scroll animation
   useEffect(() => {
@@ -41,63 +34,6 @@ function AppContent() {
 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // Check if user has already subscribed
-  useEffect(() => {
-    const hasSubscribed = localStorage.getItem('hasSubscribed');
-    if (!hasSubscribed) {
-      const timer = setTimeout(() => {
-        setShowSubscriptionModal(true);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, []);
-
-  // Email validation function
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return emailRegex.test(email);
-  };
-
-  const handleSubscribe = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setEmailError(null);
-
-    // Validate email
-    if (!email.trim()) {
-      setEmailError(translations.emailRequired?.[language] as string || 'Email is required');
-      return;
-    }
-
-    if (!validateEmail(email)) {
-      setEmailError(translations.emailInvalid?.[language] as string || 'Please enter a valid email address');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      // Add the email to Firestore
-      await addDoc(collection(db, 'subscribers'), {
-        email: email.trim().toLowerCase(),
-        timestamp: serverTimestamp(),
-        language: language
-      });
-      
-      setIsSubscribed(true);
-      localStorage.setItem('hasSubscribed', 'true');
-      
-      setTimeout(() => {
-        setShowSubscriptionModal(false);
-        setIsSubscribed(false);
-        setEmail('');
-        setIsSubmitting(false);
-      }, 2000);
-    } catch (error) {
-      console.error('Error adding subscriber:', error);
-      setEmailError(translations.subscriptionError?.[language] as string || 'Failed to subscribe. Please try again.');
-      setIsSubmitting(false);
-    }
-  };
 
   const weekDays = translations.weekDays[language] as string[];
   const rooms = translations.rooms[language] as { [key: string]: string };
@@ -792,84 +728,6 @@ function AppContent() {
             </div>
           </div>
         </footer>
-
-        {/* Subscription Modal */}
-        {showSubscriptionModal && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl p-8 max-w-md w-full relative transform transition-all">
-              <button
-                onClick={() => setShowSubscriptionModal(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-6 w-6" />
-              </button>
-              
-              {!isSubscribed ? (
-                <>
-                  <div className="text-center mb-6">
-                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Mail className="h-8 w-8 text-blue-600" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                      {translations.subscribeTitle?.[language] as string || 'Stay Updated!'}
-                    </h3>
-                    <p className="text-gray-600">
-                      {translations.subscribeDesc?.[language] as string || 'Subscribe to receive exclusive promotions and special offers.'}
-                    </p>
-                  </div>
-
-                  <form onSubmit={handleSubscribe} className="space-y-4">
-                    <div>
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => {
-                          setEmail(e.target.value);
-                          setEmailError(null);
-                        }}
-                        placeholder={translations.emailPlaceholder?.[language] as string || 'Enter your email'}
-                        className={`w-full px-4 py-3 rounded-lg border ${
-                          emailError ? 'border-red-500' : 'border-gray-300'
-                        } focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                        required
-                        disabled={isSubmitting}
-                      />
-                      {emailError && (
-                        <p className="mt-2 text-sm text-red-600">{emailError}</p>
-                      )}
-                    </div>
-                    <button
-                      type="submit"
-                      className={`w-full bg-blue-600 text-white py-3 rounded-lg font-semibold transition-colors ${
-                        isSubmitting ? 'opacity-75 cursor-not-allowed' : 'hover:bg-blue-700'
-                      }`}
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting 
-                        ? (translations.subscribing?.[language] as string || 'Subscribing...')
-                        : (translations.subscribeButton?.[language] as string || 'Subscribe')
-                      }
-                    </button>
-                  </form>
-                </>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                    {translations.subscribeSuccess?.[language] as string || 'Thank You!'}
-                  </h3>
-                  <p className="text-gray-600">
-                    {translations.subscribeSuccessDesc?.[language] as string || 'You have been successfully subscribed to our newsletter.'}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     </Router>
   );
