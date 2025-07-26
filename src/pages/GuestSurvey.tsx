@@ -363,6 +363,8 @@ const GuestSurvey: React.FC = () => {
         try {
             // Save survey data to a separate subcollection and update booking flag
             if (booking && booking.apartmentId) {
+                console.log('Starting survey submission for booking:', booking.id);
+                
                 // Create the survey response in the subcollection
                 const surveyResponseData: any = {
                     bookingId: booking.id,
@@ -382,13 +384,17 @@ const GuestSurvey: React.FC = () => {
                     surveyResponseData.guestEmail = booking.guestEmail;
                 }
 
+                console.log('Creating survey response in subcollection...');
                 // Add to the surveyResponses subcollection
                 await addDoc(collection(db, `apartments/${booking.apartmentId}/bookings/${booking.id}/surveyResponses`), surveyResponseData);
+                console.log('Survey response created successfully');
                 
+                console.log('Updating booking to mark survey as completed...');
                 // Update the booking to mark survey as completed
                 await updateDoc(doc(db, `apartments/${booking.apartmentId}/bookings`, booking.id), {
                     surveyCompleted: true
                 });
+                console.log('Booking updated successfully');
             } else {
                 console.error('Missing booking or apartmentId:', { booking });
                 throw new Error('Missing booking information');
