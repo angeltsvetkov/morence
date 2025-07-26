@@ -174,7 +174,14 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
     };
 
     const openEditModal = (testimonial: Testimonial) => {
-        setEditingTestimonial({ ...testimonial });
+        setEditingTestimonial({ 
+            ...testimonial,
+            ratings: testimonial.ratings || {
+                cleanliness: 5,
+                communication: 5,
+                comfort: 5
+            }
+        });
         setIsModalOpen(true);
     };
 
@@ -500,7 +507,7 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
                                                 >
                                                     <Star 
                                                         className={`w-6 h-6 ${
-                                                            rating <= (editingTestimonial ? editingTestimonial.ratings.cleanliness : newTestimonial.ratings.cleanliness)
+                                                            rating <= (editingTestimonial ? (editingTestimonial.ratings?.cleanliness || 5) : newTestimonial.ratings.cleanliness)
                                                                 ? 'text-yellow-400 fill-current' 
                                                                 : 'text-gray-300'
                                                         } hover:text-yellow-400 transition-colors`}
@@ -508,7 +515,7 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
                                                 </button>
                                             ))}
                                             <span className="text-sm text-gray-600 ml-2">
-                                                {editingTestimonial ? editingTestimonial.ratings.cleanliness : newTestimonial.ratings.cleanliness}/5
+                                                {editingTestimonial ? (editingTestimonial.ratings?.cleanliness || 5) : newTestimonial.ratings.cleanliness}/5
                                             </span>
                                         </div>
                                     </div>
@@ -538,7 +545,7 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
                                                 >
                                                     <Star 
                                                         className={`w-6 h-6 ${
-                                                            rating <= (editingTestimonial ? editingTestimonial.ratings.communication : newTestimonial.ratings.communication)
+                                                            rating <= (editingTestimonial ? (editingTestimonial.ratings?.communication || 5) : newTestimonial.ratings.communication)
                                                                 ? 'text-yellow-400 fill-current' 
                                                                 : 'text-gray-300'
                                                         } hover:text-yellow-400 transition-colors`}
@@ -546,7 +553,7 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
                                                 </button>
                                             ))}
                                             <span className="text-sm text-gray-600 ml-2">
-                                                {editingTestimonial ? editingTestimonial.ratings.communication : newTestimonial.ratings.communication}/5
+                                                {editingTestimonial ? (editingTestimonial.ratings?.communication || 5) : newTestimonial.ratings.communication}/5
                                             </span>
                                         </div>
                                     </div>
@@ -576,7 +583,7 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
                                                 >
                                                     <Star 
                                                         className={`w-6 h-6 ${
-                                                            rating <= (editingTestimonial ? editingTestimonial.ratings.comfort : newTestimonial.ratings.comfort)
+                                                            rating <= (editingTestimonial ? (editingTestimonial.ratings?.comfort || 5) : newTestimonial.ratings.comfort)
                                                                 ? 'text-yellow-400 fill-current' 
                                                                 : 'text-gray-300'
                                                         } hover:text-yellow-400 transition-colors`}
@@ -584,7 +591,7 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
                                                 </button>
                                             ))}
                                             <span className="text-sm text-gray-600 ml-2">
-                                                {editingTestimonial ? editingTestimonial.ratings.comfort : newTestimonial.ratings.comfort}/5
+                                                {editingTestimonial ? (editingTestimonial.ratings?.comfort || 5) : newTestimonial.ratings.comfort}/5
                                             </span>
                                         </div>
                                     </div>
