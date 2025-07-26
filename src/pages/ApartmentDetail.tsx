@@ -34,6 +34,8 @@ import {
 } from 'lucide-react';
 import { formatPrice } from '../lib/utils';
 import { Amenity } from '../types';
+import TestimonialsCarousel from '../components/TestimonialsCarousel';
+import OptimizedImage from '../components/ui/optimized-image';
 
 const locales = {
     'en': enUS,
@@ -816,11 +818,30 @@ const ApartmentDetail: React.FC = () => {
         <div className="bg-gray-50">
             {/* Full Viewport Hero Section */}
             {currentHeroImage && (
-                <div className="relative h-screen w-full bg-cover bg-center group overflow-hidden" style={{ backgroundImage: `url(${currentHeroImage})` }}>
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/60">
+                <div 
+                    className="hero-section relative h-screen w-full group overflow-hidden bg-cover bg-center"
+                    style={{ backgroundImage: `url(${currentHeroImage})` }}
+                >
+                    {/* Optimized Hero Image (overlays background for better performance when loaded) */}
+                    <OptimizedImage
+                        src={currentHeroImage}
+                        alt="Apartment hero view"
+                        className="absolute inset-0 w-full h-full object-cover z-0"
+                        priority={true}
+                        placeholder="none"
+                        lazy={false}
+                        onLoad={() => {
+                            // Hide background image once optimized image loads
+                            const heroDiv = document.querySelector('.hero-section');
+                            if (heroDiv) {
+                                (heroDiv as HTMLElement).style.backgroundImage = 'none';
+                            }
+                        }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/60 z-10">
                         {/* Apartment Name - Top Left Corner (conditionally displayed) */}
                         {!apartment.hideNameOnPublicPage && (
-                            <div className="absolute top-6 left-6 md:top-8 md:left-8 z-20">
+                            <div className="absolute top-6 left-6 md:top-8 md:left-8 z-30">
                                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-lg tracking-tight">
                                     {apartmentName}
                                 </h1>
@@ -1713,6 +1734,15 @@ const ApartmentDetail: React.FC = () => {
                 </div>
             )}
 
+            {/* Testimonials Section */}
+            {apartment && (
+                <div className="py-16 sm:py-24 bg-gradient-to-br from-indigo-50 via-white to-blue-50">
+                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <TestimonialsCarousel apartmentId={apartment.id} />
+                    </div>
+                </div>
+            )}
+
             {/* Amenities Section */}
             <div id="amenities-section" className="py-16 sm:py-24 bg-gradient-to-br from-slate-50 via-blue-50/20 to-indigo-50/30">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -2002,10 +2032,12 @@ const ApartmentDetail: React.FC = () => {
                                         className="group relative aspect-[4/3] rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 cursor-pointer"
                                         onClick={() => openLightbox(0)}
                                     >
-                                        <img
+                                        <OptimizedImage
                                             src={apartment.photos[0]}
                                             alt="Main apartment view"
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                            priority={true}
+                                            placeholder="skeleton"
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                         <div className="absolute bottom-4 left-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -2032,10 +2064,12 @@ const ApartmentDetail: React.FC = () => {
                                         className="group relative aspect-[4/3] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
                                         onClick={() => openLightbox(index + 1)}
                                     >
-                                        <img
+                                        <OptimizedImage
                                             src={photo}
                                             alt={`Apartment view ${index + 2}`}
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                            placeholder="skeleton"
+                                            lazy={true}
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                         

@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Shimmer animation for loading images */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s infinite;
+}
+
 /* Reset margins for apartment pages */
 body.apartment-header-hidden,
 body.apartment-header-visible {

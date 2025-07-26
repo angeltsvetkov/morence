@@ -51,7 +51,8 @@ import {
     ApartmentPricingTab,
     ApartmentShareTab,
     ApartmentCalendarTab,
-    ApartmentFeedbackTab
+    ApartmentFeedbackTab,
+    ApartmentTestimonialsTab
 } from '../../components/admin/apartment-edit';
 
 const storage = getStorage();
@@ -224,7 +225,7 @@ const ApartmentEditAdmin: React.FC = () => {
         });
     };
 
-    const [view, setView] = useState<'details' | 'amenities' | 'calendar' | 'pricing' | 'gallery' | 'share' | 'feedback'>('details');
+    const [view, setView] = useState<'details' | 'amenities' | 'calendar' | 'pricing' | 'gallery' | 'share' | 'feedback' | 'testimonials'>('details');
     const [formLanguage, setFormLanguage] = useState<'bg' | 'en'>('bg');
     const [isRentalModalOpen, setIsRentalModalOpen] = useState(false);
     const [selectedSlot, setSelectedSlot] = useState<{ start: Date; end: Date } | null>(null);
@@ -918,6 +919,7 @@ const ApartmentEditAdmin: React.FC = () => {
                 <button onClick={() => setView('pricing')} className={`px-4 py-2 ${view === 'pricing' ? 'border-b-2 border-blue-500' : ''}`}>{t('pricing')}</button>
                 <button onClick={() => setView('calendar')} className={`px-4 py-2 ${view === 'calendar' ? 'border-b-2 border-blue-500' : ''}`}>{t('calendarAndBookings')}</button>
                 <button onClick={() => setView('feedback')} className={`px-4 py-2 ${view === 'feedback' ? 'border-b-2 border-blue-500' : ''}`}>{t('feedback')}</button>
+                <button onClick={() => setView('testimonials')} className={`px-4 py-2 ${view === 'testimonials' ? 'border-b-2 border-blue-500' : ''}`}>{t('testimonials')}</button>
                 <button onClick={() => setView('share')} className={`px-4 py-2 ${view === 'share' ? 'border-b-2 border-blue-500' : ''}`}>{t('share')}</button>
             </div>
             {view === 'details' && (
@@ -1004,6 +1006,13 @@ const ApartmentEditAdmin: React.FC = () => {
                     setFormLanguage={setFormLanguage as (lang: 'bg' | 'en') => void}
                     apartment={apartment}
                     showConfirmation={showConfirmation}
+                />
+            )}
+            {view === 'testimonials' && (
+                <ApartmentTestimonialsTab
+                    apartmentId={apartment?.id || ''}
+                    formLanguage={formLanguage as 'bg' | 'en'}
+                    setFormLanguage={setFormLanguage as (lang: 'bg' | 'en') => void}
                 />
             )}
             {view === 'share' && (

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../../hooks/useLanguage';
+import OptimizedImage from '../ui/optimized-image';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const Gallery: React.FC = () => {
@@ -56,10 +57,13 @@ const Gallery: React.FC = () => {
                 className="relative group overflow-hidden rounded-lg cursor-pointer"
                 onClick={() => handleImageClick(photo.path)}
               >
-                <img
+                <OptimizedImage
                   src={photo.path}
                   alt={`${t('galleryTitle')} ${index + 1}`}
                   className="w-full h-48 object-cover transform group-hover:scale-110 transition-transform duration-300"
+                  placeholder="skeleton"
+                  lazy={true}
+                  height={192} // h-48 = 192px
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300 flex items-center justify-center">
                   <p className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">{t('clickToView')}</p>

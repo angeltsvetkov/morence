@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "../../ui/dropdown-menu";
 import { GalleryTabProps } from './types';
+import OptimizedImage from '../../ui/optimized-image';
 
 interface ApartmentGalleryTabProps extends GalleryTabProps {
     handleOnDragEnd: (result: DropResult) => void;
@@ -80,7 +81,14 @@ const ApartmentGalleryTab: React.FC<ApartmentGalleryTabProps> = ({
                                             {...provided.dragHandleProps}
                                             className={`relative group bg-gray-100 rounded-lg overflow-hidden ${currentApartmentData.heroImage === item.url ? 'border-4 border-yellow-400' : item.file ? 'border-4 border-dashed border-blue-400' : ''}`}
                                         >
-                                            <img src={item.url} className="w-full h-40 object-cover" alt="Apartment" />
+                                            <OptimizedImage 
+                                                src={item.url} 
+                                                className="w-full h-40 object-cover" 
+                                                alt="Apartment"
+                                                placeholder="skeleton"
+                                                lazy={false} // Admin images load immediately
+                                                height={160} // h-40 = 160px
+                                            />
                                             <div className="absolute top-2 left-2 flex items-center gap-x-1 z-10">
                                                 {currentApartmentData.heroImage === item.url && (
                                                     <div className="bg-yellow-400 p-1 rounded-full">

@@ -39,6 +39,20 @@ export interface SurveyResponse {
     responseLanguage?: string; // The language the survey was submitted in
 }
 
+export interface Testimonial {
+    id: string;
+    text: { [key in 'bg' | 'en']: string };
+    guestType: { [key in 'bg' | 'en']: string }; // e.g., "Family with children", "Business traveler", etc.
+    ratings?: {
+        cleanliness: number; // 1-5 чистота
+        communication: number; // 1-5 комуникация с домакина  
+        comfort: number; // 1-5 комфорт
+    };
+    order: number;
+    isActive: boolean;
+    createdAt: Date;
+}
+
 export interface Booking {
     id: string;
     apartmentId: string;
