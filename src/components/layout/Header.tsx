@@ -108,7 +108,7 @@ const Header = () => {
 
   return (
     <>
-      <header className={`bg-white/80 backdrop-blur-lg border-b border-white/20 shadow-lg shadow-black/5 fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+      <header className={`hidden sm:block bg-white/80 backdrop-blur-lg border-b border-white/20 shadow-lg shadow-black/5 fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
           <Link to="/" className="group">
             <div className="relative">
