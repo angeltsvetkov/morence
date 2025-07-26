@@ -8,6 +8,8 @@ import { db } from '../../../firebase';
 import { Testimonial } from '../../../types';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { Plus, Edit, Trash2, Move, Quote, Star } from 'lucide-react';
+import CountryPicker from '../../ui/country-picker';
+import { getCountryByCode } from '../../../utils/countries';
 import Modal from '../../common/Modal';
 
 interface ApartmentTestimonialsTabProps {
@@ -29,6 +31,7 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
     const [newTestimonial, setNewTestimonial] = useState({
         text: { bg: '', en: '' },
         guestType: { bg: '', en: '' },
+        nationality: '',
         ratings: {
             cleanliness: 5,
             communication: 5,
@@ -79,6 +82,7 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
             setNewTestimonial({
                 text: { bg: '', en: '' },
                 guestType: { bg: '', en: '' },
+                nationality: '',
                 ratings: {
                     cleanliness: 5,
                     communication: 5,
@@ -103,6 +107,7 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
                     await updateDoc(doc(db, `apartments/${apartmentId}/testimonials`, editingTestimonial.id), {
             text: editingTestimonial.text,
             guestType: editingTestimonial.guestType,
+            nationality: editingTestimonial.nationality,
             ratings: editingTestimonial.ratings,
             isActive: editingTestimonial.isActive
         });
@@ -176,6 +181,7 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
     const openEditModal = (testimonial: Testimonial) => {
         setEditingTestimonial({ 
             ...testimonial,
+            nationality: testimonial.nationality || '',
             ratings: testimonial.ratings || {
                 cleanliness: 5,
                 communication: 5,
@@ -190,6 +196,7 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
         setNewTestimonial({
             text: { bg: '', en: '' },
             guestType: { bg: '', en: '' },
+            nationality: '',
             ratings: {
                 cleanliness: 5,
                 communication: 5,
@@ -312,35 +319,49 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
                                                                                                         <blockquote className="text-gray-900 mb-2 italic">
                                                 "{formLanguage === 'bg' ? testimonial.text.bg : testimonial.text.en}"
                                             </blockquote>
-                                            <div className="flex items-center gap-4 mb-2">
-                                                <div className="flex items-center gap-1">
-                                                    <span className="text-xs text-gray-500">{t('cleanliness')}:</span>
-                                                    <div className="flex">
-                                                        {[...Array(5)].map((_, i) => (
-                                                            <Star key={i} className={`w-3 h-3 ${i < (testimonial.ratings?.cleanliness || 5) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <span className="text-xs text-gray-500">{t('communication')}:</span>
-                                                    <div className="flex">
-                                                        {[...Array(5)].map((_, i) => (
-                                                            <Star key={i} className={`w-3 h-3 ${i < (testimonial.ratings?.communication || 5) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <span className="text-xs text-gray-500">{t('comfort')}:</span>
-                                                    <div className="flex">
-                                                        {[...Array(5)].map((_, i) => (
-                                                            <Star key={i} className={`w-3 h-3 ${i < (testimonial.ratings?.comfort || 5) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <p className="text-sm text-gray-600">
-                                                — {formLanguage === 'bg' ? testimonial.guestType.bg : testimonial.guestType.en}
-                                            </p>
+                                                                        <div className="flex items-center gap-4 mb-2">
+                                <div className="flex items-center gap-1">
+                                    <span className="text-xs text-gray-500">{t('cleanliness')}:</span>
+                                    <div className="flex">
+                                        {[...Array(5)].map((_, i) => (
+                                            <Star key={i} className={`w-3 h-3 ${i < (testimonial.ratings?.cleanliness || 5) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    <span className="text-xs text-gray-500">{t('communication')}:</span>
+                                    <div className="flex">
+                                        {[...Array(5)].map((_, i) => (
+                                            <Star key={i} className={`w-3 h-3 ${i < (testimonial.ratings?.communication || 5) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    <span className="text-xs text-gray-500">{t('comfort')}:</span>
+                                    <div className="flex">
+                                        {[...Array(5)].map((_, i) => (
+                                            <Star key={i} className={`w-3 h-3 ${i < (testimonial.ratings?.comfort || 5) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                            <p className="text-sm text-gray-600">
+                                — {formLanguage === 'bg' ? testimonial.guestType.bg : testimonial.guestType.en}
+                                {testimonial.nationality && (
+                                    <span className="text-xs text-gray-500 ml-2 flex items-center gap-1">
+                                        {(() => {
+                                            const country = getCountryByCode(testimonial.nationality);
+                                            return country ? (
+                                                <>
+                                                    {country.flag} {country.name[formLanguage as 'bg' | 'en']}
+                                                </>
+                                            ) : (
+                                                `🌍 ${testimonial.nationality}`
+                                            );
+                                        })()}
+                                    </span>
+                                )}
+                            </p>
                                                         </div>
 
                                                         {/* Actions */}
@@ -476,6 +497,35 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
                                     className="mt-1"
                                     placeholder={t('enterGuestType')}
                                 />
+                            </div>
+
+                            {/* Nationality */}
+                            <div>
+                                <Label htmlFor="nationality" className="text-sm font-medium text-gray-900">
+                                    {t('guestNationality')}
+                                </Label>
+                                <div className="mt-1">
+                                    <CountryPicker
+                                        value={editingTestimonial ? editingTestimonial.nationality : newTestimonial.nationality}
+                                        onChange={(countryCode) => {
+                                            if (editingTestimonial) {
+                                                setEditingTestimonial(prev => prev ? {
+                                                    ...prev,
+                                                    nationality: countryCode
+                                                } : null);
+                                            } else {
+                                                setNewTestimonial(prev => ({
+                                                    ...prev,
+                                                    nationality: countryCode
+                                                }));
+                                            }
+                                        }}
+                                        placeholder={t('selectCountry')}
+                                        language={t('language') === 'bg' ? 'bg' : 'en'}
+                                        className="w-full"
+                                    />
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1">{t('nationalityHint')}</p>
                             </div>
 
                             {/* Ratings */}

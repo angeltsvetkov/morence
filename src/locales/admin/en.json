@@ -455,5 +455,9 @@
   "ratings": "Ratings",
   "cleanliness": "Cleanliness",
   "communication": "Communication",
-  "comfort": "Comfort"
+  "comfort": "Comfort",
+  "guestNationality": "Guest Nationality",
+  "enterNationality": "e.g., Germany, France, USA...",
+  "nationalityHint": "Select the guest's country from the list (optional)",
+  "selectCountry": "Select a country..."
 }

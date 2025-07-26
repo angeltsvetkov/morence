@@ -4,6 +4,7 @@ import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Testimonial } from '../types';
 import { ChevronLeft, ChevronRight, Quote, Star } from 'lucide-react';
+import { getCountryByCode } from '../utils/countries';
 
 interface TestimonialsCarouselProps {
     apartmentId: string;
@@ -89,9 +90,10 @@ const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({ apartmentId
 
     const currentTestimonial = testimonials[currentIndex];
     
-    // Provide default ratings for testimonials created before ratings feature
+    // Provide defaults for testimonials created before ratings/nationality features
     const testimonialWithRatings = {
         ...currentTestimonial,
+        nationality: currentTestimonial.nationality || '',
         ratings: currentTestimonial.ratings || {
             cleanliness: 5,
             communication: 5,
@@ -169,6 +171,24 @@ const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({ apartmentId
                             <div className="text-lg font-semibold text-gray-900 mb-1">
                                 {language === 'bg' ? testimonialWithRatings.guestType.bg : testimonialWithRatings.guestType.en}
                             </div>
+                            {testimonialWithRatings.nationality && (
+                                <div className="text-base text-blue-600 font-semibold mb-2 flex items-center justify-center gap-2 bg-blue-50 px-4 py-2 rounded-full border border-blue-200">
+                                    {(() => {
+                                        const country = getCountryByCode(testimonialWithRatings.nationality);
+                                        return country ? (
+                                            <>
+                                                <span className="text-xl">{country.flag}</span>
+                                                <span className="text-blue-700">{country.name[language as 'bg' | 'en']}</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="text-xl">🌍</span>
+                                                <span className="text-blue-700">{testimonialWithRatings.nationality}</span>
+                                            </>
+                                        );
+                                    })()}
+                                </div>
+                            )}
                             <div className="text-sm text-gray-600">
                                 {t('verifiedGuest')}
                             </div>

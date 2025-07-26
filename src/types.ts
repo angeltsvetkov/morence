@@ -43,6 +43,7 @@ export interface Testimonial {
     id: string;
     text: { [key in 'bg' | 'en']: string };
     guestType: { [key in 'bg' | 'en']: string }; // e.g., "Family with children", "Business traveler", etc.
+    nationality: string; // e.g., "Germany", "France", "Bulgaria", etc.
     ratings?: {
         cleanliness: number; // 1-5 чистота
         communication: number; // 1-5 комуникация с домакина  

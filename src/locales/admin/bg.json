@@ -455,5 +455,9 @@
   "ratings": "Оценки",
   "cleanliness": "Чистота",
   "communication": "Комуникация",
-  "comfort": "Комфорт"
+  "comfort": "Комфорт",
+  "guestNationality": "Националност на госта",
+  "enterNationality": "напр. Германия, Франция, САЩ...",
+  "nationalityHint": "Изберете страната на госта от списъка (по желание)",
+  "selectCountry": "Изберете страна..."
 } 

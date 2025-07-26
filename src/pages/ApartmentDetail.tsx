@@ -818,25 +818,14 @@ const ApartmentDetail: React.FC = () => {
         <div className="bg-gray-50">
             {/* Full Viewport Hero Section */}
             {currentHeroImage && (
-                <div 
-                    className="hero-section relative h-screen w-full group overflow-hidden bg-cover bg-center"
-                    style={{ backgroundImage: `url(${currentHeroImage})` }}
-                >
-                    {/* Optimized Hero Image (overlays background for better performance when loaded) */}
-                    <OptimizedImage
+                <div className="hero-section relative h-screen w-full group overflow-hidden">
+                    {/* Direct hero image with immediate loading */}
+                    <img
                         src={currentHeroImage}
                         alt="Apartment hero view"
                         className="absolute inset-0 w-full h-full object-cover z-0"
-                        priority={true}
-                        placeholder="none"
-                        lazy={false}
-                        onLoad={() => {
-                            // Hide background image once optimized image loads
-                            const heroDiv = document.querySelector('.hero-section');
-                            if (heroDiv) {
-                                (heroDiv as HTMLElement).style.backgroundImage = 'none';
-                            }
-                        }}
+                        loading="eager"
+                        decoding="async"
                     />
                     <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/60 z-10">
                         {/* Apartment Name - Top Left Corner (conditionally displayed) */}
