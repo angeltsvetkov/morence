@@ -831,8 +831,81 @@ const ApartmentDetail: React.FC = () => {
 
 
 
-                        {/* Left Side Cards Container */}
-                        <div className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 space-y-6">
+                        {/* Mobile Pricing Card - Centered Top */}
+                        <div className="block sm:hidden absolute top-8 left-1/2 -translate-x-1/2 w-80 max-w-[calc(100vw-2rem)] z-30">
+                            {apartment?.pricing?.perNight && (
+                                <div className="group/price relative">
+                                    {/* Animated background glow */}
+                                    <div className="absolute -inset-4 bg-gradient-to-r from-cyan-400/20 via-blue-500/20 to-purple-600/20 rounded-3xl blur-2xl opacity-75 group-hover/price:opacity-100 group-hover/price:scale-110 transition-all duration-500"></div>
+
+                                    {/* Main sleek card */}
+                                    <div className="relative bg-gradient-to-br from-white/15 via-white/10 to-white/5 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl hover:shadow-cyan-500/25 transition-all duration-500 overflow-hidden group-hover/price:scale-105">
+                                        {/* Animated border gradient */}
+                                        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/0 via-cyan-400/30 to-purple-500/0 opacity-0 group-hover/price:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
+
+                                        {/* Content */}
+                                        <div className="relative px-6 py-5">
+                                            {/* Price label */}
+                                            <div className="text-xs font-semibold text-cyan-100 tracking-wider uppercase mb-2 opacity-90 text-center">
+                                                {t('lSTBd7fnvyXx34YwC5tL')}
+                                            </div>
+
+                                            {/* Main price - Dual currency display */}
+                                            <div className="relative">
+                                                {/* Price highlight background */}
+                                                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-cyan-400/20 rounded-xl blur-sm"></div>
+                                                <div className="relative text-center">
+                                                    {language === 'bg' ? (
+                                                        <>
+                                                            {/* Primary: BGN */}
+                                                            <div className="text-4xl font-black tracking-tight text-white drop-shadow-2xl px-4 py-2">
+                                                                {apartment.pricing.perNight.bg} <span className="text-2xl font-bold text-cyan-200">лв</span>
+                                                            </div>
+                                                            {/* Secondary: EUR */}
+                                                            {apartment.pricing.perNight.en && (
+                                                                <div className="text-sm font-semibold text-cyan-100 opacity-80 mt-1">
+                                                                    ≈ €{apartment.pricing.perNight.en}
+                                                                </div>
+                                                            )}
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            {/* Primary: EUR */}
+                                                            <div className="text-4xl font-black tracking-tight text-white drop-shadow-2xl px-4 py-2">
+                                                                €{apartment.pricing.perNight.en}
+                                                            </div>
+                                                            {/* Secondary: BGN */}
+                                                            {apartment.pricing.perNight.bg && (
+                                                                <div className="text-sm font-semibold text-cyan-100 opacity-80 mt-1">
+                                                                    ≈ {apartment.pricing.perNight.bg} лв
+                                                                </div>
+                                                            )}
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Minimum nights info */}
+                                            {apartment.minimumNights && (
+                                                <div className="mt-4 text-center">
+                                                    <div className="inline-flex items-center bg-white/15 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20">
+                                                        <span className="text-sm font-medium text-cyan-100">
+                                                            {t('minimumStay')}: {apartment.minimumNights} {apartment.minimumNights === 1 ? t('night') : t('nights')}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Bottom accent */}
+                                            <div className="mt-4 h-0.5 bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent rounded-full"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Left Side Cards Container - Hidden on Mobile */}
+                        <div className="hidden sm:block absolute left-4 md:left-8 top-1/2 -translate-y-1/2 space-y-6">
                             {/* Pricing Card */}
                             {apartment?.pricing?.perNight && (
                                 <div className="group/price relative max-w-xs">
@@ -1324,6 +1397,100 @@ const ApartmentDetail: React.FC = () => {
                             </div>
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* Mobile Cards Section - Hidden on Desktop */}
+            {apartment && (
+                <div className="block sm:hidden bg-gradient-to-b from-gray-50 to-white py-8">
+                    <div className="max-w-4xl mx-auto px-4">
+
+                        {/* Info Tiles for Mobile */}
+                        <div className="mb-6">
+                            <h2 className="text-xl font-bold text-gray-900 mb-4 text-center">{t('apartmentInfo')}</h2>
+                            <div className="grid grid-cols-2 gap-4">
+                                {/* Max Guests */}
+                                {apartment.maxGuests && (
+                                    <div className="bg-gradient-to-br from-purple-600 to-blue-600 p-4 rounded-xl text-white text-center">
+                                        <Users className="w-8 h-8 mx-auto mb-2 text-purple-200" />
+                                        <div className="text-2xl font-bold">{apartment.maxGuests}</div>
+                                        <div className="text-xs text-purple-100">
+                                            {language === 'bg' ? 'Гости' : 'Guests'}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Floor Info */}
+                                {typeof apartment.floor !== 'undefined' && (
+                                    <div className="bg-gradient-to-br from-orange-600 to-red-600 p-4 rounded-xl text-white text-center">
+                                        <Building className="w-8 h-8 mx-auto mb-2 text-orange-200" />
+                                        <div className="text-lg font-bold">
+                                            {apartment.floor === 0 ? (
+                                                language === 'bg' ? 'Партер' : 'Ground'
+                                            ) : (
+                                                `${apartment.floor}${language === 'en' ? getOrdinalSuffix(apartment.floor) : '-ти'}`
+                                            )}
+                                        </div>
+                                        <div className="text-xs text-orange-100">
+                                            {language === 'bg' ? 'Етаж' : 'Floor'}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Pets Policy */}
+                                <div className={`p-4 rounded-xl text-white text-center ${
+                                    arePetsAllowed() 
+                                        ? 'bg-gradient-to-br from-green-600 to-emerald-600' 
+                                        : 'bg-gradient-to-br from-red-600 to-rose-600'
+                                }`}>
+                                    {arePetsAllowed() ? (
+                                        <Dog className="w-8 h-8 mx-auto mb-2 text-green-200" />
+                                    ) : (
+                                        <div className="relative w-8 h-8 mx-auto mb-2">
+                                            <Dog className="w-8 h-8 text-white/60" />
+                                            <Ban className="absolute inset-0 w-8 h-8 text-red-300" />
+                                        </div>
+                                    )}
+                                    <div className="text-sm font-bold">
+                                        {arePetsAllowed() ? (
+                                            language === 'bg' ? 'Разрешени' : 'Allowed'
+                                        ) : (
+                                            language === 'bg' ? 'Забранени' : 'Not Allowed'
+                                        )}
+                                    </div>
+                                    <div className="text-xs opacity-80">
+                                        {language === 'bg' ? 'Домашни любимци' : 'Pets'}
+                                    </div>
+                                </div>
+
+                                {/* Smoking Policy */}
+                                <div className={`p-4 rounded-xl text-white text-center ${
+                                    isSmokingAllowed() 
+                                        ? 'bg-gradient-to-br from-blue-600 to-indigo-600' 
+                                        : 'bg-gradient-to-br from-orange-600 to-amber-600'
+                                }`}>
+                                    {isSmokingAllowed() ? (
+                                        <Cigarette className="w-8 h-8 mx-auto mb-2 text-blue-200" />
+                                    ) : (
+                                        <div className="relative w-8 h-8 mx-auto mb-2">
+                                            <Cigarette className="w-8 h-8 text-white/60" />
+                                            <Ban className="absolute inset-0 w-8 h-8 text-orange-300" />
+                                        </div>
+                                    )}
+                                    <div className="text-sm font-bold">
+                                        {isSmokingAllowed() ? (
+                                            language === 'bg' ? 'Разрешено' : 'Allowed'
+                                        ) : (
+                                            language === 'bg' ? 'Забранено' : 'Prohibited'
+                                        )}
+                                    </div>
+                                    <div className="text-xs opacity-80">
+                                        {language === 'bg' ? 'Пушене' : 'Smoking'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
 

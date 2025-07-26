@@ -1,7 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
-import Home from './pages/HomePage';
 import GuestInstructions from './pages/GuestInstructions';
 import Places from './pages/Places';
 import Admin from './pages/Admin';
@@ -23,7 +22,6 @@ const AppContent = () => {
       <main className="flex-grow">
         <Routes>
           <Route path="/" element={<DefaultApartmentRedirect />} />
-          <Route path="/home" element={<Home />} />
           <Route path="/apartments/:slug" element={<ApartmentDetail />} />
           <Route path="/apartments/:apartmentId/calendar" element={<ApartmentCalendar />} />
           <Route path="/places" element={<Places />} />
