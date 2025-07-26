@@ -2,6 +2,272 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Reset margins for apartment pages */
+body.apartment-header-hidden,
+body.apartment-header-visible {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Header visibility control for apartment pages */
+.apartment-header-hidden header {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.3s ease-in-out,
+              backdrop-filter 0.3s ease-in-out,
+              background 0.3s ease-in-out,
+              box-shadow 0.3s ease-in-out;
+}
+
+.apartment-header-visible header {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.3s ease-in-out,
+              backdrop-filter 0.3s ease-in-out,
+              background 0.3s ease-in-out,
+              box-shadow 0.3s ease-in-out;
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Ensure header is properly positioned on apartment pages */
+body.apartment-header-hidden header,
+body.apartment-header-visible header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+}
+
+/* Prevent header from affecting layout when on apartment pages */
+body.apartment-header-hidden main,
+body.apartment-header-visible main {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Ensure hero section fills entire viewport on apartment pages */
+body.apartment-header-hidden .h-screen,
+body.apartment-header-visible .h-screen {
+  height: 100vh !important;
+  margin-top: 0 !important;
+}
+
+/* Smooth scroll behavior for the scroll indicator */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Modern Calendar Styling */
+.calendar-container .rbc-calendar {
+  font-family: 'Inter', system-ui, sans-serif;
+  border: none;
+  border-radius: 0;
+}
+
+.calendar-container .rbc-month-view {
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.calendar-container .rbc-header {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  color: #334155;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 16px 8px;
+  border: none;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+}
+
+.calendar-container .rbc-header:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 20%;
+  height: 60%;
+  width: 1px;
+  background: #cbd5e1;
+}
+
+.calendar-container .rbc-month-row {
+  border: none;
+  margin-bottom: 4px;
+}
+
+.calendar-container .rbc-date-cell {
+  padding: 8px;
+  min-height: 80px;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.calendar-container .rbc-date-cell:hover {
+  background-color: #f1f5f9 !important;
+  transform: translateY(-1px);
+}
+
+.calendar-container .rbc-off-range-bg {
+  background-color: #f8fafc;
+  color: #94a3b8;
+}
+
+.calendar-container .rbc-today {
+  background-color: #dbeafe !important;
+  border: 2px solid #3b82f6 !important;
+  font-weight: 600;
+}
+
+.calendar-container .rbc-event {
+  background: none !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 2px 6px !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  margin: 1px !important;
+}
+
+.calendar-container .rbc-event.rbc-selected {
+  background-color: #dc2626 !important;
+}
+
+.calendar-container .rbc-date-cell > a {
+  color: #374151;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.calendar-container .rbc-date-cell > a:hover {
+  background-color: #e2e8f0;
+  color: #1e293b;
+}
+
+.calendar-container .rbc-month-view .rbc-row {
+  min-height: 80px;
+}
+
+/* Custom scrollbar for calendar */
+.calendar-container ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.calendar-container ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.calendar-container ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.calendar-container ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Animation for calendar transitions */
+.calendar-container {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+ 
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+ 
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+ 
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+ 
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+ 
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+ 
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+ 
+    --radius: 0.5rem;
+  }
+ 
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+ 
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+ 
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+ 
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+ 
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+ 
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+ 
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+ 
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+ 
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+}
+ 
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
 html {
   scroll-behavior: smooth;
 }
