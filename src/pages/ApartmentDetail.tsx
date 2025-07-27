@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { formatPrice } from '../lib/utils';
 import { Amenity } from '../types';
+import SocialMetaTags from '../components/SocialMetaTags';
 import TestimonialsCarousel from '../components/TestimonialsCarousel';
 import OptimizedImage from '../components/ui/optimized-image';
 
