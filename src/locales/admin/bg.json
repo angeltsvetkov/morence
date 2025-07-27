@@ -461,5 +461,21 @@
   "nationalityHint": "Изберете страната на госта от списъка (по желание)",
   "selectCountry": "Изберете страна...",
   "processing": "Обработка",
-  "heicSupportInfo": "HEIC/HEIF изображения (iPhone формат) ще бъдат автоматично конвертирани в JPEG"
+  "heicSupportInfo": "HEIC/HEIF изображения (iPhone формат) ще бъдат автоматично конвертирани в JPEG",
+  "socialSharing": "Споделяне в социални мрежи",
+  "socialSharingSettings": "Конфигурирайте как се показва апартаментът при споделяне",
+  "socialShareImage": "Изображение за споделяне",
+  "socialShareImageDescription": "Изберете изображението, което ще се показва, когато някой сподели линк към апартамента ви в социалните мрежи.",
+  "currentSelection": "Текущо избрано",
+  "thisImageWillBeShown": "Това изображение ще се показва в прегледите на социалните мрежи",
+  "socialShareTitle": "Заглавие за споделяне",
+  "socialShareTitleDescription": "Заглавието, което се появява, когато апартаментът ви се споделя в социалните мрежи.",
+  "enterSocialTitle": "Въведете персонализирано заглавие за споделяне...",
+  "socialShareDescription": "Описание за споделяне",
+  "socialShareDescriptionDescription": "Кратко описание, което се появява под заглавието при споделяне (макс. 160 символа).",
+  "enterSocialDescription": "Въведете персонализирано описание за споделяне...",
+  "defaultWillBeUsed": "Ще се използва по подразбиране",
+  "socialSharePreview": "Преглед в социални мрежи",
+  "socialSharePreviewDescription": "Така ще изглежда апартаментът ви, когато се споделя в социалните мрежи.",
+  "supportedPlatforms": "Поддържани платформи"
 } 

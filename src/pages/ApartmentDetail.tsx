@@ -816,6 +816,9 @@ const ApartmentDetail: React.FC = () => {
 
     return (
         <div className="bg-gray-50">
+            {/* Social Media Meta Tags */}
+            {apartment && <SocialMetaTags apartment={apartment} />}
+            
             {/* Full Viewport Hero Section */}
             {currentHeroImage && (
                 <div className="hero-section relative h-screen w-full group overflow-hidden">

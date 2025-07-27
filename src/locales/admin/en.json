@@ -461,5 +461,21 @@
   "nationalityHint": "Select the guest's country from the list (optional)",
   "selectCountry": "Select a country...",
   "processing": "Processing",
-  "heicSupportInfo": "HEIC/HEIF images (iPhone format) will be automatically converted to JPEG"
+  "heicSupportInfo": "HEIC/HEIF images (iPhone format) will be automatically converted to JPEG",
+  "socialSharing": "Social Sharing",
+  "socialSharingSettings": "Configure how your apartment appears when shared",
+  "socialShareImage": "Social Share Image",
+  "socialShareImageDescription": "Select the image that will appear when someone shares a link to your apartment on social media.",
+  "currentSelection": "Currently Selected",
+  "thisImageWillBeShown": "This image will be shown in social media previews",
+  "socialShareTitle": "Social Share Title",
+  "socialShareTitleDescription": "The title that appears when your apartment is shared on social media.",
+  "enterSocialTitle": "Enter custom title for social sharing...",
+  "socialShareDescription": "Social Share Description",
+  "socialShareDescriptionDescription": "A brief description that appears below the title when shared (max 160 characters).",
+  "enterSocialDescription": "Enter custom description for social sharing...",
+  "defaultWillBeUsed": "Default will be used",
+  "socialSharePreview": "Social Media Preview",
+  "socialSharePreviewDescription": "This is how your apartment will appear when shared on social media platforms.",
+  "supportedPlatforms": "Supported Platforms"
 }

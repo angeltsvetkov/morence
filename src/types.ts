@@ -116,4 +116,9 @@ export interface Apartment {
     };
     surveyQuestions?: SurveyQuestion[];
     surveyLanguageMode?: 'multilingual' | 'bulgarian' | 'english';
+    socialSharing?: {
+        ogImage?: string;
+        ogTitle?: { bg?: string; en?: string };
+        ogDescription?: { bg?: string; en?: string };
+    };
 }

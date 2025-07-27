@@ -1025,6 +1025,11 @@ const ApartmentEditAdmin: React.FC = () => {
             )}
             {view === 'share' && (
                 <ApartmentShareTab
+                    currentApartmentData={currentApartmentData}
+                    setCurrentApartmentData={setCurrentApartmentData}
+                    galleryItems={galleryItems}
+                    formLanguage={formLanguage as 'bg' | 'en'}
+                    setFormLanguage={setFormLanguage as (lang: 'bg' | 'en') => void}
                     slug={slug}
                     handleShare={handleShare}
                     handleCopyUrl={handleCopyUrl}
