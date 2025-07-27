@@ -459,5 +459,7 @@
   "guestNationality": "Guest Nationality",
   "enterNationality": "e.g., Germany, France, USA...",
   "nationalityHint": "Select the guest's country from the list (optional)",
-  "selectCountry": "Select a country..."
+  "selectCountry": "Select a country...",
+  "processing": "Processing",
+  "heicSupportInfo": "HEIC/HEIF images (iPhone format) will be automatically converted to JPEG"
 }

@@ -505,7 +505,11 @@ const ApartmentEditAdmin: React.FC = () => {
         if (newImageFiles.length > 0) {
             const uploadPromises = newImageFiles.map(async (item) => {
                 if (!item.file) return null;
-                const storageRef = ref(storage, `apartments/${slugify(currentApartmentData.name?.[formLanguage as 'en' | 'bg'] || 'new-apartment')}/${item.file.name}`);
+                // Use apartment ID for consistent folder structure
+                const apartmentId = apartment.id;
+                const timestamp = Date.now();
+                const fileName = `${timestamp}_${item.file.name}`;
+                const storageRef = ref(storage, `apartments/${apartmentId}/photos/${fileName}`);
                 await uploadBytes(storageRef, item.file);
                 return getDownloadURL(storageRef);
             });
@@ -521,7 +525,9 @@ const ApartmentEditAdmin: React.FC = () => {
 
         const finalPhotoUrls = galleryItems.map(item => {
             if (!item.file) return item.url;
-            const newUrl = uploadedImageUrls.find(url => url.includes(encodeURIComponent(item.file!.name)));
+            // Match by file name in the URL (now includes timestamp prefix)
+            const fileName = item.file!.name;
+            const newUrl = uploadedImageUrls.find(url => url.includes(encodeURIComponent(fileName)));
             return newUrl || item.url;
         });
 
@@ -529,7 +535,8 @@ const ApartmentEditAdmin: React.FC = () => {
         if (finalHeroImage) {
             const heroItem = galleryItems.find(item => item.url === finalHeroImage);
             if (heroItem?.file) {
-                finalHeroImage = uploadedImageUrls.find(url => url.includes(encodeURIComponent(heroItem.file!.name))) || finalHeroImage;
+                const fileName = heroItem.file!.name;
+                finalHeroImage = uploadedImageUrls.find(url => url.includes(encodeURIComponent(fileName))) || finalHeroImage;
             }
         }
 
@@ -538,7 +545,8 @@ const ApartmentEditAdmin: React.FC = () => {
             finalFavouriteImages = finalFavouriteImages.map(favUrl => {
                 const favItem = galleryItems.find(item => item.url === favUrl);
                 if (favItem?.file) {
-                    return uploadedImageUrls.find(url => url.includes(encodeURIComponent(favItem.file!.name))) || favUrl;
+                    const fileName = favItem.file!.name;
+                    return uploadedImageUrls.find(url => url.includes(encodeURIComponent(fileName))) || favUrl;
                 }
                 return favUrl;
             }).filter(url => url !== undefined);

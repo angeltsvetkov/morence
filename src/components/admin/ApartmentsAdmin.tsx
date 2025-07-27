@@ -102,7 +102,10 @@ const ApartmentsAdmin: React.FC = () => {
 
         if (imageFiles && imageFiles.length > 0) {
             const uploadPromises = Array.from(imageFiles).map(async (file) => {
-                const storageRef = ref(storage, `apartments/${newApartmentSlug}/${file.name}`);
+                // For new apartments, use temporary slug initially - will be moved to proper folder later
+                const timestamp = Date.now();
+                const fileName = `${timestamp}_${file.name}`;
+                const storageRef = ref(storage, `apartments/temp/${newApartmentSlug}/photos/${fileName}`);
                 await uploadBytes(storageRef, file);
                 return getDownloadURL(storageRef);
             });
@@ -126,6 +129,11 @@ const ApartmentsAdmin: React.FC = () => {
 
         try {
             const docRef = await addDoc(collection(db, "apartments"), apartmentDataToSave);
+            
+            // TODO: Move photos from temp folder to final apartment ID folder
+            // This would require additional storage operations to move the files
+            // For now, photos will remain in temp folder until user edits the apartment
+            
             closeModal();
             fetchApartments();
             navigate(`/admin/apartments/${newApartmentSlug}`);

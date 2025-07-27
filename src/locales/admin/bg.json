@@ -459,5 +459,7 @@
   "guestNationality": "Националност на госта",
   "enterNationality": "напр. Германия, Франция, САЩ...",
   "nationalityHint": "Изберете страната на госта от списъка (по желание)",
-  "selectCountry": "Изберете страна..."
+  "selectCountry": "Изберете страна...",
+  "processing": "Обработка",
+  "heicSupportInfo": "HEIC/HEIF изображения (iPhone формат) ще бъдат автоматично конвертирани в JPEG"
 } 
