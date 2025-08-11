@@ -7,6 +7,7 @@ import Admin from './pages/Admin';
 import Login from './pages/Login';
 import GuestSurvey from './pages/GuestSurvey';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { AuthProvider } from './contexts/AuthContext';
 import ApartmentDetail from './pages/ApartmentDetail';
 import ApartmentCalendar from './pages/ApartmentCalendar';
 import DefaultApartmentRedirect from './pages/DefaultApartmentRedirect';
@@ -36,14 +37,16 @@ const AppContent = () => {
 
 function App() {
   return (
-    <LanguageProvider>
-      <Router>
-        <Routes>
-          <Route path="/admin/*" element={<Admin />} />
-          <Route path="/*" element={<AppContent />} />
-        </Routes>
-      </Router>
-    </LanguageProvider>
+    <AuthProvider>
+      <LanguageProvider>
+        <Router>
+          <Routes>
+            <Route path="/admin/*" element={<Admin />} />
+            <Route path="/*" element={<AppContent />} />
+          </Routes>
+        </Router>
+      </LanguageProvider>
+    </AuthProvider>
   );
 }
 

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { db } from '../../firebase';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { collection, addDoc, getDocs, doc, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, deleteDoc, query, where } from 'firebase/firestore';
 import Modal from '../common/Modal';
 import { useAdminLanguage } from '../../hooks/useAdminLanguage';
 import { useLanguage } from '../../hooks/useLanguage';
+import { useAuth } from '../../contexts/AuthContext';
 import { Language } from '../../contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "../../components/ui/button";
@@ -16,6 +17,7 @@ const storage = getStorage();
 const ApartmentsAdmin: React.FC = () => {
     const { language } = useLanguage(); // For apartment description display
     const { t } = useAdminLanguage(); // For admin UI translations
+    const { isSuperAdmin, userId } = useAuth();
     const navigate = useNavigate();
     const [apartments, setApartments] = useState<Apartment[]>([]);
 
@@ -24,7 +26,7 @@ const ApartmentsAdmin: React.FC = () => {
         if (typeof apartment.name === 'string') {
             return apartment.name; // Backward compatibility
         }
-        return apartment.name?.[language] || apartment.name?.en || apartment.name?.bg || 'Unnamed Apartment';
+        return apartment.name?.[language as 'bg' | 'en'] || apartment.name?.en || apartment.name?.bg || 'Unnamed Apartment';
     };
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentApartmentData, setCurrentApartmentData] = useState<Partial<Apartment>>({ 
@@ -39,12 +41,24 @@ const ApartmentsAdmin: React.FC = () => {
     const [modalLanguage, setModalLanguage] = useState<Language>('bg');
 
     const fetchApartments = useCallback(async () => {
+        if (!userId) return;
+        
         setLoading(true);
-        const querySnapshot = await getDocs(collection(db, "apartments"));
+        let querySnapshot;
+        
+        if (isSuperAdmin) {
+            // Super admin sees all apartments
+            querySnapshot = await getDocs(collection(db, "apartments"));
+        } else {
+            // Regular users see only their own apartments
+            const q = query(collection(db, "apartments"), where("ownerId", "==", userId));
+            querySnapshot = await getDocs(q);
+        }
+        
         const apts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Apartment));
         setApartments(apts);
         setLoading(false);
-    }, []);
+    }, [userId, isSuperAdmin]);
 
     useEffect(() => {
         fetchApartments();
@@ -92,7 +106,7 @@ const ApartmentsAdmin: React.FC = () => {
     };
 
     const handleSave = async () => {
-        if (!currentApartmentData) return;
+        if (!currentApartmentData || !userId) return;
         setLoading(true);
 
         let photoURLs = currentApartmentData.photos || [];
@@ -125,10 +139,11 @@ const ApartmentsAdmin: React.FC = () => {
             ...currentApartmentData,
             slug: newApartmentSlug,
             photos: photoURLs,
+            ownerId: userId, // Set the current user as the owner
         };
 
         try {
-            const docRef = await addDoc(collection(db, "apartments"), apartmentDataToSave);
+            await addDoc(collection(db, "apartments"), apartmentDataToSave);
             
             // TODO: Move photos from temp folder to final apartment ID folder
             // This would require additional storage operations to move the files

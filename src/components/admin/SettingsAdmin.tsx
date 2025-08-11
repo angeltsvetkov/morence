@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAdminLanguage } from '../../hooks/useAdminLanguage';
 import { useLanguage } from '../../hooks/useLanguage';
+import { useAuth } from '../../contexts/AuthContext';
 import { collection, getDocs, query, where, writeBatch, doc, addDoc, deleteDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import LoadingSpinner from '../common/LoadingSpinner';
@@ -9,6 +10,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import Modal from '../common/Modal';
 import { Amenity } from '../../types';
+import { migrateApartmentOwnership } from '../../scripts/migrateApartmentOwnership';
 import { 
     Wifi, Snowflake, Thermometer, ChefHat, RefrigeratorIcon, Zap, 
     FlameKindling, Car, Tv, WashingMachine, Wind, Utensils, 
@@ -162,10 +164,22 @@ interface Apartment {
 
 const SettingsAdmin: React.FC = () => {
     const { t, language } = useAdminLanguage();
+    const { isSuperAdmin } = useAuth();
     const [apartments, setApartments] = useState<Apartment[]>([]);
     const [defaultApartmentId, setDefaultApartmentId] = useState<string>('');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [migratingOwnership, setMigratingOwnership] = useState(false);
+    
+    // Only super admin can access settings
+    if (!isSuperAdmin) {
+        return (
+            <div className="p-6 text-center">
+                <h2 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h2>
+                <p className="text-gray-600">You don't have permission to access settings.</p>
+            </div>
+        );
+    }
     
     // Amenities state
     const [amenities, setAmenities] = useState<Amenity[]>([]);
@@ -544,6 +558,26 @@ const SettingsAdmin: React.FC = () => {
         });
     };
 
+    // Migration function for apartment ownership
+    const handleMigrateOwnership = async () => {
+        if (!isSuperAdmin) return;
+        
+        setMigratingOwnership(true);
+        try {
+            const result = await migrateApartmentOwnership();
+            if (result.success) {
+                alert(`Successfully migrated ${result.count} apartments!`);
+            } else {
+                alert(`Migration failed: ${result.error}`);
+            }
+        } catch (error) {
+            console.error('Migration error:', error);
+            alert('Migration failed. Check console for details.');
+        } finally {
+            setMigratingOwnership(false);
+        }
+    };
+
     const closeEditModal = () => {
         setIsEditModalOpen(false);
         setEditingAmenity(null);
@@ -594,6 +628,33 @@ const SettingsAdmin: React.FC = () => {
                         <p className="text-sm text-gray-500">{t('defaultApartmentHint')}</p>
                     </div>
                 </div>
+
+                {/* Migration Section (Super Admin Only) */}
+                {isSuperAdmin && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg shadow-md p-6">
+                        <h2 className="text-xl font-semibold mb-4 text-yellow-800">Migration Tools</h2>
+                        <p className="text-yellow-700 mb-4">
+                            These tools are only available to super administrators and should be used with caution.
+                        </p>
+                        
+                        <div className="space-y-4">
+                            <div>
+                                <h3 className="font-medium text-yellow-800 mb-2">Apartment Ownership Migration</h3>
+                                <p className="text-sm text-yellow-600 mb-3">
+                                    This will assign you as the owner of all apartments that don't have an owner. 
+                                    Run this once after implementing the new authentication system.
+                                </p>
+                                <Button
+                                    onClick={handleMigrateOwnership}
+                                    disabled={migratingOwnership}
+                                    className="bg-yellow-600 hover:bg-yellow-700 text-white"
+                                >
+                                    {migratingOwnership ? 'Migrating...' : 'Migrate Apartment Ownership'}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Amenities Management */}
                 <div className="bg-white rounded-lg shadow-md p-6">

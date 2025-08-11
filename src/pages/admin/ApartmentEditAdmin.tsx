@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../../firebase';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { doc, updateDoc, collection, getDocs, addDoc, deleteDoc, DocumentData } from 'firebase/firestore';
+import { doc, updateDoc, collection, getDocs, addDoc, deleteDoc, DocumentData, getDoc } from 'firebase/firestore';
 import { generateSurveyToken, generateSurveyUrl } from '../../lib/surveyUtils';
 import { useSurveyLinkGeneration } from '../../hooks/useSurveyLinkGeneration';
 import { useAdminLanguage } from '../../hooks/useAdminLanguage';
 import { useLanguage } from '../../hooks/useLanguage';
+import { useAuth } from '../../contexts/AuthContext';
 import { Language } from '../../contexts/LanguageContext';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop';
@@ -183,14 +184,17 @@ type GalleryItem = {
 
 const ApartmentEditAdmin: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
+    const navigate = useNavigate();
     const { language } = useLanguage();
     const { t } = useAdminLanguage();
+    const { isSuperAdmin, userId } = useAuth();
     const [apartment, setApartment] = useState<Apartment | null>(null);
     const [currentApartmentData, setCurrentApartmentData] = useState<Partial<Apartment>>({});
     const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [loading, setLoading] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
+    const [accessDenied, setAccessDenied] = useState(false);
     
     // Automatically generate survey links for bookings that don't have them
     useSurveyLinkGeneration(bookings, apartment?.id || '', setBookings);
@@ -370,7 +374,7 @@ const ApartmentEditAdmin: React.FC = () => {
     }, []);
 
     const fetchApartment = useCallback(async () => {
-        if (!slug) return;
+        if (!slug || !userId) return;
         setLoading(true);
         try {
             const querySnapshot = await getDocs(collection(db, "apartments"));
@@ -378,6 +382,14 @@ const ApartmentEditAdmin: React.FC = () => {
 
             if (aptDoc) {
                 const aptData = { id: aptDoc.id, ...aptDoc.data() } as Apartment;
+                
+                // Check access control - user can only access their own apartments unless they're super admin
+                if (!isSuperAdmin && aptData.ownerId !== userId) {
+                    setAccessDenied(true);
+                    console.error('Access denied: User does not own this apartment');
+                    return;
+                }
+                
                 setApartment(aptData);
                 setCurrentApartmentData(JSON.parse(JSON.stringify(aptData)));
                 if (aptData.photos) {
@@ -392,7 +404,7 @@ const ApartmentEditAdmin: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    }, [slug, fetchBookings]);
+    }, [slug, fetchBookings, userId, isSuperAdmin]);
 
     useEffect(() => {
         fetchApartment();
@@ -916,6 +928,20 @@ const ApartmentEditAdmin: React.FC = () => {
     };
 
     if (loading) return <p>{t('loadingApartmentDetails')}</p>;
+    if (accessDenied) {
+        return (
+            <div className="p-6 text-center">
+                <h2 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h2>
+                <p className="text-gray-600 mb-4">You don't have permission to edit this apartment.</p>
+                <button 
+                    onClick={() => navigate('/admin/apartments')}
+                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                    Go back to your apartments
+                </button>
+            </div>
+        );
+    }
     if (!apartment) return <p>{t('apartmentNotFound')}</p>;
 
     return (

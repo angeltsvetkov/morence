@@ -3,11 +3,18 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { LogOut, ArrowLeft, Building, Map, Settings, Globe } from 'lucide-react';
 import { auth } from '../../firebase';
 import { useAdminLanguage } from '../../hooks/useAdminLanguage';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Sidebar: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { t, language, setLanguage } = useAdminLanguage();
+    const { isSuperAdmin } = useAuth();
+
+    // Only show sidebar for super admin users
+    if (!isSuperAdmin) {
+        return null;
+    }
 
     const handleSignOut = () => {
         auth.signOut();
@@ -39,6 +46,7 @@ const Sidebar: React.FC = () => {
                     <Building className="mr-3" />
                     <span>{t('apartments')}</span>
                 </button>
+                
                 <button
                     onClick={() => navigate('/admin/places')}
                     className={getLinkClass('places')}

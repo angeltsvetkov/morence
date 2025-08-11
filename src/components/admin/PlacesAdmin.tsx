@@ -4,6 +4,7 @@ import { db } from '../../firebase';
 import { Language } from '../../contexts/LanguageContext';
 import { useAdminLanguage } from '../../hooks/useAdminLanguage';
 import { useLanguage } from '../../hooks/useLanguage';
+import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -28,11 +29,22 @@ interface Place {
 const PlacesAdmin: React.FC = () => {
     const { language } = useLanguage(); // For place content display
     const { t } = useAdminLanguage(); // For admin UI translations
+    const { isSuperAdmin } = useAuth();
     const [places, setPlaces] = useState<Place[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentPlace, setCurrentPlace] = useState<Partial<Place> | null>(null);
     const [formLanguage, setFormLanguage] = useState<Language>('bg');
+
+    // Only super admin can access places
+    if (!isSuperAdmin) {
+        return (
+            <div className="p-6 text-center">
+                <h2 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h2>
+                <p className="text-gray-600">You don't have permission to manage places.</p>
+            </div>
+        );
+    }
 
     const fetchPlaces = async () => {
         setLoading(true);

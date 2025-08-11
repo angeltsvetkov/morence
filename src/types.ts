@@ -98,6 +98,7 @@ export interface Apartment {
     };
     pricingOffers?: PricingOffer[];
     availabilityStart?: string;
+    ownerId?: string; // ID of the user who owns/created this apartment
     availabilityEnd?: string;
     slug: string;
     isDefault?: boolean;
