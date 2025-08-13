@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { auth, db } from '../firebase';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { collection, getDocs, query, where } from 'firebase/firestore';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAdminLanguage } from '../hooks/useAdminLanguage';
 import Sidebar from '../components/admin/Sidebar';
@@ -15,6 +15,7 @@ import { Apartment } from '../types';
 const Admin: React.FC = () => {
     const { user, loading, isSuperAdmin } = useAuth();
     const { t, language, setLanguage } = useAdminLanguage();
+    const location = useLocation();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [userApartment, setUserApartment] = useState<Apartment | null>(null);
 
@@ -119,30 +120,12 @@ const Admin: React.FC = () => {
                                         </svg>
                                     </div>
                                     <div>
-                                        <h1 className="text-2xl font-bold text-white">{t('yourApartments')}</h1>
+                                        <h1 className="text-2xl font-bold text-white">morence.top</h1>
                                         <p className="text-blue-100 text-sm">{t('manageYourProperties')}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center space-x-4">
-                                    {/* Public Page Button */}
-                                    {userApartment && (
-                                        <button
-                                            onClick={() => {
-                                                if (userApartment.slug) {
-                                                    window.open(`/apartments/${userApartment.slug}`, '_blank');
-                                                } else {
-                                                    alert(`Your apartment "${userApartment.name?.en || userApartment.name?.bg || 'Unknown'}" doesn't have a URL slug. Please edit the apartment to add one.`);
-                                                }
-                                            }}
-                                            className="flex items-center px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors duration-200 backdrop-blur-sm border border-white/20"
-                                            title={t('viewPublicPage')}
-                                        >
-                                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                                            </svg>
-                                            <span className="hidden sm:inline">{t('viewPublicPage')}</span>
-                                        </button>
-                                    )}
+                                    
 
                                     {/* Avatar with dropdown menu */}
                                     <div className="relative avatar-dropdown">

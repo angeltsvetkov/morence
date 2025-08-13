@@ -35,7 +35,12 @@ import { MoreVertical, Trash2, Home, Star, ExternalLink, Share2, Copy,
     Fuel, Briefcase, Printer, FileText, Calculator, Umbrella, Glasses,
     Watch, Key, Bell, AlertTriangle, Dog, Cat, Fish, Bird, Store,
     ShoppingBag, Gift, Award, Cloud, CloudSnow, CloudLightning, 
-    Sunrise, Sandwich, Apple, WifiOff, UserCheck, Check } from 'lucide-react';
+    Sunrise, Sandwich, Apple, WifiOff, UserCheck, Check, 
+    ArrowLeft,
+    ArrowLeftCircleIcon,
+    ArrowRightFromLine,
+    ArrowRightCircleIcon,
+    ArrowRight} from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -336,41 +341,48 @@ const ApartmentEditAdmin: React.FC = () => {
 
     const fetchBookings = useCallback(async (apartmentId: string) => {
         if (!apartmentId) return;
-        const bookingsSnapshot = await getDocs(collection(db, `apartments/${apartmentId}/bookings`));
-        const bookingsData = bookingsSnapshot.docs.map((doc: DocumentData) => {
-            const data = doc.data();
-            let title = 'Rental';
-            const bookingType = data.type || 'rental';
+        try {
+            const bookingsSnapshot = await getDocs(collection(db, `apartments/${apartmentId}/bookings`));
+            const bookingsData = bookingsSnapshot.docs.map((doc: DocumentData) => {
+                const data = doc.data();
+                let title = 'Rental';
+                const bookingType = data.type || 'rental';
 
-            if (bookingType === 'rental' && data.visitorName) {
-                title = data.visitorName;
-            } else if (bookingType === 'maintenance') {
-                title = 'Maintenance';
-            } else if (bookingType === 'blocked') {
-                title = 'Blocked';
-            } else {
-                title = 'Rental';
-            }
+                if (bookingType === 'rental' && data.visitorName) {
+                    title = data.visitorName;
+                } else if (bookingType === 'maintenance') {
+                    title = 'Maintenance';
+                } else if (bookingType === 'blocked') {
+                    title = 'Blocked';
+                } else {
+                    title = 'Rental';
+                }
 
-            return {
-                id: doc.id,
-                apartmentId: apartmentId,
-                start: safeToDate(data.start),
-                end: safeToDate(data.end),
-                title,
-                visitorName: data.visitorName,
-                isRentalPeriod: data.isRentalPeriod || (data.type || 'rental') === 'rental',
-                type: data.type || 'rental',
-                pricingOfferId: data.pricingOfferId,
-                customPrice: data.customPrice,
-                totalPrice: data.totalPrice,
-                deposit: data.deposit,
-                depositCurrency: data.depositCurrency,
-                status: data.status,
-                guestEmail: data.guestEmail
-            };
-        });
-        setBookings(bookingsData);
+                return {
+                    id: doc.id,
+                    apartmentId: apartmentId,
+                    start: safeToDate(data.start),
+                    end: safeToDate(data.end),
+                    title,
+                    visitorName: data.visitorName,
+                    isRentalPeriod: data.isRentalPeriod || (data.type || 'rental') === 'rental',
+                    type: data.type || 'rental',
+                    pricingOfferId: data.pricingOfferId,
+                    customPrice: data.customPrice,
+                    totalPrice: data.totalPrice,
+                    deposit: data.deposit,
+                    depositCurrency: data.depositCurrency,
+                    status: data.status,
+                    guestEmail: data.guestEmail
+                };
+            });
+            setBookings(bookingsData);
+        } catch (error) {
+            console.error('Error fetching bookings:', error);
+            console.log('No old bookings found or permission denied:', error);
+            // Set empty bookings array instead of failing
+            setBookings([]);
+        }
     }, []);
 
     const fetchApartment = useCallback(async () => {
@@ -395,12 +407,18 @@ const ApartmentEditAdmin: React.FC = () => {
                 if (aptData.photos) {
                     setGalleryItems(aptData.photos.map((url, index) => ({ id: `existing-${index}-${url}`, url })));
                 }
-                fetchBookings(aptDoc.id);
+                // Try to fetch bookings, but don't fail if it doesn't work
+                try {
+                    await fetchBookings(aptDoc.id);
+                } catch (bookingError) {
+                    console.error('Failed to fetch bookings, continuing without them:', bookingError);
+                }
             } else {
                 console.error('No apartment found with slug:', slug);
             }
         } catch (error) {
             console.error('Error fetching apartment:', error);
+            // Don't set accessDenied here - just log the error and continue
         } finally {
             setLoading(false);
         }
@@ -945,8 +963,37 @@ const ApartmentEditAdmin: React.FC = () => {
     if (!apartment) return <p>{t('apartmentNotFound')}</p>;
 
     return (
-        <div className="relative p-6 pb-32">
-            <div className="flex border-b mb-4">
+        <div className="relative">
+            {/* Header */}
+            <header className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-10">
+                <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-4">
+                        <button 
+                            onClick={() => navigate('/admin/apartments')}
+                            className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors group"
+                        >
+                            <ArrowRight className="w-5 h-5 rotate-180 group-hover:transform group-hover:-translate-x-1 transition-transform" />
+                            <span className="font-medium">{t('backToApartments')}</span>
+                        </button>
+                        <div className="w-px h-6 bg-gray-300"></div>
+                        <h1 className="text-2xl font-bold text-gray-900">
+                            {apartment.name?.[language as 'bg' | 'en'] || apartment.name?.en || apartment.name?.bg || 'Apartment'}
+                        </h1>
+                    </div>
+                    <button 
+                        onClick={() => open(`/apartments/${slug}`, "_blank")}
+                        className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors group"
+                    >
+                        <ExternalLink className="w-5 h-5 group-hover:transform group-hover:scale-110 transition-transform" />
+                        <span className="font-medium">{t('viewPublicPage')}</span>
+                    </button>
+                </div>
+            </header>
+            
+            {/* Content Area */}
+            <div className="p-6 pb-32">
+                {/* Tab Navigation */}
+                <div className="flex border-b mb-6">
                 <button onClick={() => setView('details')} className={`px-4 py-2 ${view === 'details' ? 'border-b-2 border-blue-500' : ''}`}>{t('details')}</button>
                 <button onClick={() => setView('amenities')} className={`px-4 py-2 ${view === 'amenities' ? 'border-b-2 border-blue-500' : ''}`}>{t('amenities')}</button>
                 <button onClick={() => setView('gallery')} className={`px-4 py-2 ${view === 'gallery' ? 'border-b-2 border-blue-500' : ''}`}>{t('gallery')}</button>
@@ -1290,7 +1337,9 @@ const ApartmentEditAdmin: React.FC = () => {
                     </div>
                 </div>
             )}
+            </div>
         </div>
     );
 };
+
 export default ApartmentEditAdmin;

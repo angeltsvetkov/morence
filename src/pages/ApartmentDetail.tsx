@@ -203,6 +203,7 @@ interface Apartment {
     };
     heroImage?: string;
     favouriteImages?: string[];
+    hideName?: boolean; // Whether to hide the apartment name on the public page
     hideNameOnPublicPage?: boolean; // Whether to hide the apartment name on the public page
     smokingAllowed?: boolean; // Whether smoking is allowed in this apartment
     maxGuests?: number; // Maximum number of guests allowed
@@ -352,6 +353,27 @@ const ApartmentDetail: React.FC = () => {
         for (const contact of allContacts) {
             if (contact?.phone) {
                 return contact.phone;
+            }
+        }
+
+        return null;
+    };
+
+    // Helper function to get owner/contact name
+    const getContactName = (): string | null => {
+        if (!apartment?.contacts) return null;
+
+        // Try current language first, then fallback to other languages
+        const currentLangContact = apartment.contacts[language];
+        if (currentLangContact?.name) {
+            return currentLangContact.name;
+        }
+
+        // Fallback to any available contact name
+        const allContacts = Object.values(apartment.contacts);
+        for (const contact of allContacts) {
+            if (contact?.name) {
+                return contact.name;
             }
         }
 
@@ -833,7 +855,7 @@ const ApartmentDetail: React.FC = () => {
                     />
                     <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/60 z-10">
                         {/* Apartment Name - Top Left Corner (conditionally displayed) */}
-                        {!apartment.hideNameOnPublicPage && (
+                        {!apartment.hideName && (
                             <div className="absolute top-6 left-6 md:top-8 md:left-8 z-30">
                                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-lg tracking-tight">
                                     {apartmentName}
@@ -2217,10 +2239,19 @@ const ApartmentDetail: React.FC = () => {
                         {/* Phone icon */}
                         <Phone className="w-5 h-5 text-white transform group-hover:rotate-12 transition-transform duration-300 flex-shrink-0" />
 
-                        {/* Phone number */}
-                        <span className="text-white font-semibold text-sm whitespace-nowrap">
-                            {apartment.contactPhone}
-                        </span>
+                        {/* Contact info */}
+                        <div className="flex flex-col text-left">
+                            {/* Contact name if available */}
+                            {getContactName() && (
+                                <span className="text-white font-semibold text-sm whitespace-nowrap">
+                                    {getContactName()}
+                                </span>
+                            )}
+                            {/* Phone number */}
+                            <span className={`text-white text-sm whitespace-nowrap ${getContactName() ? 'font-medium opacity-90' : 'font-semibold'}`}>
+                                {apartment.contactPhone}
+                            </span>
+                        </div>
 
                         {/* Pulse animation */}
                         <div className="absolute inset-0 rounded-full border-2 border-green-400 opacity-0 group-hover:opacity-100 animate-ping"></div>
@@ -2229,10 +2260,13 @@ const ApartmentDetail: React.FC = () => {
                     {/* Tooltip */}
                     <div className="absolute bottom-full right-0 mb-2 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
                         <div className="bg-gray-900 text-white text-sm px-3 py-2 rounded-lg whitespace-nowrap shadow-lg">
-                            {language === 'bg' ? 'Обадете се на собственика' : 'Call the owner'}
+                            {getContactName() 
+                                ? `${language === 'bg' ? 'Обадете се на' : 'Call'} ${getContactName()}`
+                                : (language === 'bg' ? 'Обадете се на собственика' : 'Call the owner')
+                            }
                             <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-900"></div>
-                </div>
-            </div>
+                        </div>
+                    </div>
                 </div>
             )}
 

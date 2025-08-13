@@ -28,6 +28,8 @@
   "distance": "Distance",
   "confirmDeletePlace": "Are you sure you want to delete this place?",
   "manageApartments": "Manage Apartments",
+  "backToApartments": "Back to Apartments",
+  "editingApartment": "Editing Apartment",
   "addNewApartment": "Add New Apartment",
   "confirmDeleteApartment": "Are you sure you want to delete this apartment?",
   "noImageAvailable": "No Image Available",

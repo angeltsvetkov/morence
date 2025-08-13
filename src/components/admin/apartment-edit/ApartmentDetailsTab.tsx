@@ -147,30 +147,6 @@ const ApartmentDetailsTab: React.FC<ApartmentDetailsTabProps> = ({
                 </p>
             </div>
 
-            {/* Location */}
-            <div>
-                <Label htmlFor="location" className="flex items-center gap-2">
-                    {t('location')}
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        formLanguage === 'bg' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-                    }`}>
-                        {formLanguage === 'bg' ? '🇧🇬 BG' : '🇬🇧 EN'}
-                    </span>
-                </Label>
-                <Input
-                    id="location"
-                    placeholder={t('locationPlaceholder')}
-                    value={currentApartmentData.location?.[formLanguage] || ''}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        setCurrentApartmentData({
-                            ...currentApartmentData,
-                            location: { ...currentApartmentData.location, [formLanguage]: e.target.value }
-                        })
-                    }
-                    className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                />
-            </div>
-
             {/* Address */}
             <div>
                 <Label htmlFor="address" className="flex items-center gap-2">
