@@ -32,6 +32,7 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
         text: { bg: '', en: '' },
         guestType: { bg: '', en: '' },
         nationality: '',
+        bookingDuration: 0,
         ratings: {
             cleanliness: 5,
             communication: 5,
@@ -83,6 +84,7 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
                 text: { bg: '', en: '' },
                 guestType: { bg: '', en: '' },
                 nationality: '',
+                bookingDuration: 0,
                 ratings: {
                     cleanliness: 5,
                     communication: 5,
@@ -108,6 +110,7 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
             text: editingTestimonial.text,
             guestType: editingTestimonial.guestType,
             nationality: editingTestimonial.nationality,
+            bookingDuration: editingTestimonial.bookingDuration,
             ratings: editingTestimonial.ratings,
             isActive: editingTestimonial.isActive
         });
@@ -182,10 +185,11 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
         setEditingTestimonial({ 
             ...testimonial,
             nationality: testimonial.nationality || '',
-            ratings: testimonial.ratings || {
-                cleanliness: 5,
-                communication: 5,
-                comfort: 5
+            bookingDuration: testimonial.bookingDuration || 0,
+            ratings: {
+                cleanliness: testimonial.ratings?.cleanliness || 5,
+                communication: testimonial.ratings?.communication || 5,
+                comfort: testimonial.ratings?.comfort || 5
             }
         });
         setIsModalOpen(true);
@@ -197,6 +201,7 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
             text: { bg: '', en: '' },
             guestType: { bg: '', en: '' },
             nationality: '',
+            bookingDuration: 0,
             ratings: {
                 cleanliness: 5,
                 communication: 5,
@@ -359,6 +364,14 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
                                                 `🌍 ${testimonial.nationality}`
                                             );
                                         })()}
+                                    </span>
+                                )}
+                                {testimonial.bookingDuration && testimonial.bookingDuration > 0 && (
+                                    <span className="text-xs text-gray-500 ml-2 flex items-center gap-1">
+                                        {testimonial.bookingDuration} {testimonial.bookingDuration === 1 
+                                            ? (formLanguage === 'bg' ? 'нощ' : 'night')
+                                            : (formLanguage === 'bg' ? 'нощи' : 'nights')
+                                        }
                                     </span>
                                 )}
                             </p>
@@ -528,6 +541,36 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
                                 <p className="text-xs text-gray-500 mt-1">{t('nationalityHint')}</p>
                             </div>
 
+                            {/* Booking Duration */}
+                            <div>
+                                <Label className="text-sm font-medium text-gray-900 mb-2 block">
+                                    {t('bookingDuration')}
+                                </Label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="365"
+                                    value={editingTestimonial ? editingTestimonial.bookingDuration || 0 : newTestimonial.bookingDuration}
+                                    onChange={(e) => {
+                                        const duration = parseInt(e.target.value) || 0;
+                                        if (editingTestimonial) {
+                                            setEditingTestimonial(prev => prev ? {
+                                                ...prev,
+                                                bookingDuration: duration
+                                            } : null);
+                                        } else {
+                                            setNewTestimonial(prev => ({
+                                                ...prev,
+                                                bookingDuration: duration
+                                            }));
+                                        }
+                                    }}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="Enter number of nights"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Number of nights the guest stayed</p>
+                            </div>
+
                             {/* Ratings */}
                             <div>
                                 <Label className="text-sm font-medium text-gray-900 mb-3 block">{t('ratings')}</Label>
@@ -544,7 +587,11 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
                                                         if (editingTestimonial) {
                                                             setEditingTestimonial(prev => prev ? {
                                                                 ...prev,
-                                                                ratings: { ...prev.ratings, cleanliness: rating }
+                                                                ratings: { 
+                                                                    cleanliness: rating,
+                                                                    communication: prev.ratings?.communication || 5,
+                                                                    comfort: prev.ratings?.comfort || 5
+                                                                }
                                                             } : null);
                                                         } else {
                                                             setNewTestimonial(prev => ({
@@ -582,7 +629,11 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
                                                         if (editingTestimonial) {
                                                             setEditingTestimonial(prev => prev ? {
                                                                 ...prev,
-                                                                ratings: { ...prev.ratings, communication: rating }
+                                                                ratings: { 
+                                                                    cleanliness: prev.ratings?.cleanliness || 5,
+                                                                    communication: rating,
+                                                                    comfort: prev.ratings?.comfort || 5
+                                                                }
                                                             } : null);
                                                         } else {
                                                             setNewTestimonial(prev => ({
@@ -620,7 +671,11 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
                                                         if (editingTestimonial) {
                                                             setEditingTestimonial(prev => prev ? {
                                                                 ...prev,
-                                                                ratings: { ...prev.ratings, comfort: rating }
+                                                                ratings: { 
+                                                                    cleanliness: prev.ratings?.cleanliness || 5,
+                                                                    communication: prev.ratings?.communication || 5,
+                                                                    comfort: rating
+                                                                }
                                                             } : null);
                                                         } else {
                                                             setNewTestimonial(prev => ({

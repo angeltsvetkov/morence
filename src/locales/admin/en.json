@@ -466,6 +466,7 @@
   "enterNationality": "e.g., Germany, France, USA...",
   "nationalityHint": "Select the guest's country from the list (optional)",
   "selectCountry": "Select a country...",
+  "bookingDuration": "Booking Duration (nights)",
   "processing": "Processing",
   "heicSupportInfo": "HEIC/HEIF images (iPhone format) will be automatically converted to JPEG",
   "socialSharing": "Social Sharing",

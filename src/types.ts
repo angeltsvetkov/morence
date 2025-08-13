@@ -44,6 +44,7 @@ export interface Testimonial {
     text: { [key in 'bg' | 'en']: string };
     guestType: { [key in 'bg' | 'en']: string }; // e.g., "Family with children", "Business traveler", etc.
     nationality: string; // e.g., "Germany", "France", "Bulgaria", etc.
+    bookingDuration?: number; // Duration of stay in nights
     ratings?: {
         cleanliness: number; // 1-5 чистота
         communication: number; // 1-5 комуникация с домакина  

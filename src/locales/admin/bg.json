@@ -466,6 +466,7 @@
   "enterNationality": "напр. Германия, Франция, САЩ...",
   "nationalityHint": "Изберете страната на госта от списъка (по желание)",
   "selectCountry": "Изберете страна...",
+  "bookingDuration": "Продължителност на престоя (нощи)",
   "processing": "Обработка",
   "heicSupportInfo": "HEIC/HEIF изображения (iPhone формат) ще бъдат автоматично конвертирани в JPEG",
   "socialSharing": "Споделяне в социални мрежи",

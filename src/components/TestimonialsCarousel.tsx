@@ -90,10 +90,11 @@ const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({ apartmentId
 
     const currentTestimonial = testimonials[currentIndex];
     
-    // Provide defaults for testimonials created before ratings/nationality features
+    // Provide defaults for testimonials created before ratings/nationality/bookingDuration features
     const testimonialWithRatings = {
         ...currentTestimonial,
         nationality: currentTestimonial.nationality || '',
+        bookingDuration: currentTestimonial.bookingDuration || 0,
         ratings: currentTestimonial.ratings || {
             cleanliness: 5,
             communication: 5,
@@ -103,6 +104,21 @@ const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({ apartmentId
 
     return (
         <div className="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200 shadow-lg relative overflow-hidden group">
+            {/* Booking Duration Ribbon */}
+            {testimonialWithRatings.bookingDuration && testimonialWithRatings.bookingDuration > 0 && (
+                <div className="absolute top-0 right-0 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-bl-lg shadow-lg z-10">
+                    <div className="flex items-center gap-1.5 text-sm font-semibold">
+                        <span className="text-blue-100"></span>
+                        <span>
+                            {testimonialWithRatings.bookingDuration}{testimonialWithRatings.bookingDuration === 1 
+                                ? (language === 'bg' ? ' нощувка' : ' night')
+                                : (language === 'bg' ? ' нощувки' : ' nights')
+                            }
+                        </span>
+                    </div>
+                </div>
+            )}
+            
             {/* Background decoration */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full -translate-y-16 translate-x-16 opacity-50"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-purple-50 to-pink-100 rounded-full translate-y-12 -translate-x-12 opacity-50"></div>
