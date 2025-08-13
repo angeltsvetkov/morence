@@ -551,41 +551,41 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
             `}</style>
 
             {/* Tab Header */}
-            <div className="flex justify-between items-center mb-6 pb-4 border-b">
-                <h3 className="text-xl font-semibold text-gray-900">{t('calendarAndBookings')}</h3>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 pb-4 border-b gap-2">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">{t('calendarAndBookings')}</h3>
                 <div className="text-sm text-gray-600">
                     {t('calendarDescription')}
                 </div>
             </div>
 
             {/* Calendar Legend */}
-            <div className="flex gap-4 mb-4 p-4 bg-gray-50 rounded-lg flex-wrap">
+            <div className="flex gap-4 mb-4 p-3 sm:p-4 bg-gray-50 rounded-lg flex-wrap">
                 <div className="flex items-center gap-2">
                     <div className="w-4 h-4 bg-green-500 rounded"></div>
-                    <span className="text-sm">{t('bookingTypeBooked')}</span>
+                    <span className="text-xs sm:text-sm">{t('bookingTypeBooked')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                     <div className="w-4 h-4 bg-red-500 rounded"></div>
-                    <span className="text-sm">{t('bookingTypeBlocked')}</span>
+                    <span className="text-xs sm:text-sm">{t('bookingTypeBlocked')}</span>
                 </div>
             </div>
 
             {/* Navigation Controls */}
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center mb-4 gap-3">
                 <button 
                     onClick={() => navigateCalendar('prev')}
-                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 font-medium transition-colors"
+                    className="px-3 sm:px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 font-medium transition-colors text-sm sm:text-base"
                 >
                     ← {t('previous')}
                 </button>
-                <div className="flex gap-8 text-lg font-semibold text-gray-800">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-8 text-center text-base sm:text-lg font-semibold text-gray-800">
                     <span>
                         {currentDate.toLocaleDateString(language === 'bg' ? 'bg-BG' : 'en-US', { 
                             month: 'long', 
                             year: 'numeric' 
                         })}
                     </span>
-                    <span>
+                    <span className="hidden sm:inline">
                         {nextMonth.toLocaleDateString(language === 'bg' ? 'bg-BG' : 'en-US', { 
                             month: 'long', 
                             year: 'numeric' 
@@ -594,23 +594,23 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
                 </div>
                 <button 
                     onClick={() => navigateCalendar('next')}
-                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 font-medium transition-colors"
+                    className="px-3 sm:px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 font-medium transition-colors text-sm sm:text-base"
                 >
                     {t('next')} →
                 </button>
             </div>
 
             {/* Dual Calendar Layout */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {/* Current Month Calendar */}
-                <div className="bg-white border rounded-lg p-4 flex flex-col" style={{ height: '700px' }}>
-                    <h4 className="text-lg font-semibold text-center mb-4 text-gray-700 flex-shrink-0">
+                <div className="bg-white border rounded-lg p-3 sm:p-4 flex flex-col" style={{ height: '500px' }}>
+                    <h4 className="text-base sm:text-lg font-semibold text-center mb-3 sm:mb-4 text-gray-700 flex-shrink-0">
                         {currentDate.toLocaleDateString(language === 'bg' ? 'bg-BG' : 'en-US', { 
                             month: 'long', 
                             year: 'numeric' 
                         })}
                     </h4>
-                    <div className="flex-1 min-h-0">
+                    <div className="flex-1 min-h-0 overflow-hidden">
                         <DragAndDropCalendar
                             localizer={localizer}
                             events={calendarEvents}
@@ -632,7 +632,7 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
                             toolbar={false} // Hide toolbar since we have custom navigation
                             step={60}
                             showMultiDayTimes
-                            style={{ height: '100%' }}
+                            style={{ height: '100%', fontSize: '12px' }}
                             messages={{
                                 date: t('date'),
                                 time: t('time'),

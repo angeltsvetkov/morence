@@ -963,46 +963,48 @@ const ApartmentEditAdmin: React.FC = () => {
     if (!apartment) return <p>{t('apartmentNotFound')}</p>;
 
     return (
-        <div className="relative">
+        <div className="relative min-h-screen">
             {/* Header */}
-            <header className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-10">
-                <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-4">
+            <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 sticky top-0 z-10">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-3 sm:gap-0">
+                    <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
                         <button 
                             onClick={() => navigate('/admin/apartments')}
-                            className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors group"
+                            className="flex items-center gap-2 px-2 sm:px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors group"
                         >
-                            <ArrowRight className="w-5 h-5 rotate-180 group-hover:transform group-hover:-translate-x-1 transition-transform" />
-                            <span className="font-medium">{t('backToApartments')}</span>
+                            <ArrowRight className="w-4 sm:w-5 h-4 sm:h-5 rotate-180 group-hover:transform group-hover:-translate-x-1 transition-transform" />
+                            <span className="font-medium text-sm sm:text-base">{t('backToApartments')}</span>
                         </button>
-                        <div className="w-px h-6 bg-gray-300"></div>
-                        <h1 className="text-2xl font-bold text-gray-900">
+                        <div className="w-px h-6 bg-gray-300 hidden sm:block"></div>
+                        <h1 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
                             {apartment.name?.[language as 'bg' | 'en'] || apartment.name?.en || apartment.name?.bg || 'Apartment'}
                         </h1>
                     </div>
                     <button 
                         onClick={() => open(`/apartments/${slug}`, "_blank")}
-                        className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors group"
+                        className="flex items-center gap-2 px-2 sm:px-3 py-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors group w-full sm:w-auto justify-center sm:justify-start"
                     >
-                        <ExternalLink className="w-5 h-5 group-hover:transform group-hover:scale-110 transition-transform" />
-                        <span className="font-medium">{t('viewPublicPage')}</span>
+                        <ExternalLink className="w-4 sm:w-5 h-4 sm:h-5 group-hover:transform group-hover:scale-110 transition-transform" />
+                        <span className="font-medium text-sm sm:text-base">{t('viewPublicPage')}</span>
                     </button>
                 </div>
             </header>
             
             {/* Content Area */}
-            <div className="p-6 pb-32">
+            <div className="p-4 sm:p-6 pb-32">
                 {/* Tab Navigation */}
-                <div className="flex border-b mb-6">
-                <button onClick={() => setView('details')} className={`px-4 py-2 ${view === 'details' ? 'border-b-2 border-blue-500' : ''}`}>{t('details')}</button>
-                <button onClick={() => setView('amenities')} className={`px-4 py-2 ${view === 'amenities' ? 'border-b-2 border-blue-500' : ''}`}>{t('amenities')}</button>
-                <button onClick={() => setView('gallery')} className={`px-4 py-2 ${view === 'gallery' ? 'border-b-2 border-blue-500' : ''}`}>{t('gallery')}</button>
-                <button onClick={() => setView('pricing')} className={`px-4 py-2 ${view === 'pricing' ? 'border-b-2 border-blue-500' : ''}`}>{t('pricing')}</button>
-                <button onClick={() => setView('calendar')} className={`px-4 py-2 ${view === 'calendar' ? 'border-b-2 border-blue-500' : ''}`}>{t('calendarAndBookings')}</button>
-                <button onClick={() => setView('feedback')} className={`px-4 py-2 ${view === 'feedback' ? 'border-b-2 border-blue-500' : ''}`}>{t('feedback')}</button>
-                <button onClick={() => setView('testimonials')} className={`px-4 py-2 ${view === 'testimonials' ? 'border-b-2 border-blue-500' : ''}`}>{t('testimonials')}</button>
-                <button onClick={() => setView('share')} className={`px-4 py-2 ${view === 'share' ? 'border-b-2 border-blue-500' : ''}`}>{t('share')}</button>
-            </div>
+                <div className="flex border-b mb-6 overflow-x-auto scrollbar-hide">
+                    <div className="flex space-x-0 min-w-max">
+                        <button onClick={() => setView('details')} className={`px-3 sm:px-4 py-2 text-sm sm:text-base whitespace-nowrap ${view === 'details' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}>{t('details')}</button>
+                        <button onClick={() => setView('amenities')} className={`px-3 sm:px-4 py-2 text-sm sm:text-base whitespace-nowrap ${view === 'amenities' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}>{t('amenities')}</button>
+                        <button onClick={() => setView('gallery')} className={`px-3 sm:px-4 py-2 text-sm sm:text-base whitespace-nowrap ${view === 'gallery' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}>{t('gallery')}</button>
+                        <button onClick={() => setView('pricing')} className={`px-3 sm:px-4 py-2 text-sm sm:text-base whitespace-nowrap ${view === 'pricing' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}>{t('pricing')}</button>
+                        <button onClick={() => setView('calendar')} className={`px-3 sm:px-4 py-2 text-sm sm:text-base whitespace-nowrap ${view === 'calendar' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}>{t('calendarAndBookings')}</button>
+                        <button onClick={() => setView('feedback')} className={`px-3 sm:px-4 py-2 text-sm sm:text-base whitespace-nowrap ${view === 'feedback' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}>{t('feedback')}</button>
+                        <button onClick={() => setView('testimonials')} className={`px-3 sm:px-4 py-2 text-sm sm:text-base whitespace-nowrap ${view === 'testimonials' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}>{t('testimonials')}</button>
+                        <button onClick={() => setView('share')} className={`px-3 sm:px-4 py-2 text-sm sm:text-base whitespace-nowrap ${view === 'share' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}>{t('share')}</button>
+                    </div>
+                </div>
             {view === 'details' && (
                 <ApartmentDetailsTab
                     currentApartmentData={currentApartmentData}

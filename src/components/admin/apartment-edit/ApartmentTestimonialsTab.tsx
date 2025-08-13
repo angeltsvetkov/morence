@@ -226,12 +226,12 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900">{t('testimonials')}</h2>
-                    <p className="text-gray-600">{t('manageTestimonials')}</p>
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{t('testimonials')}</h2>
+                    <p className="text-gray-600 text-sm sm:text-base">{t('manageTestimonials')}</p>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
                     {/* Language Toggle */}
                     <div className="flex bg-gray-100 rounded-lg p-1">
                         <button
@@ -256,9 +256,10 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
                         </button>
                     </div>
                     
-                    <Button onClick={openAddModal} className="bg-blue-600 hover:bg-blue-700">
+                    <Button onClick={openAddModal} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
                         <Plus className="w-4 h-4 mr-2" />
-                        {t('addTestimonial')}
+                        <span className="hidden sm:inline">{t('addTestimonial')}</span>
+                        <span className="sm:hidden">{t('add')}</span>
                     </Button>
                 </div>
             </div>
@@ -298,28 +299,37 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
                                                             : 'hover:bg-gray-50'
                                                     }`}
                                                 >
-                                                    <div className="flex items-start gap-4">
+                                                    <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
                                                         {/* Drag Handle */}
                                                         <div 
                                                             {...provided.dragHandleProps}
-                                                            className="cursor-move text-gray-400 hover:text-gray-600 mt-2"
+                                                            className="cursor-move text-gray-400 hover:text-gray-600 mt-1 sm:mt-2 hidden sm:block"
                                                         >
-                                                            <Move className="w-5 h-5" />
+                                                            <Move className="w-4 sm:w-5 h-4 sm:h-5" />
                                                         </div>
 
                                                         {/* Testimonial Content */}
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="flex items-center gap-2 mb-2">
-                                                                <span className="text-sm font-medium text-gray-600">
-                                                                    #{index + 1}
-                                                                </span>
-                                                                <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                                                    testimonial.isActive 
-                                                                        ? 'bg-green-100 text-green-800' 
-                                                                        : 'bg-gray-100 text-gray-600'
-                                                                }`}>
-                                                                    {testimonial.isActive ? t('active') : t('inactive')}
-                                                                </span>
+                                                        <div className="flex-1 min-w-0 w-full">
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="text-sm font-medium text-gray-600">
+                                                                        #{index + 1}
+                                                                    </span>
+                                                                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                                                        testimonial.isActive 
+                                                                            ? 'bg-green-100 text-green-800' 
+                                                                            : 'bg-gray-100 text-gray-600'
+                                                                    }`}>
+                                                                        {testimonial.isActive ? t('active') : t('inactive')}
+                                                                    </span>
+                                                                </div>
+                                                                {/* Mobile drag handle */}
+                                                                <div 
+                                                                    {...provided.dragHandleProps}
+                                                                    className="cursor-move text-gray-400 hover:text-gray-600 sm:hidden"
+                                                                >
+                                                                    <Move className="w-4 h-4" />
+                                                                </div>
                                                             </div>
                                                                                                         <blockquote className="text-gray-900 mb-2 italic">
                                                 "{formLanguage === 'bg' ? testimonial.text.bg : testimonial.text.en}"
@@ -378,31 +388,35 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
                                                         </div>
 
                                                         {/* Actions */}
-                                                        <div className="flex items-center gap-2">
+                                                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-3 sm:mt-0 w-full sm:w-auto">
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
                                                                 onClick={() => toggleTestimonialActive(testimonial.id, testimonial.isActive)}
-                                                                className={testimonial.isActive ? 'text-orange-600 hover:text-orange-700' : 'text-green-600 hover:text-green-700'}
+                                                                className={`${testimonial.isActive ? 'text-orange-600 hover:text-orange-700' : 'text-green-600 hover:text-green-700'} w-full sm:w-auto`}
                                                             >
                                                                 {testimonial.isActive ? t('deactivate') : t('activate')}
                                                             </Button>
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => openEditModal(testimonial)}
-                                                                className="text-blue-600 hover:text-blue-700"
-                                                            >
-                                                                <Edit className="w-4 h-4" />
-                                                            </Button>
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => setDeletingTestimonialId(testimonial.id)}
-                                                                className="text-red-600 hover:text-red-700"
-                                                            >
-                                                                <Trash2 className="w-4 h-4" />
-                                                            </Button>
+                                                            <div className="flex gap-2">
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => openEditModal(testimonial)}
+                                                                    className="text-blue-600 hover:text-blue-700 flex-1 sm:flex-none"
+                                                                >
+                                                                    <Edit className="w-4 h-4 sm:mr-0 mr-2" />
+                                                                    <span className="sm:hidden">{t('edit')}</span>
+                                                                </Button>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => setDeletingTestimonialId(testimonial.id)}
+                                                                    className="text-red-600 hover:text-red-700 flex-1 sm:flex-none"
+                                                                >
+                                                                    <Trash2 className="w-4 h-4 sm:mr-0 mr-2" />
+                                                                    <span className="sm:hidden">{t('delete')}</span>
+                                                                </Button>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -425,19 +439,19 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
                         setIsModalOpen(false);
                         setEditingTestimonial(null);
                     }}
-                    className="w-full max-w-2xl"
+                    className="w-full max-w-2xl mx-4 sm:mx-0 max-h-[90vh] overflow-y-auto"
                 >
-                    <div className="p-6">
+                    <div className="p-4 sm:p-6">
                         <h3 className="text-lg font-semibold mb-4">
                             {editingTestimonial ? t('editTestimonial') : t('addTestimonial')}
                         </h3>
                         
                         <div className="space-y-4">
                             {/* Language selector for form */}
-                            <div className="flex bg-gray-100 rounded-lg p-1 w-fit">
+                            <div className="flex bg-gray-100 rounded-lg p-1 w-full sm:w-fit">
                                 <button
                                     onClick={() => setFormLanguage('bg')}
-                                    className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                                    className={`flex-1 sm:flex-none px-3 py-1 rounded-md text-sm font-medium transition-colors ${
                                         formLanguage === 'bg' 
                                             ? 'bg-white text-gray-900 shadow-sm' 
                                             : 'text-gray-600 hover:text-gray-900'
@@ -447,7 +461,7 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
                                 </button>
                                 <button
                                     onClick={() => setFormLanguage('en')}
-                                    className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                                    className={`flex-1 sm:flex-none px-3 py-1 rounded-md text-sm font-medium transition-colors ${
                                         formLanguage === 'en' 
                                             ? 'bg-white text-gray-900 shadow-sm' 
                                             : 'text-gray-600 hover:text-gray-900'
