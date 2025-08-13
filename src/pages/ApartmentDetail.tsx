@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { db } from '../firebase';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useLanguage } from '../hooks/useLanguage';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
@@ -226,6 +226,8 @@ const ApartmentDetail: React.FC = () => {
     const [places, setPlaces] = useState<Place[]>([]);
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [loading, setLoading] = useState(true);
+    const [dataLoaded, setDataLoaded] = useState(false);
+    const [heroImageLoaded, setHeroImageLoaded] = useState(false);
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
     const [currentDate, setCurrentDate] = useState(new Date());
     const [currentHeroImage, setCurrentHeroImage] = useState<string>('');
@@ -481,6 +483,8 @@ const ApartmentDetail: React.FC = () => {
         const fetchApartmentAndBookings = async () => {
             if (!slug) return;
             setLoading(true);
+            setDataLoaded(false);
+            setHeroImageLoaded(false);
             try {
                 // Fetch apartment details by slug
                 const apartmentsRef = collection(db, "apartments");
@@ -492,6 +496,9 @@ const ApartmentDetail: React.FC = () => {
                     const apartmentData = { id: docSnap.id, ...docSnap.data() } as Apartment;
                     setApartment(apartmentData);
                     setCurrentHeroImage(apartmentData.heroImage || (apartmentData.photos.length > 0 ? apartmentData.photos[0] : ''));
+                    
+                    // Reset hero image loaded state when we get new data
+                    setHeroImageLoaded(false);
 
                     // Helper function to safely convert date fields
                     const safeToDate = (dateField: any): Date => {
@@ -523,26 +530,6 @@ const ApartmentDetail: React.FC = () => {
                     });
                     allBookings.push(...newBookingsData);
 
-                    // Fetch from old main collection for this apartment
-                    try {
-                        const oldBookingsQuery = query(collection(db, "bookings"), where("apartmentId", "==", docSnap.id));
-                        const oldBookingsSnapshot = await getDocs(oldBookingsQuery);
-                        const oldBookingsData = oldBookingsSnapshot.docs.map(doc => {
-                            const data = doc.data();
-                            return {
-                                id: doc.id,
-                                apartmentId: docSnap.id,
-                                start: safeToDate(data.start),
-                                end: safeToDate(data.end),
-                                title: data.title || 'Reserved',
-                                ...data
-                            } as Booking;
-                        });
-                        allBookings.push(...oldBookingsData);
-                    } catch (error) {
-                        console.log("No old bookings found or permission denied:", error);
-                    }
-
                     setBookings(allBookings);
                 } else {
                     console.log("No such document!");
@@ -551,7 +538,7 @@ const ApartmentDetail: React.FC = () => {
             } catch (error) {
                 console.error("Error fetching data: ", error);
             } finally {
-                setLoading(false);
+                setDataLoaded(true);
             }
         };
 
@@ -583,6 +570,35 @@ const ApartmentDetail: React.FC = () => {
 
         return () => clearTimeout(timer); // Cleanup the timer
     }, [currentHeroImage, slideshowImages]);
+
+    // Effect to control overall loading state - wait for both data and hero image
+    useEffect(() => {
+        // Only hide loading when both conditions are met:
+        // 1. Data has been loaded from Firebase
+        // 2. Hero image has finished loading (or there's no hero image)
+        if (dataLoaded && (heroImageLoaded || !currentHeroImage)) {
+            setLoading(false);
+        }
+    }, [dataLoaded, heroImageLoaded, currentHeroImage]);
+
+    // Reset hero image loaded state when hero image changes
+    useEffect(() => {
+        if (currentHeroImage) {
+            setHeroImageLoaded(false);
+            
+            // Check if image is already cached/loaded
+            const img = new Image();
+            img.onload = () => {
+                setHeroImageLoaded(true);
+            };
+            img.onerror = () => {
+                setHeroImageLoaded(true);
+            };
+            img.src = currentHeroImage;
+            
+            // If image loads immediately (from cache), the onload fires synchronously
+        }
+    }, [currentHeroImage]);
 
     // Scroll detection for header visibility
     useEffect(() => {
@@ -778,26 +794,6 @@ const ApartmentDetail: React.FC = () => {
             });
             allBookings.push(...newBookingsData);
 
-            // Fetch from old main collection for this apartment
-            try {
-                const oldBookingsQuery = query(collection(db, "bookings"), where("apartmentId", "==", apartment.id));
-                const oldBookingsSnapshot = await getDocs(oldBookingsQuery);
-                const oldBookingsData = oldBookingsSnapshot.docs.map(doc => {
-                    const data = doc.data();
-                    return {
-                        id: doc.id,
-                        apartmentId: apartment.id,
-                        start: safeToDate(data.start),
-                        end: safeToDate(data.end),
-                        title: data.title || 'Reserved',
-                        ...data
-                    } as Booking;
-                });
-                allBookings.push(...oldBookingsData);
-            } catch (error) {
-                console.log("No old bookings found or permission denied:", error);
-            }
-
             setBookings(allBookings);
         };
         fetchBookings();
@@ -852,6 +848,8 @@ const ApartmentDetail: React.FC = () => {
                         className="absolute inset-0 w-full h-full object-cover z-0"
                         loading="eager"
                         decoding="async"
+                        onLoad={() => setHeroImageLoaded(true)}
+                        onError={() => setHeroImageLoaded(true)}
                     />
                     <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/60 z-10">
                         {/* Apartment Name - Top Left Corner (conditionally displayed) */}
