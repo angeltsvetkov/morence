@@ -57,17 +57,20 @@ const Header = () => {
     if (!isApartmentPage) return;
 
     const observerOptions = {
-      rootMargin: '-20% 0px -40% 0px',
-      threshold: [0, 0.3, 0.6, 1.0]
+      rootMargin: '-10% 0px -30% 0px',
+      threshold: [0, 0.1, 0.3, 0.5, 1.0]
     };
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting && entry.intersectionRatio > 0.3) {
+        if (entry.isIntersecting && entry.intersectionRatio > 0.1) {
           setActiveSection(entry.target.id);
         }
       });
     }, observerOptions);
+
+    // Keep track of observed sections to avoid duplicates
+    const observedSections = new Set<string>();
 
     // Wait for sections to be rendered
     const checkSections = () => {
@@ -77,20 +80,30 @@ const Header = () => {
       const gallerySection = document.getElementById('gallery-section');
       const placesSection = document.getElementById('places-section');
 
-      if (amenitiesSection && availabilitySection) {
-        if (offersSection) {
-          observer.observe(offersSection);
-        }
+      // Observe sections as they become available
+      if (offersSection && !observedSections.has('offers-section')) {
+        observer.observe(offersSection);
+        observedSections.add('offers-section');
+      }
+      if (amenitiesSection && !observedSections.has('amenities-section')) {
         observer.observe(amenitiesSection);
+        observedSections.add('amenities-section');
+      }
+      if (availabilitySection && !observedSections.has('availability-section')) {
         observer.observe(availabilitySection);
-        if (gallerySection) {
-          observer.observe(gallerySection);
-        }
-        if (placesSection) {
-          observer.observe(placesSection);
-        }
-      } else {
-        // Retry after a short delay if sections aren't ready
+        observedSections.add('availability-section');
+      }
+      if (gallerySection && !observedSections.has('gallery-section')) {
+        observer.observe(gallerySection);
+        observedSections.add('gallery-section');
+      }
+      if (placesSection && !observedSections.has('places-section')) {
+        observer.observe(placesSection);
+        observedSections.add('places-section');
+      }
+
+      // Continue checking if not all expected sections are found yet
+      if (!amenitiesSection || !availabilitySection) {
         setTimeout(checkSections, 100);
       }
     };
@@ -134,7 +147,7 @@ const Header = () => {
                       : 'text-gray-600 hover:text-gray-900 hover:bg-white/80 hover:shadow-md hover:scale-105'
                   }`}
                 >
-                  <span className="relative z-10">{t('specialOffers')}</span>
+                  <span className="relative z-10">{t('pricing')}</span>
                   {activeSection === 'offers-section' && (
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full opacity-50 blur-sm"></div>
                   )}

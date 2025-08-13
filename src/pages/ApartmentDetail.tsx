@@ -1313,7 +1313,7 @@ const ApartmentDetail: React.FC = () => {
 
                         {/* Combined Special Offers Button / Scroll Down Indicator */}
                         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center z-20">
-                            {apartment?.pricing?.perNight && apartment.pricingOffers && apartment.pricingOffers.length > 0 ? (
+                            {(apartment?.pricing?.perNight?.bg || apartment?.pricing?.perNight?.en || (apartment.pricingOffers && apartment.pricingOffers.length > 0)) ? (
                                 // Special Offers Section with Connected Design
                                 <div className="relative flex flex-col items-center">
                                     {/* Connecting Line */}
@@ -1333,7 +1333,10 @@ const ApartmentDetail: React.FC = () => {
                                         className="cursor-pointer group relative z-10 px-4 py-2"
                                     >
                                         <div className="text-white text-lg font-bold tracking-wide text-center drop-shadow-2xl group-hover:text-orange-200 transition-all duration-300">
-                                            {t('viewSpecialOffers') || `${t('view')} ${t('specialOffers')}`}
+                                            {apartment.pricingOffers && apartment.pricingOffers.length > 0 
+                                                ? (t('viewSpecialOffers') || `${t('view')} ${t('specialOffers')}`)
+                                                : (t('viewPricing') || `${t('view')} ${t('pricing')}`)
+                                            }
                                         </div>
                                         {/* Underline indicator */}
                                         <div className="w-0 h-0.5 bg-gradient-to-r from-orange-400 to-amber-400 mx-auto mt-1 group-hover:w-full transition-all duration-300 rounded-full shadow-lg"></div>
@@ -1531,7 +1534,7 @@ const ApartmentDetail: React.FC = () => {
             )}
 
             {/* Pricing Offers Section */}
-            {apartment.pricingOffers && apartment.pricingOffers.length > 0 && (
+            {(apartment?.pricing?.perNight?.bg || apartment?.pricing?.perNight?.en || (apartment.pricingOffers && apartment.pricingOffers.length > 0)) && (
                 <div id="offers-section" className="py-16 sm:py-24 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
                     <div className="w-full px-4 sm:px-6 lg:px-8">
                         {/* Special Offers Header */}
@@ -1541,11 +1544,11 @@ const ApartmentDetail: React.FC = () => {
                                     <Gift className="w-6 h-6 text-white" />
                     </div>
                                 <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-gray-900 via-orange-700 to-pink-800 bg-clip-text text-transparent">
-                                    {t('specialOffers')}
+                                    {apartment.pricingOffers && apartment.pricingOffers.length > 0 ? t('specialOffers') : t('pricing')}
                                 </h2>
                 </div>
                             <p className="text-xl text-gray-600 text-center max-w-3xl mx-auto">
-                                {t('specialOffersDescription')}
+                                {apartment.pricingOffers && apartment.pricingOffers.length > 0 ? t('specialOffersDescription') : t('pricingDescription')}
                             </p>
             </div>
                         <div className="flex flex-wrap justify-center gap-6 mx-auto max-w-full">
@@ -1647,7 +1650,7 @@ const ApartmentDetail: React.FC = () => {
                                     </div>
 
                             {/* Special Offers Cards */}
-                            {apartment.pricingOffers.map((offer, index) => {
+                            {apartment.pricingOffers?.map((offer, index) => {
                                 // Get per-night prices (now stored directly as per-night rates)
                                 const bgnPerNight = (offer as any).priceBGN || Math.round(offer.price * 1.95583);
                                 const eurPerNight = (offer as any).priceEUR || offer.price;
