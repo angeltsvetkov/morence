@@ -233,31 +233,36 @@ const PlacesAdmin: React.FC = () => {
                                     className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                 />
                             </div>
-                            <div>
-                                <Label>{t('websiteUrl')}</Label>
-                                <Input 
-                                    value={currentPlace.url || ''} 
-                                    onChange={e => handleInputChange('url', e.target.value)}
-                                    placeholder={t('placeholderWebsite')}
-                                    className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                />
+                            
+                            {/* Website URL and Location on same line */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <Label>{t('websiteUrl')}</Label>
+                                    <Input 
+                                        value={currentPlace.url || ''} 
+                                        onChange={e => handleInputChange('url', e.target.value)}
+                                        placeholder={t('placeholderWebsite')}
+                                        className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    />
+                                </div>
+                                <div>
+                                    <Label>{t('distance')} (km)</Label>
+                                    <Input 
+                                        type="number"
+                                        value={currentPlace.distance || ''} 
+                                        onChange={e => handleInputChange('distance', e.target.value ? Number(e.target.value) : undefined)}
+                                        placeholder={t('placeholderDistance')}
+                                        className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    />
+                                </div>
                             </div>
+                            
                             <div>
                                 <Label>{t('locationHint')}</Label>
                                 <Input 
                                     value={currentPlace.location || ''} 
                                     onChange={e => handleInputChange('location', e.target.value)}
                                     placeholder={t('placeholderLocation')}
-                                    className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                />
-                            </div>
-                            <div>
-                                <Label>{t('distance')} (in km, optional)</Label>
-                                <Input 
-                                    type="number"
-                                    value={currentPlace.distance || ''} 
-                                    onChange={e => handleInputChange('distance', e.target.value ? Number(e.target.value) : undefined)}
-                                    placeholder={t('placeholderDistance')}
                                     className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                 />
                             </div>

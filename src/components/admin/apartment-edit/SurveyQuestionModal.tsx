@@ -209,47 +209,48 @@ const SurveyQuestionModal: React.FC<SurveyQuestionModalProps> = ({ isOpen, onClo
                             />
                         )}
                     </div>
-                    <div>
-                        <Label htmlFor="editQuestionType">{t('questionType')}</Label>
-                        <select
-                            id="editQuestionType"
-                            value={editedQuestion.type}
-                            onChange={(e) => setEditedQuestion(prev => prev ? { ...prev, type: e.target.value as 'rating' | 'text' | 'yesno' | 'choice' } : null)}
-                            className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                            <option value="rating">{t('ratingQuestion')} (1-5 ⭐)</option>
-                            <option value="text">{t('textQuestion')} (Open text)</option>
-                            <option value="yesno">{t('yesNoQuestion')} (Yes/No)</option>
-                            <option value="choice">{t('choiceQuestion')} (Multiple choice)</option>
-                        </select>
-                    </div>
-
-                    {/* Max Selections for Multiple Choice */}
-                    {editedQuestion.type === 'choice' && (
+                    {/* Question Type and Max Selections */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <Label htmlFor="maxSelections" className="text-sm font-medium text-gray-900">{t('maxSelections')}</Label>
-                            <Input
-                                id="maxSelections"
-                                type="number"
-                                min="1"
-                                max="10"
-                                value={editedQuestion.maxSelections || 1}
-                                onChange={(e) => setEditedQuestion(prev => prev ? { 
-                                    ...prev, 
-                                    maxSelections: parseInt(e.target.value) || 1 
-                                } : null)}
-                                className="mt-1"
-                            />
-                            <div className="mt-1 text-xs text-gray-500">
-                                {editedQuestion.maxSelections === 1 
-                                    ? t('singleSelectionNote') 
-                                    : t('multipleSelectionNote').replace('{count}', String(editedQuestion.maxSelections || 1))
-                                }
-                            </div>
+                            <Label htmlFor="editQuestionType">{t('questionType')}</Label>
+                            <select
+                                id="editQuestionType"
+                                value={editedQuestion.type}
+                                onChange={(e) => setEditedQuestion(prev => prev ? { ...prev, type: e.target.value as SurveyQuestion['type'] } : null)}
+                                className="mt-1 w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            >
+                                <option value="rating">{t('ratingQuestion')} (1-5 ⭐)</option>
+                                <option value="text">{t('textQuestion')} (Open text)</option>
+                                <option value="yesno">{t('yesNoQuestion')} (Yes/No)</option>
+                                <option value="choice">{t('choiceQuestion')} (Multiple choice)</option>
+                            </select>
                         </div>
-                    )}
-                    
-                    {/* Multiple Choice Options Editor */}
+
+                        {/* Max Selections for Multiple Choice */}
+                        {editedQuestion.type === 'choice' && (
+                            <div>
+                                <Label htmlFor="maxSelections" className="text-sm font-medium text-gray-900">{t('maxSelections')}</Label>
+                                <Input
+                                    id="maxSelections"
+                                    type="number"
+                                    min="1"
+                                    max="10"
+                                    value={editedQuestion.maxSelections || 1}
+                                    onChange={(e) => setEditedQuestion(prev => prev ? { 
+                                        ...prev, 
+                                        maxSelections: parseInt(e.target.value) || 1 
+                                    } : null)}
+                                    className="mt-1"
+                                />
+                                <div className="mt-1 text-xs text-gray-500">
+                                    {editedQuestion.maxSelections === 1 
+                                        ? t('singleSelectionNote') 
+                                        : t('multipleSelectionNote').replace('{count}', String(editedQuestion.maxSelections || 1))
+                                    }
+                                </div>
+                            </div>
+                        )}
+                    </div>                    {/* Multiple Choice Options Editor */}
                     {editedQuestion.type === 'choice' && (
                         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                             <div className="flex justify-between items-center mb-3">

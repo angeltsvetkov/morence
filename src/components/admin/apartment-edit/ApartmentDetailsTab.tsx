@@ -104,48 +104,49 @@ const ApartmentDetailsTab: React.FC<ApartmentDetailsTabProps> = ({
                 />
             </div>
 
-            {/* Floor Number */}
-            <div>
-                <Label htmlFor="floor">{t('floor')}</Label>
-                <Input
-                    id="floor"
-                    type="number"
-                    min="0"
-                    max="50"
-                    placeholder={t('enterFloorNumber')}
-                    value={currentApartmentData.floor !== undefined ? currentApartmentData.floor.toString() : ''}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
-                        setCurrentApartmentData({
-                            ...currentApartmentData,
-                            floor: e.target.value !== '' ? parseInt(e.target.value) : undefined
-                        })
-                    }
-                    className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                />
-            </div>
+            {/* Floor Number and Minimum Nights */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <Label htmlFor="floor">{t('floor')}</Label>
+                    <Input
+                        id="floor"
+                        type="number"
+                        min="0"
+                        max="50"
+                        placeholder={t('enterFloorNumber')}
+                        value={currentApartmentData.floor !== undefined ? currentApartmentData.floor.toString() : ''}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
+                            setCurrentApartmentData({
+                                ...currentApartmentData,
+                                floor: e.target.value !== '' ? parseInt(e.target.value) : undefined
+                            })
+                        }
+                        className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    />
+                </div>
 
-            {/* Minimum Nights */}
-            <div>
-                <Label htmlFor="minimumNights">{t('minimumNumberOfNights') || 'Minimum Number of Nights'}</Label>
-                <Input
-                    id="minimumNights"
-                    type="number"
-                    min="1"
-                    max="30"
-                    placeholder="e.g., 2"
-                    value={currentApartmentData.minimumNights !== undefined ? currentApartmentData.minimumNights.toString() : ''}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
-                        setCurrentApartmentData({
-                            ...currentApartmentData,
-                            minimumNights: e.target.value !== '' ? parseInt(e.target.value) : undefined
-                        })
-                    }
-                    className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                />
-                <p className="text-sm text-gray-500 mt-1">
-                    {t('minimumNightsDescription') || 'Minimum number of nights guests must book. Leave empty for no minimum.'}
-                </p>
+                <div>
+                    <Label htmlFor="minimumNights">{t('minimumNumberOfNights') || 'Minimum Number of Nights'}</Label>
+                    <Input
+                        id="minimumNights"
+                        type="number"
+                        min="1"
+                        max="30"
+                        placeholder="e.g., 2"
+                        value={currentApartmentData.minimumNights !== undefined ? currentApartmentData.minimumNights.toString() : ''}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
+                            setCurrentApartmentData({
+                                ...currentApartmentData,
+                                minimumNights: e.target.value !== '' ? parseInt(e.target.value) : undefined
+                            })
+                        }
+                        className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    />
+                </div>
             </div>
+            <p className="text-sm text-gray-500 mt-1">
+                {t('minimumNightsDescription') || 'Minimum number of nights guests must book. Leave empty for no minimum.'}
+            </p>
 
             {/* Address */}
             <div>
