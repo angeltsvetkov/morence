@@ -32,7 +32,7 @@ const ApartmentAmenitiesTab: React.FC<ApartmentAmenitiesTabProps> = ({
     const { t } = useAdminLanguage();
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 pb-16">
             {/* Tab Header */}
             <div className="flex justify-between items-center mb-6 pb-4 border-b">
                 <h3 className="text-xl font-semibold text-gray-900">{t('amenities')}</h3>

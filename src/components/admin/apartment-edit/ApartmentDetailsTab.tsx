@@ -20,7 +20,7 @@ const ApartmentDetailsTab: React.FC<ApartmentDetailsTabProps> = ({
     const { t } = useAdminLanguage();
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 pb-16">
             {/* Tab Language Selector */}
             <div className="flex justify-between items-center mb-6 pb-4 border-b">
                 <h3 className="text-xl font-semibold text-gray-900">{t('details')}</h3>
@@ -217,70 +217,6 @@ const ApartmentDetailsTab: React.FC<ApartmentDetailsTabProps> = ({
                         />
                     </div>
                 </div>
-            </div>
-
-            {/* Availability Period */}
-            <div className="bg-slate-50 p-6 rounded-lg border">
-                <h4 className="text-lg font-semibold text-gray-800 mb-4">{t('availabilityPeriod')}</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <Label htmlFor="availabilityStart">{t('startDate')}</Label>
-                        <Input
-                            id="availabilityStart"
-                            type="date"
-                            value={currentApartmentData.availabilityStart || ''}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                                setCurrentApartmentData({
-                                    ...currentApartmentData,
-                                    availabilityStart: e.target.value
-                                })
-                            }
-                            className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        />
-                    </div>
-                    <div>
-                        <Label htmlFor="availabilityEnd">{t('endDate')}</Label>
-                        <Input
-                            id="availabilityEnd"
-                            type="date"
-                            value={currentApartmentData.availabilityEnd || ''}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                                setCurrentApartmentData({
-                                    ...currentApartmentData,
-                                    availabilityEnd: e.target.value
-                                })
-                            }
-                            className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        />
-                    </div>
-                </div>
-                
-                {/* Display current availability period */}
-                {currentApartmentData.availabilityStart && currentApartmentData.availabilityEnd && (
-                    <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                        <p className="text-sm text-blue-800">
-                            {t('availabilityPeriodInfo')}: {' '}
-                            <span className="font-medium">
-                                {new Date(currentApartmentData.availabilityStart).toLocaleDateString()}
-                            </span>
-                            {' '}{t('to')}{' '}
-                            <span className="font-medium">
-                                {new Date(currentApartmentData.availabilityEnd).toLocaleDateString()}
-                            </span>
-                        </p>
-                    </div>
-                )}
-                
-                {(currentApartmentData.availabilityStart || currentApartmentData.availabilityEnd) && (
-                    <div className="mt-2">
-                        <p className="text-xs text-gray-500">
-                            {currentApartmentData.availabilityStart && currentApartmentData.availabilityEnd ? 
-                                t('availabilityActiveMessage') :
-                                t('availabilityBothDatesRequired')
-                            }
-                        </p>
-                    </div>
-                )}
             </div>
         </div>
     );

@@ -109,7 +109,7 @@ const Admin: React.FC = () => {
         <div className="min-h-screen bg-gray-100">
             <Sidebar />
             <main className={`p-8 ${isSuperAdmin ? 'ml-64' : ''}`}>
-                {!isSuperAdmin && (
+                {!isSuperAdmin && !location.pathname.includes('/apartments') && (
                     <div className="mb-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl shadow-lg">
                         <div className="px-8 py-6">
                             <div className="flex justify-between items-center">

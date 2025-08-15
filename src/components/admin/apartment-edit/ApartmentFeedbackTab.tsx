@@ -419,7 +419,7 @@ const ApartmentFeedbackTab: React.FC<ApartmentFeedbackTabProps> = ({ apartment, 
     }
 
             return (
-            <div className="space-y-6">
+            <div className="space-y-6 pb-16">
                 {/* Header */}
                 <div className="flex justify-between items-center border-b pb-4">
                     <h3 className="text-xl font-semibold text-gray-900">{t('guestFeedback')}</h3>

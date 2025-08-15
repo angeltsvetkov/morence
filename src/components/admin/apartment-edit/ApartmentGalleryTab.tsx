@@ -37,7 +37,7 @@ const ApartmentGalleryTab: React.FC<ApartmentGalleryTabProps> = ({
     const [conversionStatus, setConversionStatus] = useState<string>('');
 
     return (
-        <div>
+        <div className="pb-16">
             {/* Tab Header */}
             <div className="flex justify-between items-center mb-6 pb-4 border-b">
                 <h3 className="text-xl font-semibold text-gray-900">{t('gallery')}</h3>

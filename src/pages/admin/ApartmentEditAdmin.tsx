@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { db } from '../../firebase';
+import { db, auth } from '../../firebase';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { doc, updateDoc, collection, getDocs, addDoc, deleteDoc, DocumentData, getDoc } from 'firebase/firestore';
 import { generateSurveyToken, generateSurveyUrl } from '../../lib/surveyUtils';
@@ -20,10 +20,11 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { slugify, formatPrice, getCurrencySymbol } from '../../lib/utils';
 import { safeToDate } from '../../utils/dateUtils';
-import { MoreVertical, Trash2, Home, Star, ExternalLink, Share2, Copy,
-    Wifi, Snowflake, Thermometer, ChefHat, RefrigeratorIcon, Zap, 
-    Waves, Shield, Car, Baby, Dumbbell, Coffee, Monitor, TreePine, 
-    MapPin, Users, Bed, Bath, Sofa, Utensils, WashingMachine, 
+import {
+    MoreVertical, Trash2, Home, Star, ExternalLink,
+    Wifi, Snowflake, Thermometer, ChefHat, RefrigeratorIcon, Zap,
+    Waves, Shield, Car, Baby, Dumbbell, Coffee, Monitor, TreePine,
+    MapPin, Users, Bed, Bath, Sofa, Utensils, WashingMachine,
     FlameKindling, AirVent, Tv, Car as ParkingIcon, Building,
     PersonStanding, Gamepad2, Sparkles, Home as HouseIcon, Plane,
     Flower, ShoppingCart, Heart, Music, Camera, Book, Wine,
@@ -34,18 +35,19 @@ import { MoreVertical, Trash2, Home, Star, ExternalLink, Share2, Copy,
     Newspaper, Globe, Stethoscope, Activity, Bike, Bus, Train, Ship,
     Fuel, Briefcase, Printer, FileText, Calculator, Umbrella, Glasses,
     Watch, Key, Bell, AlertTriangle, Dog, Cat, Fish, Bird, Store,
-    ShoppingBag, Gift, Award, Cloud, CloudSnow, CloudLightning, 
-    Sunrise, Sandwich, Apple, WifiOff, UserCheck, Check, 
+    ShoppingBag, Gift, Award, Cloud, CloudSnow, CloudLightning,
+    Sunrise, Sandwich, Apple, WifiOff, UserCheck, Check,
     ArrowLeft,
     ArrowLeftCircleIcon,
     ArrowRightFromLine,
     ArrowRightCircleIcon,
-    ArrowRight} from 'lucide-react';
+    ArrowRight, LogOut, ChevronDown
+} from 'lucide-react';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
 import RentalPeriodModal from '../../components/admin/RentalPeriodModal';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
@@ -55,7 +57,6 @@ import {
     ApartmentAmenitiesTab,
     ApartmentGalleryTab,
     ApartmentPricingTab,
-    ApartmentShareTab,
     ApartmentCalendarTab,
     ApartmentFeedbackTab,
     ApartmentTestimonialsTab
@@ -191,8 +192,8 @@ const ApartmentEditAdmin: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
     const { language } = useLanguage();
-    const { t } = useAdminLanguage();
-    const { isSuperAdmin, userId } = useAuth();
+    const { t, language: adminLanguage, setLanguage: setAdminLanguage } = useAdminLanguage();
+    const { isSuperAdmin, userId, user } = useAuth();
     const [apartment, setApartment] = useState<Apartment | null>(null);
     const [currentApartmentData, setCurrentApartmentData] = useState<Partial<Apartment>>({});
     const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
@@ -200,10 +201,26 @@ const ApartmentEditAdmin: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
     const [accessDenied, setAccessDenied] = useState(false);
-    
+    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+    const userMenuRef = useRef<HTMLDivElement>(null);
+
+    // Handle click outside to close user menu
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+                setIsUserMenuOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
     // Automatically generate survey links for bookings that don't have them
     useSurveyLinkGeneration(bookings, apartment?.id || '', setBookings);
-    
+
     // Confirmation dialog state
     const [confirmationDialog, setConfirmationDialog] = useState<{
         isOpen: boolean;
@@ -215,8 +232,8 @@ const ApartmentEditAdmin: React.FC = () => {
         isOpen: false,
         title: '',
         message: '',
-        onConfirm: () => {},
-        onCancel: () => {}
+        onConfirm: () => { },
+        onCancel: () => { }
     });
 
     const showConfirmation = (title: string, message: string, onConfirm: () => void) => {
@@ -234,7 +251,7 @@ const ApartmentEditAdmin: React.FC = () => {
         });
     };
 
-    const [view, setView] = useState<'details' | 'amenities' | 'calendar' | 'pricing' | 'gallery' | 'share' | 'feedback' | 'testimonials'>('details');
+    const [view, setView] = useState<'details' | 'amenities' | 'calendar' | 'pricing' | 'gallery' | 'feedback' | 'testimonials'>('details');
     const [formLanguage, setFormLanguage] = useState<'bg' | 'en'>('bg');
     const [isRentalModalOpen, setIsRentalModalOpen] = useState(false);
     const [selectedSlot, setSelectedSlot] = useState<{ start: Date; end: Date } | null>(null);
@@ -258,7 +275,7 @@ const ApartmentEditAdmin: React.FC = () => {
     });
     const [availableAmenities, setAvailableAmenities] = useState<Amenity[]>([]);
     const EUR_TO_BGN_RATE = 1.95583;
-    
+
     const convertBgnToEur = (bgnPrice: number): number => {
         return Math.ceil(bgnPrice / EUR_TO_BGN_RATE);
     };
@@ -279,9 +296,9 @@ const ApartmentEditAdmin: React.FC = () => {
     const fetchAvailableAmenities = useCallback(async () => {
         try {
             const querySnapshot = await getDocs(collection(db, "amenities"));
-            const amenitiesList = querySnapshot.docs.map(doc => ({ 
-                id: doc.id, 
-                ...doc.data() 
+            const amenitiesList = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
             } as Amenity));
             setAvailableAmenities(amenitiesList);
         } catch (error) {
@@ -300,7 +317,7 @@ const ApartmentEditAdmin: React.FC = () => {
     const convertEurToBgn = (eurPrice: number): number => {
         return eurPrice * EUR_TO_BGN_RATE;
     };
-    
+
     const handleDeleteBooking = async (bookingId: string) => {
         try {
             if (!apartment?.id) {
@@ -313,7 +330,7 @@ const ApartmentEditAdmin: React.FC = () => {
             alert(language === 'bg' ? 'Грешка при изтриването на резервацията' : 'Error deleting booking');
         }
     };
-    
+
     const renderAmenityIcon = (amenity: string) => {
         // First try to find icon from Firebase amenities
         const amenityData = availableAmenities.find(a => a.en === amenity || a.bg === amenity || a.id === amenity);
@@ -394,14 +411,14 @@ const ApartmentEditAdmin: React.FC = () => {
 
             if (aptDoc) {
                 const aptData = { id: aptDoc.id, ...aptDoc.data() } as Apartment;
-                
+
                 // Check access control - user can only access their own apartments unless they're super admin
                 if (!isSuperAdmin && aptData.ownerId !== userId) {
                     setAccessDenied(true);
                     console.error('Access denied: User does not own this apartment');
                     return;
                 }
-                
+
                 setApartment(aptData);
                 setCurrentApartmentData(JSON.parse(JSON.stringify(aptData)));
                 if (aptData.photos) {
@@ -611,30 +628,6 @@ const ApartmentEditAdmin: React.FC = () => {
         }
     };
 
-    const handleShare = async () => {
-        const shareUrl = `${window.location.origin}/apartments/${slug}`;
-        const shareTitle = currentApartmentData?.name?.[formLanguage as 'en' | 'bg'] || 'Check out this apartment';
-        if (navigator.share) {
-            try {
-                await navigator.share({ title: shareTitle, url: shareUrl });
-            } catch (error) {
-                handleCopyUrl();
-            }
-        } else {
-            handleCopyUrl();
-        }
-    };
-
-    const handleCopyUrl = async () => {
-        const shareUrl = `${window.location.origin}/apartments/${slug}`;
-        try {
-            await navigator.clipboard.writeText(shareUrl);
-            alert('URL Copied!');
-        } catch (error) {
-            alert(t('failedToCopyUrl'));
-        }
-    };
-
     const handleSaveRentalPeriod = async (data: any) => {
         if (!apartment) return;
         const hasOverlap = bookings.some(existingBooking => data.startDate < existingBooking.end && existingBooking.start < data.endDate);
@@ -676,7 +669,7 @@ const ApartmentEditAdmin: React.FC = () => {
 
         try {
             const bookingRef = await addDoc(collection(db, `apartments/${apartment.id}/bookings`), newBooking);
-            
+
             // Generate and update survey URL if it's a booking
             if (data.type === 'booked' && newBooking.surveyToken) {
                 const surveyUrl = generateSurveyUrl(bookingRef.id, newBooking.surveyToken, undefined, data.surveyLanguage);
@@ -837,8 +830,8 @@ const ApartmentEditAdmin: React.FC = () => {
 
     const handleDeletePricingOffer = async (offerId: string) => {
         showConfirmation(
-            t('confirmDelete') || 'Confirm Delete', 
-            t('confirmDeletePricingOffer') || 'Are you sure you want to delete this pricing offer?', 
+            t('confirmDelete') || 'Confirm Delete',
+            t('confirmDeletePricingOffer') || 'Are you sure you want to delete this pricing offer?',
             async () => {
                 const originalOffers = currentApartmentData.pricingOffers || [];
                 const updatedOffers = originalOffers.filter(offer => offer.id !== offerId);
@@ -876,16 +869,16 @@ const ApartmentEditAdmin: React.FC = () => {
 
     const handleDeleteBasePrice = async () => {
         showConfirmation(
-            t('confirmDelete') || 'Confirm Delete', 
-            t('confirmDeleteBasePrice') || 'Are you sure you want to delete the base price?', 
+            t('confirmDelete') || 'Confirm Delete',
+            t('confirmDeleteBasePrice') || 'Are you sure you want to delete the base price?',
             async () => {
                 const originalPricing = currentApartmentData.pricing;
                 setCurrentApartmentData(prev => ({ ...prev, pricing: { ...prev.pricing, perNight: {} } }));
-                
+
                 if (apartment) {
                     try {
                         setLoading(true);
-                        await updateDoc(doc(db, 'apartments', apartment.id), { 
+                        await updateDoc(doc(db, 'apartments', apartment.id), {
                             'pricing.perNight': {}
                         });
                         setSaveSuccess(true);
@@ -916,13 +909,13 @@ const ApartmentEditAdmin: React.FC = () => {
                 en: newBasePrice.priceEUR
             }
         };
-        
+
         setCurrentApartmentData(prev => ({ ...prev, pricing: updatedPricing }));
-        
+
         if (apartment) {
             try {
                 setLoading(true);
-                await updateDoc(doc(db, 'apartments', apartment.id), { 
+                await updateDoc(doc(db, 'apartments', apartment.id), {
                     'pricing.perNight': {
                         bg: newBasePrice.priceBGN,
                         en: newBasePrice.priceEUR
@@ -939,7 +932,7 @@ const ApartmentEditAdmin: React.FC = () => {
                 setLoading(false);
             }
         }
-        
+
         setNewBasePrice({ priceBGN: 0, priceEUR: 0, description: '' });
         setIsBasePriceModalOpen(false);
         setEditingBasePrice(false);
@@ -951,7 +944,7 @@ const ApartmentEditAdmin: React.FC = () => {
             <div className="p-6 text-center">
                 <h2 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h2>
                 <p className="text-gray-600 mb-4">You don't have permission to edit this apartment.</p>
-                <button 
+                <button
                     onClick={() => navigate('/admin/apartments')}
                     className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                 >
@@ -968,28 +961,116 @@ const ApartmentEditAdmin: React.FC = () => {
             <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 sticky top-0 z-10">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-3 sm:gap-0">
                     <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
-                        <button 
+                        <button
                             onClick={() => navigate('/admin/apartments')}
                             className="flex items-center gap-2 px-2 sm:px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors group"
                         >
                             <ArrowRight className="w-4 sm:w-5 h-4 sm:h-5 rotate-180 group-hover:transform group-hover:-translate-x-1 transition-transform" />
-                            <span className="font-medium text-sm sm:text-base">{t('backToApartments')}</span>
                         </button>
                         <div className="w-px h-6 bg-gray-300 hidden sm:block"></div>
+                        
+                        {/* Morence.top branding */}
+                        <div className="flex items-center gap-3">
+                            <div className="bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600 px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 backdrop-blur-sm border border-white/20 flex items-center gap-2">
+                                <Waves className="w-4 h-4 text-white animate-pulse" />
+                                <div className="flex items-baseline">
+                                    <span className="text-white text-sm font-bold tracking-wider uppercase bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">morence</span>
+                                    <span className="text-blue-100 text-xs font-light">.top</span>
+                                </div>
+                            </div>
+                            <div className="w-px h-6 bg-gray-300 hidden sm:block"></div>
+                        </div>
+                        
                         <h1 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
                             {apartment.name?.[language as 'bg' | 'en'] || apartment.name?.en || apartment.name?.bg || 'Apartment'}
                         </h1>
+                        <button
+                            onClick={() => open(`/apartments/${slug}`, "_blank")}
+                            className="flex items-center justify-center p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors group"
+                            title={t('viewPublicPage')}
+                        >
+                            <ExternalLink className="w-5 h-5 group-hover:transform group-hover:scale-110 transition-transform" />
+                        </button>
                     </div>
-                    <button 
-                        onClick={() => open(`/apartments/${slug}`, "_blank")}
-                        className="flex items-center gap-2 px-2 sm:px-3 py-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors group w-full sm:w-auto justify-center sm:justify-start"
-                    >
-                        <ExternalLink className="w-4 sm:w-5 h-4 sm:h-5 group-hover:transform group-hover:scale-110 transition-transform" />
-                        <span className="font-medium text-sm sm:text-base">{t('viewPublicPage')}</span>
-                    </button>
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                        {/* User Avatar with Dropdown */}
+                        {user && (
+                            <div className="relative" ref={userMenuRef}>
+                                <button
+                                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                                    className="flex items-center gap-1 hover:opacity-80 transition-opacity cursor-pointer"
+                                >
+                                    {user.photoURL ? (
+                                        <img
+                                            src={user.photoURL}
+                                            alt={user.displayName || user.email || 'User'}
+                                            className="w-8 h-8 rounded-full object-cover"
+                                            referrerPolicy="no-referrer"
+                                        />
+                                    ) : (
+                                        <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-semibold">
+                                            {(user.displayName || user.email || 'U').charAt(0).toUpperCase()}
+                                        </div>
+                                    )}
+                                    <ChevronDown className="w-4 h-4 text-gray-500" />
+                                </button>
+
+                                {/* Dropdown Menu */}
+                                {isUserMenuOpen && (
+                                    <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                                        <div className="py-1">
+                                            {/* User Info */}
+                                            <div className="px-3 py-2 border-b border-gray-100">
+                                                <div className="text-sm font-medium text-gray-900 truncate">
+                                                    {user.displayName || 'User'}
+                                                </div>
+                                                <div className="text-xs text-gray-500 truncate">
+                                                    {user.email}
+                                                </div>
+                                            </div>
+
+                                            {/* Language Selector */}
+                                            <div className="px-3 py-2 border-b border-gray-100">
+                                                <div className="text-xs text-gray-500 mb-1">{t('language')}</div>
+                                                <div className="flex gap-1">
+                                                    {(['bg', 'en'] as const).map((lang) => (
+                                                        <button
+                                                            key={lang}
+                                                            onClick={() => {
+                                                                setAdminLanguage(lang);
+                                                                setIsUserMenuOpen(false);
+                                                            }}
+                                                            className={`px-2 py-1 text-xs rounded ${adminLanguage === lang
+                                                                ? 'bg-blue-100 text-blue-700 font-medium'
+                                                                : 'text-gray-600 hover:bg-gray-100'
+                                                                }`}
+                                                        >
+                                                            {lang.toUpperCase()}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Logout */}
+                                            <button
+                                                onClick={() => {
+                                                    auth.signOut();
+                                                    setIsUserMenuOpen(false);
+                                                }}
+                                                className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                            >
+                                                <LogOut className="w-4 h-4" />
+                                                {t('signOut')}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </header>
-            
+
             {/* Content Area */}
             <div className="p-4 sm:p-6 pb-32">
                 {/* Tab Navigation */}
@@ -1002,343 +1083,330 @@ const ApartmentEditAdmin: React.FC = () => {
                         <button onClick={() => setView('calendar')} className={`px-3 sm:px-4 py-2 text-sm sm:text-base whitespace-nowrap ${view === 'calendar' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}>{t('calendarAndBookings')}</button>
                         <button onClick={() => setView('feedback')} className={`px-3 sm:px-4 py-2 text-sm sm:text-base whitespace-nowrap ${view === 'feedback' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}>{t('feedback')}</button>
                         <button onClick={() => setView('testimonials')} className={`px-3 sm:px-4 py-2 text-sm sm:text-base whitespace-nowrap ${view === 'testimonials' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}>{t('testimonials')}</button>
-                        <button onClick={() => setView('share')} className={`px-3 sm:px-4 py-2 text-sm sm:text-base whitespace-nowrap ${view === 'share' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}>{t('share')}</button>
                     </div>
                 </div>
-            {view === 'details' && (
-                <ApartmentDetailsTab
-                    currentApartmentData={currentApartmentData}
-                    setCurrentApartmentData={setCurrentApartmentData}
-                    formLanguage={formLanguage as 'bg' | 'en'}
-                    setFormLanguage={setFormLanguage as (lang: 'bg' | 'en') => void}
-                    loading={loading}
-                    handleNameChange={handleNameChange as (lang: 'bg' | 'en', value: string) => void}
-                    handleContactChange={handleContactChange as (lang: 'bg' | 'en', field: 'name' | 'email', value: string) => void}
-                />
-            )}
-            {view === 'amenities' && (
-                <ApartmentAmenitiesTab
-                    currentApartmentData={currentApartmentData}
-                    setCurrentApartmentData={setCurrentApartmentData}
-                    formLanguage={formLanguage as 'bg' | 'en'}
-                    setFormLanguage={setFormLanguage as (lang: 'bg' | 'en') => void}
-                    availableAmenities={availableAmenities}
-                    handleAmenityToggle={handleAmenityToggle}
-                    handleCustomAmenityAdd={handleCustomAmenityAdd}
-                    handleAmenityRemove={handleAmenityRemove}
-                    handleAmenitiesOnDragEnd={handleAmenitiesOnDragEnd}
-                    getAmenityTranslation={getAmenityTranslation}
-                    renderAmenityIcon={renderAmenityIcon}
-                />
-            )}
-            {view === 'gallery' && (
-                <ApartmentGalleryTab
-                    currentApartmentData={currentApartmentData}
-                    setCurrentApartmentData={setCurrentApartmentData}
-                    galleryItems={galleryItems}
-                    setGalleryItems={setGalleryItems}
-                    handleOnDragEnd={handleOnDragEnd}
-                    handleImageDelete={handleImageDelete}
-                    handleSetHeroImage={handleSetHeroImage}
-                    handleToggleFavouriteImage={handleToggleFavouriteImage}
-                    formLanguage={formLanguage as 'bg' | 'en'}
-                    setFormLanguage={setFormLanguage as (lang: 'bg' | 'en') => void}
-                />
-            )}
-            {view === 'pricing' && (
-                <ApartmentPricingTab
-                    currentApartmentData={currentApartmentData}
-                    setCurrentApartmentData={setCurrentApartmentData}
-                    formLanguage={formLanguage as 'bg' | 'en'}
-                    setFormLanguage={setFormLanguage as (lang: 'bg' | 'en') => void}
-                    handleAddBasePrice={handleAddBasePrice}
-                    handleEditBasePrice={handleEditBasePrice}
-                    handleDeleteBasePrice={handleDeleteBasePrice}
-                    handleEditPricingOffer={handleEditPricingOffer}
-                    handleDeletePricingOffer={handleDeletePricingOffer}
-                    setIsPricingOfferModalOpen={setIsPricingOfferModalOpen}
-                    convertEurToBgn={convertEurToBgn}
-                />
-            )}
-            {view === 'calendar' && (
-                <ApartmentCalendarTab
-                    currentApartmentData={currentApartmentData}
-                    setCurrentApartmentData={setCurrentApartmentData}
-                    formLanguage={formLanguage as 'bg' | 'en'}
-                    setFormLanguage={setFormLanguage as (lang: 'bg' | 'en') => void}
-                    apartment={apartment}
-                    bookings={bookings}
-                    setBookings={setBookings}
-                    isRentalModalOpen={isRentalModalOpen}
-                    setIsRentalModalOpen={setIsRentalModalOpen}
-                    selectedSlot={selectedSlot}
-                    setSelectedSlot={setSelectedSlot}
-                    editingBooking={editingBooking}
-                    setEditingBooking={setEditingBooking}
-                    handleSaveRentalPeriod={handleSaveRentalPeriod}
-                    handleUpdateBooking={handleUpdateBooking}
-                    handleDeleteBooking={handleDeleteBooking}
-                    getBookingTypeTranslation={getBookingTypeTranslation}
-                />
-            )}
-            {view === 'feedback' && (
-                <ApartmentFeedbackTab
-                    currentApartmentData={currentApartmentData}
-                    setCurrentApartmentData={setCurrentApartmentData}
-                    formLanguage={formLanguage as 'bg' | 'en'}
-                    setFormLanguage={setFormLanguage as (lang: 'bg' | 'en') => void}
-                    apartment={apartment}
-                    showConfirmation={showConfirmation}
-                />
-            )}
-            {view === 'testimonials' && (
-                <ApartmentTestimonialsTab
-                    apartmentId={apartment?.id || ''}
-                    formLanguage={formLanguage as 'bg' | 'en'}
-                    setFormLanguage={setFormLanguage as (lang: 'bg' | 'en') => void}
-                />
-            )}
-            {view === 'share' && (
-                <ApartmentShareTab
-                    currentApartmentData={currentApartmentData}
-                    setCurrentApartmentData={setCurrentApartmentData}
-                    galleryItems={galleryItems}
-                    formLanguage={formLanguage as 'bg' | 'en'}
-                    setFormLanguage={setFormLanguage as (lang: 'bg' | 'en') => void}
-                    slug={slug}
-                    handleShare={handleShare}
-                    handleCopyUrl={handleCopyUrl}
-                />
-            )}
-            
-            {/* Simple Save Button Footer */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
-                <div className="px-14 py-4">
-                    <div className="flex justify-end items-center">
-                        {/* Success indicator */}
-                        {saveSuccess && (
-                            <div className="flex items-center gap-2 text-green-600">
-                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                </svg>
-                                <span className="text-sm font-medium px-6">{t('changesSavedSuccessfully')}</span>
-                            </div>
-                        )}
-                        
-                        {/* Simple Save Button */}
-                        <Button 
-                            type="button"
-                            onClick={handleSave} 
-                            disabled={loading} 
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2"
-                        >
-                            {loading ? (
-                                <>
-                                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                {view === 'details' && (
+                    <ApartmentDetailsTab
+                        currentApartmentData={currentApartmentData}
+                        setCurrentApartmentData={setCurrentApartmentData}
+                        formLanguage={formLanguage as 'bg' | 'en'}
+                        setFormLanguage={setFormLanguage as (lang: 'bg' | 'en') => void}
+                        loading={loading}
+                        handleNameChange={handleNameChange as (lang: 'bg' | 'en', value: string) => void}
+                        handleContactChange={handleContactChange as (lang: 'bg' | 'en', field: 'name' | 'email', value: string) => void}
+                    />
+                )}
+                {view === 'amenities' && (
+                    <ApartmentAmenitiesTab
+                        currentApartmentData={currentApartmentData}
+                        setCurrentApartmentData={setCurrentApartmentData}
+                        formLanguage={formLanguage as 'bg' | 'en'}
+                        setFormLanguage={setFormLanguage as (lang: 'bg' | 'en') => void}
+                        availableAmenities={availableAmenities}
+                        handleAmenityToggle={handleAmenityToggle}
+                        handleCustomAmenityAdd={handleCustomAmenityAdd}
+                        handleAmenityRemove={handleAmenityRemove}
+                        handleAmenitiesOnDragEnd={handleAmenitiesOnDragEnd}
+                        getAmenityTranslation={getAmenityTranslation}
+                        renderAmenityIcon={renderAmenityIcon}
+                    />
+                )}
+                {view === 'gallery' && (
+                    <ApartmentGalleryTab
+                        currentApartmentData={currentApartmentData}
+                        setCurrentApartmentData={setCurrentApartmentData}
+                        galleryItems={galleryItems}
+                        setGalleryItems={setGalleryItems}
+                        handleOnDragEnd={handleOnDragEnd}
+                        handleImageDelete={handleImageDelete}
+                        handleSetHeroImage={handleSetHeroImage}
+                        handleToggleFavouriteImage={handleToggleFavouriteImage}
+                        formLanguage={formLanguage as 'bg' | 'en'}
+                        setFormLanguage={setFormLanguage as (lang: 'bg' | 'en') => void}
+                    />
+                )}
+                {view === 'pricing' && (
+                    <ApartmentPricingTab
+                        currentApartmentData={currentApartmentData}
+                        setCurrentApartmentData={setCurrentApartmentData}
+                        formLanguage={formLanguage as 'bg' | 'en'}
+                        setFormLanguage={setFormLanguage as (lang: 'bg' | 'en') => void}
+                        handleAddBasePrice={handleAddBasePrice}
+                        handleEditBasePrice={handleEditBasePrice}
+                        handleDeleteBasePrice={handleDeleteBasePrice}
+                        handleEditPricingOffer={handleEditPricingOffer}
+                        handleDeletePricingOffer={handleDeletePricingOffer}
+                        setIsPricingOfferModalOpen={setIsPricingOfferModalOpen}
+                        convertEurToBgn={convertEurToBgn}
+                    />
+                )}
+                {view === 'calendar' && (
+                    <ApartmentCalendarTab
+                        currentApartmentData={currentApartmentData}
+                        setCurrentApartmentData={setCurrentApartmentData}
+                        formLanguage={formLanguage as 'bg' | 'en'}
+                        setFormLanguage={setFormLanguage as (lang: 'bg' | 'en') => void}
+                        apartment={apartment}
+                        bookings={bookings}
+                        setBookings={setBookings}
+                        isRentalModalOpen={isRentalModalOpen}
+                        setIsRentalModalOpen={setIsRentalModalOpen}
+                        selectedSlot={selectedSlot}
+                        setSelectedSlot={setSelectedSlot}
+                        editingBooking={editingBooking}
+                        setEditingBooking={setEditingBooking}
+                        handleSaveRentalPeriod={handleSaveRentalPeriod}
+                        handleUpdateBooking={handleUpdateBooking}
+                        handleDeleteBooking={handleDeleteBooking}
+                        getBookingTypeTranslation={getBookingTypeTranslation}
+                    />
+                )}
+                {view === 'feedback' && (
+                    <ApartmentFeedbackTab
+                        currentApartmentData={currentApartmentData}
+                        setCurrentApartmentData={setCurrentApartmentData}
+                        formLanguage={formLanguage as 'bg' | 'en'}
+                        setFormLanguage={setFormLanguage as (lang: 'bg' | 'en') => void}
+                        apartment={apartment}
+                        showConfirmation={showConfirmation}
+                    />
+                )}
+                {view === 'testimonials' && (
+                    <ApartmentTestimonialsTab
+                        apartmentId={apartment?.id || ''}
+                        formLanguage={formLanguage as 'bg' | 'en'}
+                        setFormLanguage={setFormLanguage as (lang: 'bg' | 'en') => void}
+                    />
+                )}
+
+                {/* Simple Save Button Footer */}
+                <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
+                    <div className="px-14 py-4">
+                        <div className="flex justify-end items-center">
+                            {/* Success indicator */}
+                            {saveSuccess && (
+                                <div className="flex items-center gap-2 text-green-600">
+                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                     </svg>
-                                    {t('saving')}
-                                </>
-                            ) : (
-                                <>
-                                    {t('saveChanges')}
-                                </>
+                                    <span className="text-sm font-medium px-6">{t('changesSavedSuccessfully')}</span>
+                                </div>
                             )}
-                        </Button>
-                    </div>
-                </div>
-            </div>
 
-            {/* Base Price Modal */}
-            {isBasePriceModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-                        <h3 className="text-lg font-semibold mb-4">
-                            {editingBasePrice ? t('editBasePrice') : t('addBasePrice')}
-                        </h3>
-                        
-                        <div className="space-y-4">
-                            <div>
-                                <Label htmlFor="priceBGN">{t('priceInBGN')}</Label>
-                                <Input
-                                    id="priceBGN"
-                                    type="number"
-                                    value={newBasePrice.priceBGN || ''}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
-                                        setNewBasePrice(prev => ({ 
-                                            ...prev, 
-                                            priceBGN: parseFloat(e.target.value) || 0 
-                                        }))
-                                    }
-                                    placeholder="150"
-                                    className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                />
-                            </div>
-                            
-                            <div>
-                                <Label htmlFor="priceEUR">{t('priceInEUR')}</Label>
-                                <Input
-                                    id="priceEUR"
-                                    type="number"
-                                    value={newBasePrice.priceEUR || ''}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
-                                        setNewBasePrice(prev => ({ 
-                                            ...prev, 
-                                            priceEUR: parseFloat(e.target.value) || 0 
-                                        }))
-                                    }
-                                    placeholder="77"
-                                    className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                />
-                            </div>
-                        </div>
-                        
-                        <div className="flex justify-end gap-2 mt-6">
+                            {/* Simple Save Button */}
                             <Button
-                                variant="outline"
-                                onClick={() => {
-                                    setIsBasePriceModalOpen(false);
-                                    setEditingBasePrice(false);
-                                    setNewBasePrice({ priceBGN: 0, priceEUR: 0, description: '' });
-                                }}
-                            >
-                                {t('cancel')}
-                            </Button>
-                            <Button
-                                onClick={handleSaveBasePrice}
+                                type="button"
+                                onClick={handleSave}
                                 disabled={loading}
-                                className="bg-blue-600 hover:bg-blue-700"
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2"
                             >
-                                {loading ? t('saving') : t('save')}
+                                {loading ? (
+                                    <>
+                                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        {t('saving')}
+                                    </>
+                                ) : (
+                                    <>
+                                        {t('saveChanges')}
+                                    </>
+                                )}
                             </Button>
                         </div>
                     </div>
                 </div>
-            )}
 
-            {/* Pricing Offer Modal */}
-            {isPricingOfferModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-                        <h3 className="text-lg font-semibold mb-4">
-                            {editingPricingOffer ? t('editPricingOffer') : t('addPricingOffer')}
-                        </h3>
-                        
-                        <div className="space-y-4">
-                            <div>
-                                <Label htmlFor="offerName">{t('offerName')}</Label>
-                                <Input
-                                    id="offerName"
-                                    type="text"
-                                    value={newPricingOffer.name || ''}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
-                                        setNewPricingOffer(prev => ({ ...prev, name: e.target.value }))
-                                    }
-                                    placeholder="Weekly Discount"
-                                    className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="offerDays">{t('minimumNumberOfNights')}</Label>
-                                <Input
-                                    id="offerDays"
-                                    type="number"
-                                    value={newPricingOffer.days || ''}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
-                                        setNewPricingOffer(prev => ({ ...prev, days: Number(e.target.value) }))
-                                    }
-                                    placeholder="7"
-                                    className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="pricePerNightBGN">{t('pricePerNightBGN')}</Label>
-                                <Input
-                                    id="pricePerNightBGN"
-                                    type="number"
-                                    value={newPricingOffer.pricePerNightBGN || ''}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
-                                        setNewPricingOffer(prev => ({ ...prev, pricePerNightBGN: Number(e.target.value) }))
-                                    }
-                                    placeholder="130"
-                                    className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="pricePerNightEUR">{t('pricePerNightEUR')}</Label>
-                                <Input
-                                    id="pricePerNightEUR"
-                                    type="number"
-                                    value={newPricingOffer.pricePerNightEUR || ''}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
-                                        setNewPricingOffer(prev => ({ ...prev, pricePerNightEUR: Number(e.target.value) }))
-                                    }
-                                    placeholder="67"
-                                    className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="offerDescription">{t('description')} ({t('optional')})</Label>
-                                <Input
-                                    id="offerDescription"
-                                    type="text"
-                                    value={newPricingOffer.description || ''}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
-                                        setNewPricingOffer(prev => ({ ...prev, description: e.target.value }))
-                                    }
-                                    placeholder="Save 15% for weekly stays"
-                                    className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                />
-                            </div>
-                        </div>
-                        
-                        <div className="flex justify-end gap-2 mt-6">
-                            <Button
-                                variant="outline"
-                                onClick={() => {
-                                    setIsPricingOfferModalOpen(false);
-                                    setEditingPricingOffer(null);
-                                    setNewPricingOffer({ name: '', days: 0, price: 0, pricePerNightBGN: 0, pricePerNightEUR: 0, description: '' });
-                                }}
-                            >
-                                {t('cancel')}
-                            </Button>
-                            <Button
-                                onClick={editingPricingOffer ? handleUpdatePricingOffer : handleAddPricingOffer}
-                                disabled={loading}
-                                className="bg-blue-600 hover:bg-blue-700"
-                            >
-                                {loading ? t('saving') : t('save')}
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            )}
+                {/* Base Price Modal */}
+                {isBasePriceModalOpen && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+                            <h3 className="text-lg font-semibold mb-4">
+                                {editingBasePrice ? t('editBasePrice') : t('addBasePrice')}
+                            </h3>
 
-            {/* Confirmation Dialog */}
-            {confirmationDialog.isOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-                        <h3 className="text-lg font-semibold mb-4">{confirmationDialog.title}</h3>
-                        <p className="text-sm text-gray-800 mb-4">{confirmationDialog.message}</p>
-                        <div className="flex justify-end gap-2">
-                            <Button
-                                variant="outline"
-                                onClick={confirmationDialog.onCancel}
-                            >
-                                {t('cancel') || 'Cancel'}
-                            </Button>
-                            <Button
-                                onClick={confirmationDialog.onConfirm}
-                                className="bg-red-600 hover:bg-red-700 text-white"
-                            >
-                                {t('delete') || 'Delete'}
-                            </Button>
+                            <div className="space-y-4">
+                                <div>
+                                    <Label htmlFor="priceBGN">{t('priceInBGN')}</Label>
+                                    <Input
+                                        id="priceBGN"
+                                        type="number"
+                                        value={newBasePrice.priceBGN || ''}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                            setNewBasePrice(prev => ({
+                                                ...prev,
+                                                priceBGN: parseFloat(e.target.value) || 0
+                                            }))
+                                        }
+                                        placeholder="150"
+                                        className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    />
+                                </div>
+
+                                <div>
+                                    <Label htmlFor="priceEUR">{t('priceInEUR')}</Label>
+                                    <Input
+                                        id="priceEUR"
+                                        type="number"
+                                        value={newBasePrice.priceEUR || ''}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                            setNewBasePrice(prev => ({
+                                                ...prev,
+                                                priceEUR: parseFloat(e.target.value) || 0
+                                            }))
+                                        }
+                                        placeholder="77"
+                                        className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end gap-2 mt-6">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        setIsBasePriceModalOpen(false);
+                                        setEditingBasePrice(false);
+                                        setNewBasePrice({ priceBGN: 0, priceEUR: 0, description: '' });
+                                    }}
+                                >
+                                    {t('cancel')}
+                                </Button>
+                                <Button
+                                    onClick={handleSaveBasePrice}
+                                    disabled={loading}
+                                    className="bg-blue-600 hover:bg-blue-700"
+                                >
+                                    {loading ? t('saving') : t('save')}
+                                </Button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
+
+                {/* Pricing Offer Modal */}
+                {isPricingOfferModalOpen && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+                            <h3 className="text-lg font-semibold mb-4">
+                                {editingPricingOffer ? t('editPricingOffer') : t('addPricingOffer')}
+                            </h3>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <Label htmlFor="offerName">{t('offerName')}</Label>
+                                    <Input
+                                        id="offerName"
+                                        type="text"
+                                        value={newPricingOffer.name || ''}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                            setNewPricingOffer(prev => ({ ...prev, name: e.target.value }))
+                                        }
+                                        placeholder="Weekly Discount"
+                                        className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="offerDays">{t('minimumNumberOfNights')}</Label>
+                                    <Input
+                                        id="offerDays"
+                                        type="number"
+                                        value={newPricingOffer.days || ''}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                            setNewPricingOffer(prev => ({ ...prev, days: Number(e.target.value) }))
+                                        }
+                                        placeholder="7"
+                                        className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="pricePerNightBGN">{t('pricePerNightBGN')}</Label>
+                                    <Input
+                                        id="pricePerNightBGN"
+                                        type="number"
+                                        value={newPricingOffer.pricePerNightBGN || ''}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                            setNewPricingOffer(prev => ({ ...prev, pricePerNightBGN: Number(e.target.value) }))
+                                        }
+                                        placeholder="130"
+                                        className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="pricePerNightEUR">{t('pricePerNightEUR')}</Label>
+                                    <Input
+                                        id="pricePerNightEUR"
+                                        type="number"
+                                        value={newPricingOffer.pricePerNightEUR || ''}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                            setNewPricingOffer(prev => ({ ...prev, pricePerNightEUR: Number(e.target.value) }))
+                                        }
+                                        placeholder="67"
+                                        className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="offerDescription">{t('description')} ({t('optional')})</Label>
+                                    <Input
+                                        id="offerDescription"
+                                        type="text"
+                                        value={newPricingOffer.description || ''}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                            setNewPricingOffer(prev => ({ ...prev, description: e.target.value }))
+                                        }
+                                        placeholder="Save 15% for weekly stays"
+                                        className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end gap-2 mt-6">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        setIsPricingOfferModalOpen(false);
+                                        setEditingPricingOffer(null);
+                                        setNewPricingOffer({ name: '', days: 0, price: 0, pricePerNightBGN: 0, pricePerNightEUR: 0, description: '' });
+                                    }}
+                                >
+                                    {t('cancel')}
+                                </Button>
+                                <Button
+                                    onClick={editingPricingOffer ? handleUpdatePricingOffer : handleAddPricingOffer}
+                                    disabled={loading}
+                                    className="bg-blue-600 hover:bg-blue-700"
+                                >
+                                    {loading ? t('saving') : t('save')}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Confirmation Dialog */}
+                {confirmationDialog.isOpen && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+                            <h3 className="text-lg font-semibold mb-4">{confirmationDialog.title}</h3>
+                            <p className="text-sm text-gray-800 mb-4">{confirmationDialog.message}</p>
+                            <div className="flex justify-end gap-2">
+                                <Button
+                                    variant="outline"
+                                    onClick={confirmationDialog.onCancel}
+                                >
+                                    {t('cancel') || 'Cancel'}
+                                </Button>
+                                <Button
+                                    onClick={confirmationDialog.onConfirm}
+                                    className="bg-red-600 hover:bg-red-700 text-white"
+                                >
+                                    {t('delete') || 'Delete'}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

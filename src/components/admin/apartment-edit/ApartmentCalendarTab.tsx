@@ -166,24 +166,6 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
     const [searchTerm] = useState('');
 
     const handleSelectSlot = ({ start, end }: { start: Date; end: Date }) => {
-        // Check if the selected dates are within the availability period
-        if (currentApartmentData.availabilityStart || currentApartmentData.availabilityEnd) {
-            const availStart = currentApartmentData.availabilityStart ? new Date(currentApartmentData.availabilityStart) : null;
-            const availEnd = currentApartmentData.availabilityEnd ? new Date(currentApartmentData.availabilityEnd) : null;
-            
-            // Check if start date is within availability
-            if (availStart && start < availStart) {
-                alert(t('bookingStartOutsideAvailability') || 'Start date is before the apartment availability period.');
-                return;
-            }
-            
-            // Check if end date is within availability  
-            if (availEnd && end > availEnd) {
-                alert(t('bookingEndOutsideAvailability') || 'End date is after the apartment availability period.');
-                return;
-            }
-        }
-        
         setSelectedSlot({ start, end });
         setIsRentalModalOpen(true);
     };
@@ -204,17 +186,6 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
     const handleEventDrop = ({ event, start, end }: any) => {
         const booking = bookings.find(b => b.id === event.resource?.id || b.id === event.id);
         if (booking && apartment) {
-            // Check if the new dates are within the availability period
-            if (currentApartmentData.availabilityStart || currentApartmentData.availabilityEnd) {
-                const availStart = currentApartmentData.availabilityStart ? new Date(currentApartmentData.availabilityStart) : null;
-                const availEnd = currentApartmentData.availabilityEnd ? new Date(currentApartmentData.availabilityEnd) : null;
-                
-                if ((availStart && start < availStart) || (availEnd && end > availEnd)) {
-                    alert(t('cannotMoveBookingOutsideAvailability') || 'Cannot move booking outside the apartment availability period.');
-                    return;
-                }
-            }
-            
             const updatedData = {
                 startDate: start,
                 endDate: end,
@@ -231,17 +202,6 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
     const handleEventResize = ({ event, start, end }: any) => {
         const booking = bookings.find(b => b.id === event.resource?.id || b.id === event.id);
         if (booking && apartment) {
-            // Check if the new dates are within the availability period
-            if (currentApartmentData.availabilityStart || currentApartmentData.availabilityEnd) {
-                const availStart = currentApartmentData.availabilityStart ? new Date(currentApartmentData.availabilityStart) : null;
-                const availEnd = currentApartmentData.availabilityEnd ? new Date(currentApartmentData.availabilityEnd) : null;
-                
-                if ((availStart && start < availStart) || (availEnd && end > availEnd)) {
-                    alert(t('cannotResizeBookingOutsideAvailability') || 'Cannot resize booking outside the apartment availability period.');
-                    return;
-                }
-            }
-            
             const updatedData = {
                 startDate: start,
                 endDate: end,
@@ -255,26 +215,8 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
         }
     };
 
-    // Function to style slots based on availability
-    const slotPropGetter = (date: Date) => {
-        if (currentApartmentData.availabilityStart || currentApartmentData.availabilityEnd) {
-            const availStart = currentApartmentData.availabilityStart ? new Date(currentApartmentData.availabilityStart) : null;
-            const availEnd = currentApartmentData.availabilityEnd ? new Date(currentApartmentData.availabilityEnd) : null;
-            
-            const isOutsideAvailability = (availStart && date < availStart) || (availEnd && date > availEnd);
-            
-            if (isOutsideAvailability) {
-                return {
-                    style: {
-                        backgroundColor: '#f3f4f6',
-                        color: '#9ca3af',
-                        pointerEvents: 'none' as const,
-                        cursor: 'not-allowed'
-                    }
-                };
-            }
-        }
-        
+    // Function to style slots - now allows all dates
+    const slotPropGetter = () => {
         return {};
     };
 
@@ -537,7 +479,7 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 pb-16">
             {/* Add CSS for pulse animation */}
             <style>{`
                 @keyframes pulse {
