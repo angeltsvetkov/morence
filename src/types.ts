@@ -62,6 +62,7 @@ export interface Booking {
     end: Date;
     title: string; // e.g., "Reserved" or guest name for admin
     visitorName?: string; // Name of the person renting (for admin use)
+    notes?: string; // Additional notes for the booking
     isRentalPeriod?: boolean; // Distinguishes rental periods from regular bookings
     type?: 'booked' | 'blocked' | 'rental' | 'maintenance'; // Type of booking/unavailability (rental and maintenance kept for backward compatibility)
     pricingOfferId?: string; // ID of selected pricing offer

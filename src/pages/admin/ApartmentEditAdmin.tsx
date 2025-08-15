@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db, auth } from '../../firebase';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { doc, updateDoc, collection, getDocs, addDoc, deleteDoc, DocumentData, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, collection, getDocs, addDoc, deleteDoc, DocumentData, getDoc, serverTimestamp } from 'firebase/firestore';
 import { generateSurveyToken, generateSurveyUrl } from '../../lib/surveyUtils';
 import { useSurveyLinkGeneration } from '../../hooks/useSurveyLinkGeneration';
 import { useAdminLanguage } from '../../hooks/useAdminLanguage';
@@ -647,18 +647,34 @@ const ApartmentEditAdmin: React.FC = () => {
             end: data.endDate,
             title,
             isRentalPeriod: data.type === 'booked',
-            type: data.type
+            type: data.type,
+            createdAt: serverTimestamp()
         };
+        
+        // Core booking fields
         if (data.visitorName) newBooking.visitorName = data.visitorName;
+        if (data.notes) newBooking.notes = data.notes;
+        
+        // Pricing fields
         if (data.pricingOfferId) newBooking.pricingOfferId = data.pricingOfferId;
         if (data.customPrice) newBooking.customPrice = data.customPrice;
         if (data.totalPrice) newBooking.totalPrice = data.totalPrice;
+        
+        // Payment fields
         if (data.deposit) newBooking.deposit = data.deposit;
         if (data.depositCurrency) newBooking.depositCurrency = data.depositCurrency;
         if (data.status) newBooking.status = data.status;
+        
+        // Guest contact fields
         if (data.guestEmail) newBooking.guestEmail = data.guestEmail;
         if (data.guestPhone) newBooking.guestPhone = data.guestPhone;
+        
+        // Survey fields
         if (data.surveyLanguage) newBooking.surveyLanguage = data.surveyLanguage;
+        
+        // Initialize survey completion tracking
+        newBooking.surveyCompleted = false;
+        newBooking.surveyEmailSent = false;
 
         // Generate survey token and URL for booked types
         if (data.type === 'booked') {
@@ -708,18 +724,30 @@ const ApartmentEditAdmin: React.FC = () => {
             end: data.endDate,
             title,
             isRentalPeriod: data.type === 'booked',
-            type: data.type
+            type: data.type,
+            updatedAt: serverTimestamp()
         };
-        if (data.visitorName) updatedBooking.visitorName = data.visitorName;
-        if (data.pricingOfferId) updatedBooking.pricingOfferId = data.pricingOfferId;
-        if (data.customPrice) updatedBooking.customPrice = data.customPrice;
-        if (data.totalPrice) updatedBooking.totalPrice = data.totalPrice;
-        if (data.deposit) updatedBooking.deposit = data.deposit;
-        if (data.depositCurrency) updatedBooking.depositCurrency = data.depositCurrency;
-        if (data.status) updatedBooking.status = data.status;
-        if (data.guestEmail) updatedBooking.guestEmail = data.guestEmail;
-        if (data.guestPhone) updatedBooking.guestPhone = data.guestPhone;
-        if (data.surveyLanguage) updatedBooking.surveyLanguage = data.surveyLanguage;
+        
+        // Core booking fields - handle both setting and clearing
+        updatedBooking.visitorName = data.visitorName || null;
+        updatedBooking.notes = data.notes || null;
+        
+        // Pricing fields
+        updatedBooking.pricingOfferId = data.pricingOfferId || null;
+        updatedBooking.customPrice = data.customPrice || null;
+        updatedBooking.totalPrice = data.totalPrice || null;
+        
+        // Payment fields
+        updatedBooking.deposit = data.deposit || null;
+        updatedBooking.depositCurrency = data.depositCurrency || null;
+        updatedBooking.status = data.status || null;
+        
+        // Guest contact fields
+        updatedBooking.guestEmail = data.guestEmail || null;
+        updatedBooking.guestPhone = data.guestPhone || null;
+        
+        // Survey fields
+        updatedBooking.surveyLanguage = data.surveyLanguage || null;
 
         // Handle survey token and URL
         if (data.surveyToken) updatedBooking.surveyToken = data.surveyToken;

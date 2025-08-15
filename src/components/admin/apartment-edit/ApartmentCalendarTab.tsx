@@ -166,7 +166,15 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
     const [searchTerm] = useState('');
 
     const handleSelectSlot = ({ start, end }: { start: Date; end: Date }) => {
-        setSelectedSlot({ start, end });
+        // If start and end are the same (single day click), make it a 1-day booking
+        // by setting end to the next day
+        let adjustedEnd = end;
+        if (start.getTime() === end.getTime()) {
+            adjustedEnd = new Date(start);
+            adjustedEnd.setDate(adjustedEnd.getDate() + 1);
+        }
+        
+        setSelectedSlot({ start, end: adjustedEnd });
         setIsRentalModalOpen(true);
     };
 
@@ -190,10 +198,19 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
                 startDate: start,
                 endDate: end,
                 visitorName: booking.visitorName,
+                notes: booking.notes,
                 type: booking.type,
                 pricingOfferId: booking.pricingOfferId,
                 customPrice: booking.customPrice,
-                totalPrice: booking.totalPrice
+                totalPrice: booking.totalPrice,
+                deposit: booking.deposit,
+                depositCurrency: booking.depositCurrency,
+                status: booking.status,
+                guestEmail: booking.guestEmail,
+                guestPhone: booking.guestPhone,
+                surveyLanguage: booking.surveyLanguage,
+                surveyToken: booking.surveyToken,
+                surveyUrl: booking.surveyUrl
             };
             handleUpdateBooking(booking.id, updatedData);
         }
@@ -206,10 +223,19 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
                 startDate: start,
                 endDate: end,
                 visitorName: booking.visitorName,
+                notes: booking.notes,
                 type: booking.type,
                 pricingOfferId: booking.pricingOfferId,
                 customPrice: booking.customPrice,
-                totalPrice: booking.totalPrice
+                totalPrice: booking.totalPrice,
+                deposit: booking.deposit,
+                depositCurrency: booking.depositCurrency,
+                status: booking.status,
+                guestEmail: booking.guestEmail,
+                guestPhone: booking.guestPhone,
+                surveyLanguage: booking.surveyLanguage,
+                surveyToken: booking.surveyToken,
+                surveyUrl: booking.surveyUrl
             };
             handleUpdateBooking(booking.id, updatedData);
         }
@@ -545,7 +571,7 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
             {/* Dual Calendar Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {/* Current Month Calendar */}
-                <div className="bg-white border rounded-lg p-3 sm:p-4 flex flex-col" style={{ height: '500px' }}>
+                <div className="bg-white border rounded-lg p-3 sm:p-4 flex flex-col" style={{ height: '600px' }}>
                     <h4 className="text-base sm:text-lg font-semibold text-center mb-3 sm:mb-4 text-gray-700 flex-shrink-0">
                         {currentDate.toLocaleDateString(language === 'bg' ? 'bg-BG' : 'en-US', { 
                             month: 'long', 
@@ -574,7 +600,7 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
                             toolbar={false} // Hide toolbar since we have custom navigation
                             step={60}
                             showMultiDayTimes
-                            style={{ height: '100%', fontSize: '12px' }}
+                            style={{ height: '100%' }}
                             messages={{
                                 date: t('date'),
                                 time: t('time'),
@@ -598,55 +624,55 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
                 </div>
 
                 {/* Next Month Calendar */}
-                <div className="bg-white border rounded-lg p-4 flex flex-col" style={{ height: '700px' }}>
-                    <h4 className="text-lg font-semibold text-center mb-4 text-gray-700 flex-shrink-0">
+                <div className="bg-white border rounded-lg p-3 sm:p-4 flex flex-col" style={{ height: '600px' }}>
+                    <h4 className="text-base sm:text-lg font-semibold text-center mb-3 sm:mb-4 text-gray-700 flex-shrink-0">
                         {nextMonth.toLocaleDateString(language === 'bg' ? 'bg-BG' : 'en-US', { 
                             month: 'long', 
                             year: 'numeric' 
                         })}
                     </h4>
-                    <div className="flex-1 min-h-0">
-                <DragAndDropCalendar
-                    localizer={localizer}
-                    events={calendarEvents}
-                    startAccessor={(event: any) => event.start}
-                    endAccessor={(event: any) => event.end}
-                    culture={language}
-                    onSelectSlot={handleSelectSlot}
-                    onSelectEvent={handleEventClick}
-                    onEventDrop={handleEventDrop}
-                    onEventResize={handleEventResize}
-                    selectable
-                    resizable
-                    eventPropGetter={eventStyleGetter}
-                    slotPropGetter={slotPropGetter}
+                    <div className="flex-1 min-h-0 overflow-hidden">
+                        <DragAndDropCalendar
+                            localizer={localizer}
+                            events={calendarEvents}
+                            startAccessor={(event: any) => event.start}
+                            endAccessor={(event: any) => event.end}
+                            culture={language}
+                            onSelectSlot={handleSelectSlot}
+                            onSelectEvent={handleEventClick}
+                            onEventDrop={handleEventDrop}
+                            onEventResize={handleEventResize}
+                            selectable
+                            resizable
+                            eventPropGetter={eventStyleGetter}
+                            slotPropGetter={slotPropGetter}
                             views={['month']}
-                    defaultView="month"
+                            defaultView="month"
                             date={nextMonth}
                             onNavigate={() => {}} // Disable built-in navigation
                             toolbar={false} // Hide toolbar since we have custom navigation
-                    step={60}
-                    showMultiDayTimes
+                            step={60}
+                            showMultiDayTimes
                             style={{ height: '100%' }}
-                    messages={{
-                        date: t('date'),
-                        time: t('time'),
-                        event: t('event'),
-                        allDay: t('allDay'),
-                        week: t('week'),
-                        work_week: t('workWeek'),
-                        day: t('day'),
-                        month: t('month'),
-                        previous: t('previous'),
-                        next: t('next'),
-                        yesterday: t('yesterday'),
-                        tomorrow: t('tomorrow'),
-                        today: t('today'),
-                        agenda: t('agenda'),
-                        noEventsInRange: t('noEventsInRange'),
-                        showMore: (total: number) => `+${total} ${t('more')}`
-                    }}
-                />
+                            messages={{
+                                date: t('date'),
+                                time: t('time'),
+                                event: t('event'),
+                                allDay: t('allDay'),
+                                week: t('week'),
+                                work_week: t('workWeek'),
+                                day: t('day'),
+                                month: t('month'),
+                                previous: t('previous'),
+                                next: t('next'),
+                                yesterday: t('yesterday'),
+                                tomorrow: t('tomorrow'),
+                                today: t('today'),
+                                agenda: t('agenda'),
+                                noEventsInRange: t('noEventsInRange'),
+                                showMore: (total: number) => `+${total} ${t('more')}`
+                            }}
+                        />
                     </div>
                 </div>
             </div>

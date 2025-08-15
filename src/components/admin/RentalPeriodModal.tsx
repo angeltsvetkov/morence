@@ -170,7 +170,11 @@ const RentalPeriodModal: React.FC<RentalPeriodModalProps> = ({
     }, [isEditMode, editingBooking?.id, editingBooking?.surveyCompleted, editingBooking?.apartmentId]);
 
     const formatDateForInput = (date: Date) => {
-        return date.toISOString().split('T')[0];
+        // Use local timezone instead of UTC to avoid timezone offset issues
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     };
 
     const calculateDays = (start: string, end: string) => {
@@ -260,7 +264,7 @@ const RentalPeriodModal: React.FC<RentalPeriodModalProps> = ({
             // Editing mode - populate with existing data
             setVisitorName(editingBooking.visitorName || '');
             setType(editingBooking.type === 'maintenance' || editingBooking.type === 'rental' ? 'booked' : editingBooking.type || 'booked');
-            setNotes(''); // Could add notes field to Booking interface if needed
+            setNotes((editingBooking as any).notes || ''); // Load existing notes
             setStartDate(formatDateForInput(editingBooking.start));
             setEndDate(formatDateForInput(editingBooking.end));
             
