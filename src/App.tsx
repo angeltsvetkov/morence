@@ -12,7 +12,6 @@ import ApartmentDetail from './pages/ApartmentDetail';
 import ApartmentCalendar from './pages/ApartmentCalendar';
 import DefaultApartmentRedirect from './pages/DefaultApartmentRedirect';
 import { getSubdomainInfo } from './utils/subdomain';
-import SubdomainCalendarWrapper from './components/SubdomainCalendarWrapper';
 
 const AppContent = () => {
   const location = useLocation();
@@ -27,10 +26,7 @@ const AppContent = () => {
         <Routes>
           {/* If we're on a subdomain, handle subdomain-specific routes */}
           {subdomainInfo.isSubdomain && (
-            <>
-              <Route path="/" element={<ApartmentDetail />} />
-              <Route path="/calendar" element={<SubdomainCalendarWrapper />} />
-            </>
+            <Route path="/" element={<ApartmentDetail />} />
           )}
           <Route path="/" element={<DefaultApartmentRedirect />} />
           <Route path="/apartments/:slug" element={<ApartmentDetail />} />

@@ -238,22 +238,6 @@ const Header = () => {
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full opacity-50 blur-sm"></div>
                   )}
                 </button>
-                
-                {/* Calendar button - only show on subdomain apartment pages */}
-                {subdomainInfo.isSubdomain && (
-                  <NavLink
-                    to="/calendar"
-                    className={({ isActive }) => `
-                      relative px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 transform hover:scale-105
-                      ${isActive 
-                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/25' 
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/80 hover:shadow-md'
-                      }
-                    `}
-                  >
-                    <span className="relative z-10">{t('availability')}</span>
-                  </NavLink>
-                )}
               </div>
             ) : (
               <NavLink 
