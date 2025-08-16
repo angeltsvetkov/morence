@@ -4,6 +4,7 @@ import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { useLanguage } from '../../hooks/useLanguage';
 import { Language } from '../../contexts/LanguageContext';
+import { getCurrentSubdomain } from '../../utils/subdomain';
 
 interface Apartment {
   id: string;
@@ -49,21 +50,42 @@ const Footer = () => {
 
   useEffect(() => {
     const fetchApartmentPhone = async () => {
-      // Check if we're on an apartment page
+      let apartmentSlug = null;
+      let isSubdomainAccess = false;
+      
+      // Check if we're on a traditional apartment page (/apartments/slug)
       const apartmentMatch = location.pathname.match(/^\/apartments\/([^\/]+)/);
       if (apartmentMatch) {
-        const apartmentSlug = apartmentMatch[1];
-        
+        apartmentSlug = apartmentMatch[1];
+      } else {
+        // Check if we're on a subdomain apartment page (apartment-name.morence.top/)
+        const subdomain = getCurrentSubdomain();
+        if (subdomain && location.pathname === '/') {
+          apartmentSlug = subdomain;
+          isSubdomainAccess = true;
+        }
+      }
+      
+      if (apartmentSlug) {
         try {
-          // First try to find by slug
           const apartmentsCollection = collection(db, 'apartments');
-          let apartmentQuery = query(apartmentsCollection, where('slug', '==', apartmentSlug));
-          let querySnapshot = await getDocs(apartmentQuery);
+          let apartmentQuery;
+          let querySnapshot;
           
-          // If not found by slug, try by ID
-          if (querySnapshot.empty) {
-            apartmentQuery = query(apartmentsCollection, where('__name__', '==', apartmentSlug));
+          if (isSubdomainAccess) {
+            // For subdomain access, search by domain field
+            apartmentQuery = query(apartmentsCollection, where('domain', '==', apartmentSlug));
             querySnapshot = await getDocs(apartmentQuery);
+          } else {
+            // For traditional access, search by slug first, then by ID
+            apartmentQuery = query(apartmentsCollection, where('slug', '==', apartmentSlug));
+            querySnapshot = await getDocs(apartmentQuery);
+            
+            // If not found by slug, try by ID
+            if (querySnapshot.empty) {
+              apartmentQuery = query(apartmentsCollection, where('__name__', '==', apartmentSlug));
+              querySnapshot = await getDocs(apartmentQuery);
+            }
           }
           
           if (!querySnapshot.empty) {
@@ -77,19 +99,19 @@ const Footer = () => {
         } catch (error) {
           console.error('Error fetching apartment data for footer:', error);
         }
-              } else {
-          // Reset phone and address when not on apartment page
-          setApartmentPhone(null);
-          setApartmentEmail(null);
-          setApartmentAddress(null);
-        }
+      } else {
+        // Reset phone and address when not on apartment page
+        setApartmentPhone(null);
+        setApartmentEmail(null);
+        setApartmentAddress(null);
+      }
     };
 
     fetchApartmentPhone();
   }, [location.pathname, language]);
 
   // Use apartment phone if available, otherwise fallback to hardcoded
-  const displayPhone = apartmentPhone || '+359 883 460 715';
+  const displayPhone = apartmentPhone;
 
   return (
     <footer className="bg-white mt-16 py-8">
