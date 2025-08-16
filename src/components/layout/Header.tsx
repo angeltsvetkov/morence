@@ -5,15 +5,25 @@ import LanguageSwitcher from '../LanguageSwitcher';
 import { useState, useEffect } from 'react';
 import { auth } from '../../firebase';
 import { User } from 'firebase/auth';
+import { getSubdomainInfo } from '../../utils/subdomain';
 
 const Header = () => {
   const { t } = useLanguage();
   const [user, setUser] = useState<User | null>(null);
   const [activeSection, setActiveSection] = useState<string>('');
   const location = useLocation();
-  const isHomePage = location.pathname === '/';
-  const isApartmentPage = location.pathname.startsWith('/apartments/');
-  const [isVisible, setIsVisible] = useState(location.pathname !== '/' && !isApartmentPage);
+  const subdomainInfo = getSubdomainInfo();
+  
+  // We're on the main site's homepage if we're on root path AND not on a subdomain
+  const isHomePage = location.pathname === '/' && !subdomainInfo.isSubdomain;
+  
+  // Consider it an apartment page if either:
+  // 1. Traditional apartment URL (/apartments/...)
+  // 2. Subdomain access (on subdomain and on root path)
+  const isApartmentPage = location.pathname.startsWith('/apartments/') || 
+                          (subdomainInfo.isSubdomain && location.pathname === '/');
+  
+  const [isVisible, setIsVisible] = useState(!isHomePage || isApartmentPage);
 
   useEffect(() => {
     // For apartment pages, visibility is controlled by the apartment page itself
@@ -21,13 +31,13 @@ const Header = () => {
       return;
     }
 
-    // For other pages (except home), the header should be visible immediately
+    // For other pages (except main site home), the header should be visible immediately
     if (!isHomePage) {
       setIsVisible(true);
       return;
     }
 
-    // This effect should only apply to the home page
+    // This effect should only apply to the main site home page
     const handleScroll = () => {
       if (window.scrollY > 100) {
         setIsVisible(true);
@@ -36,7 +46,7 @@ const Header = () => {
       }
     };
 
-    // Set initial state for homepage
+    // Set initial state for main site homepage
     handleScroll();
 
     window.addEventListener('scroll', handleScroll);
@@ -228,6 +238,22 @@ const Header = () => {
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full opacity-50 blur-sm"></div>
                   )}
                 </button>
+                
+                {/* Calendar button - only show on subdomain apartment pages */}
+                {subdomainInfo.isSubdomain && (
+                  <NavLink
+                    to="/calendar"
+                    className={({ isActive }) => `
+                      relative px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 transform hover:scale-105
+                      ${isActive 
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/25' 
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/80 hover:shadow-md'
+                      }
+                    `}
+                  >
+                    <span className="relative z-10">{t('availability')}</span>
+                  </NavLink>
+                )}
               </div>
             ) : (
               <NavLink 
@@ -260,8 +286,8 @@ const Header = () => {
           </nav>
         </div>
       </header>
-      {/* Only add padding-top for non-home and non-apartment pages */}
-      {location.pathname !== '/' && !isApartmentPage && <div className="pt-16" />}
+      {/* Only add padding-top for pages that aren't the main site homepage or apartment pages */}
+      {!isHomePage && !isApartmentPage && <div className="pt-16" />}
     </>
   );
 };
