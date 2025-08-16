@@ -13,6 +13,7 @@ import BookingModal from '../components/BookingModal';
 import ImageGallery from 'react-image-gallery';
 import "react-image-gallery/styles/css/image-gallery.css";
 import { Language } from '../contexts/LanguageContext';
+import { getCurrentSubdomain } from '../utils/subdomain';
 import {
     Link as LinkIcon, MapPin, Milestone, CreditCard, Star, ChevronDown,
     Wifi, Snowflake, Thermometer, ChefHat, RefrigeratorIcon, Zap,
@@ -481,15 +482,32 @@ const ApartmentDetail: React.FC = () => {
 
     useEffect(() => {
         const fetchApartmentAndBookings = async () => {
-            if (!slug) return;
             setLoading(true);
             setDataLoaded(false);
             setHeroImageLoaded(false);
+            
             try {
-                // Fetch apartment details by slug
+                let apartmentQuery;
                 const apartmentsRef = collection(db, "apartments");
-                const q = query(apartmentsRef, where("slug", "==", slug));
-                const querySnapshot = await getDocs(q);
+                
+                // Check if we have a slug parameter from URL
+                if (slug) {
+                    // Regular slug-based routing
+                    apartmentQuery = query(apartmentsRef, where("slug", "==", slug));
+                } else {
+                    // Check if we're on a subdomain
+                    const subdomain = getCurrentSubdomain();
+                    if (subdomain) {
+                        // Subdomain-based routing - fetch by domain field
+                        apartmentQuery = query(apartmentsRef, where("domain", "==", subdomain));
+                    } else {
+                        // No slug and no subdomain - can't proceed
+                        setLoading(false);
+                        return;
+                    }
+                }
+
+                const querySnapshot = await getDocs(apartmentQuery);
 
                 if (!querySnapshot.empty) {
                     const docSnap = querySnapshot.docs[0];
@@ -552,7 +570,7 @@ const ApartmentDetail: React.FC = () => {
         fetchApartmentAndBookings();
         fetchPlaces();
         fetchAvailableAmenities();
-    }, [slug]);
+    }, [slug]); // Note: getCurrentSubdomain() is called inside the effect, so no need to add it as dependency
 
     // Effect for auto-switching hero image
     useEffect(() => {

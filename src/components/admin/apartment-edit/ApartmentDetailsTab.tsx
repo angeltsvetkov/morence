@@ -31,16 +31,68 @@ const ApartmentDetailsTab: React.FC<ApartmentDetailsTabProps> = ({
                 </div>
             </div>
 
-            <div>
-                <Label htmlFor="name" className="flex items-center gap-2">
-                    {t('name')}
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        formLanguage === 'bg' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-                    }`}>
-                        {formLanguage === 'bg' ? '🇧🇬 BG' : '🇬🇧 EN'}
-                    </span>
-                </Label>
-                <Input id="name" value={currentApartmentData.name?.[formLanguage] || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleNameChange(formLanguage, e.target.value)} className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" />
+            {/* Name and Domain Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Apartment Name */}
+                <div>
+                    <Label htmlFor="name" className="flex items-center gap-2">
+                        {t('name')}
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            formLanguage === 'bg' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                        }`}>
+                            {formLanguage === 'bg' ? '🇧🇬 BG' : '🇬🇧 EN'}
+                        </span>
+                    </Label>
+                    <Input 
+                        id="name" 
+                        value={currentApartmentData.name?.[formLanguage] || ''} 
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleNameChange(formLanguage, e.target.value)} 
+                        className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" 
+                    />
+                </div>
+
+                {/* Custom Domain */}
+                <div>
+                    <Label htmlFor="domain" className="flex items-center gap-2">
+                        {t('customDomain') || 'Custom Domain'}
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            🌐 {t('publicPage') || 'Public Page'}
+                        </span>
+                    </Label>
+                    <div className="flex">
+                        <span className="inline-flex items-center px-3 py-2 border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-l-md">
+                            https://
+                        </span>
+                        <Input 
+                            id="domain"
+                            type="text"
+                            value={currentApartmentData.domain || ''} 
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                // Only allow lowercase letters, numbers, and hyphens
+                                const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                                setCurrentApartmentData({
+                                    ...currentApartmentData,
+                                    domain: value
+                                });
+                            }}
+                            placeholder={t('domainPlaceholder') || 'your-apartment-name'}
+                            className="flex-1 border border-l-0 border-gray-300 rounded-none p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" 
+                        />
+                        <span className="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-r-md">
+                            .morence.top
+                        </span>
+                    </div>
+                    <p className="text-sm text-gray-500 mt-1">
+                        {currentApartmentData.domain ? (
+                            <>
+                                {t('domainPreview') || 'Your public page will be available at'}: <br />
+                                <span className="font-mono text-blue-600">https://{currentApartmentData.domain}.morence.top</span>
+                            </>
+                        ) : (
+                            t('domainDescription') || 'Set a custom subdomain for your apartment\'s public page. Use only lowercase letters, numbers, and hyphens.'
+                        )}
+                    </p>
+                </div>
             </div>
 
             {/* Hide Name Option */}
@@ -85,7 +137,7 @@ const ApartmentDetailsTab: React.FC<ApartmentDetailsTabProps> = ({
                 />
             </div>
 
-
+            {/* Description */}
             <div>
                 <Label htmlFor="description" className="flex items-center gap-2">
                     {t('description')}

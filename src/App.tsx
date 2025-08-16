@@ -11,17 +11,27 @@ import { AuthProvider } from './contexts/AuthContext';
 import ApartmentDetail from './pages/ApartmentDetail';
 import ApartmentCalendar from './pages/ApartmentCalendar';
 import DefaultApartmentRedirect from './pages/DefaultApartmentRedirect';
+import { getSubdomainInfo } from './utils/subdomain';
+import SubdomainCalendarWrapper from './components/SubdomainCalendarWrapper';
 
 const AppContent = () => {
   const location = useLocation();
   const isAdminPage = location.pathname.startsWith('/admin');
   const isSurveyPage = location.pathname.startsWith('/survey');
+  const subdomainInfo = getSubdomainInfo();
 
   return (
     <div className="flex flex-col min-h-screen">
       {!isAdminPage && !isSurveyPage && <Header />}
       <main className="flex-grow">
         <Routes>
+          {/* If we're on a subdomain, handle subdomain-specific routes */}
+          {subdomainInfo.isSubdomain && (
+            <>
+              <Route path="/" element={<ApartmentDetail />} />
+              <Route path="/calendar" element={<SubdomainCalendarWrapper />} />
+            </>
+          )}
           <Route path="/" element={<DefaultApartmentRedirect />} />
           <Route path="/apartments/:slug" element={<ApartmentDetail />} />
           <Route path="/apartments/:apartmentId/calendar" element={<ApartmentCalendar />} />

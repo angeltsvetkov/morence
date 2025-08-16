@@ -89,6 +89,7 @@ export interface Apartment {
     address?: { [key in 'bg' | 'en']?: string };
     floor?: number;
     apartmentNumber?: string; // Internal reference number (admin only)
+    domain?: string; // Subdomain for public apartment page (e.g., "my-apartment" for https://my-apartment.morence.top)
     minimumNights?: number;
     amenities: string[];
     amenityOrder?: string[];
