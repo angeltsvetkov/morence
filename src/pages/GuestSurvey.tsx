@@ -449,8 +449,8 @@ const GuestSurvey: React.FC = () => {
                     </h1>
                     <p className="text-gray-600 text-lg leading-relaxed">
                         {userLanguage === 'bg' 
-                            ? 'Тази връзка към анкетата е невалидна или е изтекла.'
-                            : 'This survey link is invalid or has expired.'
+                            ? 'Тази връзка към анкетата е невалидна.'
+                            : 'This survey link is invalid.'
                         }
                     </p>
                 </div>
