@@ -1324,7 +1324,7 @@ const ApartmentDetail: React.FC = () => {
                         </div>
 
                         {/* Combined Special Offers Button / Scroll Down Indicator */}
-                        <div className="absolute bottom-20 sm:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center z-20">
+                        <div className="absolute bottom-32 sm:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center z-20">
                             {(apartment?.pricing?.perNight?.bg || apartment?.pricing?.perNight?.en || (apartment.pricingOffers && apartment.pricingOffers.length > 0)) ? (
                                 // Special Offers Section with Connected Design
                                 <div className="relative flex flex-col items-center">
