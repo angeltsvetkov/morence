@@ -236,6 +236,7 @@ const ApartmentDetail: React.FC = () => {
     const [availableAmenities, setAvailableAmenities] = useState<Amenity[]>([]);
     const [showLightbox, setShowLightbox] = useState(false);
     const [lightboxStartIndex, setLightboxStartIndex] = useState(0);
+    const [showAllImages, setShowAllImages] = useState(false);
 
     const apartmentName = useMemo(() => {
         if (!apartment) return '';
@@ -2115,50 +2116,54 @@ const ApartmentDetail: React.FC = () => {
                         </div>
 
                         {/* Additional Images Grid */}
-                        {apartment.photos.length > 3 && (
-                            <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                {apartment.photos.slice(3).map((photo, index) => (
-                                    <div 
-                                        key={index + 3} 
-                                        className="group relative aspect-square rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer"
-                                        onClick={() => openLightbox(index + 3)}
-                                    >
-                                        <img
-                                            src={photo}
-                                            alt={`Apartment detail ${index + 4}`}
-                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                        />
-                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300"></div>
-                                        
-                                        {/* Click to expand indicator */}
-                                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                            <div className="bg-white/90 backdrop-blur-sm rounded-full p-2">
-                                                <Plus className="w-5 h-5 text-gray-800" />
-                                            </div>
+                        <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                            {apartment.photos.length > 3 && apartment.photos.slice(3, showAllImages ? apartment.photos.length : Math.min(10, apartment.photos.length)).map((photo, index) => (
+                                <div 
+                                    key={index + 3} 
+                                    className="group relative aspect-square rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer"
+                                    onClick={() => openLightbox(index + 3)}
+                                >
+                                    <img
+                                        src={photo}
+                                        alt={`Apartment detail ${index + 4}`}
+                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                    />
+                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300"></div>
+                                    
+                                    {/* Click to expand indicator */}
+                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <div className="bg-white/90 backdrop-blur-sm rounded-full p-2">
+                                            <Plus className="w-5 h-5 text-gray-800" />
                                         </div>
                                     </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* View All Button */}
-                        {apartment.photos.length > 1 && (
-                            <div className="text-center mt-12">
-                                <button
-                                    onClick={() => openLightbox(0)}
-                                    className="group relative inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-8 py-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                                >
-                                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl"></div>
-                                    <Camera className="w-5 h-5" />
-                                    <span>
-                                        {language === 'bg' ? 
-                                            `Вижте всички ${apartment.photos.length} снимки` : 
-                                            `View all ${apartment.photos.length} photos`
-                                        }
+                                </div>
+                            ))}
+                            
+                            {/* Open Gallery Card - Always visible */}
+                            <div 
+                                className="group relative aspect-square rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer bg-gradient-to-br from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                                onClick={() => openLightbox(0)}
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-br from-blue-600/90 to-purple-600/90 group-hover:from-blue-700/90 group-hover:to-purple-700/90 transition-all duration-300"></div>
+                                
+                                {/* Content */}
+                                <div className="relative h-full flex flex-col items-center justify-center text-white p-4">
+                                    <Camera className="w-8 h-8 mb-2 group-hover:scale-110 transition-transform duration-300" />
+                                    <span className="text-sm font-semibold text-center leading-tight">
+                                        {language === 'bg' ? 'Отвори галерията' : 'Open Gallery'}
                                     </span>
-                                </button>
+                                    <span className="text-xs opacity-90 mt-1">
+                                        {apartment.photos.length} {language === 'bg' ? 'снимки' : 'photos'}
+                                    </span>
+                                </div>
+                                
+                                {/* Hover effect */}
+                                <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-all duration-300"></div>
+                                
+                                {/* Border glow effect */}
+                                <div className="absolute inset-0 ring-2 ring-white/20 group-hover:ring-white/40 rounded-lg transition-all duration-300"></div>
                             </div>
-                        )}
+                        </div>
                     </div>
                 </div>
             )}
