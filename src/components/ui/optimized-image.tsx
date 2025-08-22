@@ -4,6 +4,7 @@ interface OptimizedImageProps {
     src: string;
     alt: string;
     className?: string;
+    containerClassName?: string;
     width?: number;
     height?: number;
     priority?: boolean; // For above-the-fold images
@@ -14,13 +15,15 @@ interface OptimizedImageProps {
     onClick?: () => void;
     fallbackSrc?: string;
     lazy?: boolean;
-    quality?: number;
+    // When true, the wrapper fills its parent (absolute inset-0), similar to Next.js Image fill
+    fill?: boolean;
 }
 
 const OptimizedImage: React.FC<OptimizedImageProps> = ({
     src,
     alt,
     className = '',
+    containerClassName = '',
     width,
     height,
     priority = false,
@@ -31,7 +34,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     onClick,
     fallbackSrc,
     lazy = true,
-    quality = 75
+    fill = false
 }) => {
     const [isLoaded, setIsLoaded] = useState(false);
     const [isInView, setIsInView] = useState(!lazy || priority);
@@ -41,11 +44,11 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     const observerRef = useRef<IntersectionObserver | null>(null);
 
     // Generate optimized image URLs (in a real app, you'd use a service like Cloudinary, Vercel, or Next.js Image)
-    const getOptimizedSrc = useCallback((originalSrc: string, w?: number, q: number = quality) => {
+    const getOptimizedSrc = useCallback((originalSrc: string) => {
         // For now, return original src - in production you'd transform this
         // Example: return `${originalSrc}?w=${w}&q=${q}&f=webp`
         return originalSrc;
-    }, [quality]);
+    }, []);
 
     // Set up intersection observer for lazy loading
     useEffect(() => {
@@ -74,7 +77,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     // Set source when in view
     useEffect(() => {
         if (isInView && !currentSrc) {
-            setCurrentSrc(getOptimizedSrc(src, width));
+            setCurrentSrc(getOptimizedSrc(src));
         }
     }, [isInView, src, width, getOptimizedSrc, currentSrc]);
 
@@ -84,7 +87,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
             const link = document.createElement('link');
             link.rel = 'preload';
             link.as = 'image';
-            link.href = getOptimizedSrc(src, width);
+            link.href = getOptimizedSrc(src);
             document.head.appendChild(link);
 
             return () => {
@@ -110,7 +113,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
 
     // Skeleton loader
     const SkeletonLoader = () => (
-        <div className={`bg-gray-200 animate-pulse ${className}`} style={{ width, height }}>
+        <div className={`bg-gray-200 animate-pulse ${fill ? 'absolute inset-0' : className}`} style={{ width, height }}>
             <div className="w-full h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-shimmer"></div>
         </div>
     );
@@ -118,7 +121,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     // Blur placeholder
     const BlurPlaceholder = () => (
         <div 
-            className={`transition-opacity duration-300 ${isLoaded ? 'opacity-0' : 'opacity-100'} ${className}`}
+            className={`transition-opacity duration-300 ${isLoaded ? 'opacity-0' : 'opacity-100'} ${fill ? 'absolute inset-0' : className}`}
             style={{
                 backgroundImage: blurDataURL ? `url(${blurDataURL})` : undefined,
                 backgroundSize: 'cover',
@@ -135,7 +138,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
         return (
             <div 
                 ref={imgRef}
-                className={className}
+                className={fill ? 'absolute inset-0' : className}
                 style={{ width, height }}
             >
                 {placeholder === 'skeleton' && <SkeletonLoader />}
@@ -145,10 +148,10 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     }
 
     return (
-        <div className={`relative overflow-hidden ${className.includes('absolute') ? '' : ''}`} style={{ width, height }}>
+        <div className={`${fill ? 'absolute inset-0' : 'relative'} overflow-hidden ${containerClassName}`} style={{ width, height }}>
             {/* Placeholder */}
             {!isLoaded && placeholder !== 'none' && (
-                <div className={`${className.includes('absolute') ? className : 'absolute inset-0'}`}>
+                <div className={`absolute inset-0`}>
                     {placeholder === 'skeleton' && <SkeletonLoader />}
                     {placeholder === 'blur' && blurDataURL && <BlurPlaceholder />}
                 </div>
@@ -160,7 +163,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
                     ref={imgRef}
                     src={currentSrc}
                     alt={alt}
-                    className={`transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'} ${className}`}
+                    className={`transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'} ${fill ? `absolute inset-0 w-full h-full object-cover block ${className}` : className}`}
                     style={{ width, height }}
                     onLoad={handleLoad}
                     onError={handleError}

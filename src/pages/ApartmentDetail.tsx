@@ -2067,6 +2067,8 @@ const ApartmentDetail: React.FC = () => {
                                             src={apartment.photos[0]}
                                             alt="Main apartment view"
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                            containerClassName="absolute inset-0"
+                                            fill
                                             priority={true}
                                             placeholder="skeleton"
                                         />
@@ -2099,6 +2101,8 @@ const ApartmentDetail: React.FC = () => {
                                             src={photo}
                                             alt={`Apartment view ${index + 2}`}
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                            containerClassName="absolute inset-0"
+                                            fill
                                             placeholder="skeleton"
                                             lazy={true}
                                         />
