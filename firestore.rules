@@ -11,8 +11,13 @@ service cloud.firestore {
     match /apartments/{apartmentId}/bookings/{bookingId} {
       allow read: if true;
       allow create, delete: if request.auth != null;
-      // Allow authenticated users to update any fields
-      allow update: if request.auth != null;
+      // Authenticated updates are allowed, but surveyToken is immutable once set to a non-empty value
+      allow update: if request.auth != null &&
+                    // If surveyToken was already set (non-null and not empty), it must not be changed
+                    !(
+                      (resource.data.keys().hasAny(['surveyToken']) && resource.data.surveyToken != null && resource.data.surveyToken != '') &&
+                      request.resource.data.diff(resource.data).changedKeys().hasAny(['surveyToken'])
+                    );
       // Allow guests to mark survey as completed (only this field)
       allow update: if request.auth == null && 
                     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['surveyCompleted']) &&

@@ -444,12 +444,13 @@ const ApartmentFeedbackTab: React.FC<ApartmentFeedbackTabProps> = ({ apartment, 
                             <select
                                 id="surveyLanguageMode"
                                 value={currentApartmentData.surveyLanguageMode || 'multilingual'}
-                                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                                    console.log('Survey language mode changed to:', e.target.value);
                                     setCurrentApartmentData({
                                         ...currentApartmentData,
                                         surveyLanguageMode: e.target.value as 'multilingual' | 'bulgarian' | 'english'
-                                    })
-                                }
+                                    });
+                                }}
                                 className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                             >
                                 <option value="bulgarian">{t('surveyLanguageBulgarian')}</option>

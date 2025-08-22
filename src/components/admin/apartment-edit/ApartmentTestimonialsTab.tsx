@@ -66,19 +66,28 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
     };
 
     const handleAddTestimonial = async () => {
+        console.log('handleAddTestimonial called with:', newTestimonial);
+        
         if (!newTestimonial.text.bg.trim() || !newTestimonial.text.en.trim() || 
             !newTestimonial.guestType.bg.trim() || !newTestimonial.guestType.en.trim()) {
+            console.log('Validation failed - missing required fields');
+            alert('Please fill in all required fields in both languages');
             return;
         }
 
+        console.log('Validation passed, saving testimonial...');
         setLoading(true);
         try {
             const maxOrder = testimonials.length > 0 ? Math.max(...testimonials.map(t => t.order)) : 0;
-            await addDoc(collection(db, `apartments/${apartmentId}/testimonials`), {
+            const testimonialData = {
                 ...newTestimonial,
                 order: maxOrder + 1,
                 createdAt: new Date()
-            });
+            };
+            console.log('Saving testimonial data:', testimonialData);
+            
+            await addDoc(collection(db, `apartments/${apartmentId}/testimonials`), testimonialData);
+            console.log('Testimonial saved successfully!');
 
             setNewTestimonial({
                 text: { bg: '', en: '' },
@@ -96,6 +105,7 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
             await fetchTestimonials();
         } catch (error) {
             console.error('Error adding testimonial:', error);
+            alert('Error saving testimonial: ' + (error as Error).message);
         } finally {
             setLoading(false);
         }
@@ -474,7 +484,19 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
                             {/* Testimonial Text */}
                             <div>
                                 <Label htmlFor="testimonialText" className="text-sm font-medium text-gray-900">
-                                    {t('testimonialText')} ({formLanguage.toUpperCase()})
+                                    {t('testimonialText')} ({formLanguage.toUpperCase()}) *
+                                    <span className="text-xs text-gray-500 ml-2">
+                                        {!editingTestimonial && (
+                                            newTestimonial.text.bg.trim() && newTestimonial.text.en.trim() 
+                                                ? '✅ Both languages filled' 
+                                                : '⚠️ Fill both BG and EN'
+                                        )}
+                                        {editingTestimonial && (
+                                            editingTestimonial.text.bg.trim() && editingTestimonial.text.en.trim() 
+                                                ? '✅ Both languages filled' 
+                                                : '⚠️ Fill both BG and EN'
+                                        )}
+                                    </span>
                                 </Label>
                                 <textarea
                                     id="testimonialText"
@@ -502,7 +524,19 @@ const ApartmentTestimonialsTab: React.FC<ApartmentTestimonialsTabProps> = ({
                             {/* Guest Type */}
                             <div>
                                 <Label htmlFor="guestType" className="text-sm font-medium text-gray-900">
-                                    {t('guestType')} ({formLanguage.toUpperCase()})
+                                    {t('guestType')} ({formLanguage.toUpperCase()}) *
+                                    <span className="text-xs text-gray-500 ml-2">
+                                        {!editingTestimonial && (
+                                            newTestimonial.guestType.bg.trim() && newTestimonial.guestType.en.trim() 
+                                                ? '✅ Both languages filled' 
+                                                : '⚠️ Fill both BG and EN'
+                                        )}
+                                        {editingTestimonial && (
+                                            editingTestimonial.guestType.bg.trim() && editingTestimonial.guestType.en.trim() 
+                                                ? '✅ Both languages filled' 
+                                                : '⚠️ Fill both BG and EN'
+                                        )}
+                                    </span>
                                 </Label>
                                 <Input
                                     id="guestType"

@@ -4,7 +4,6 @@ import { db, auth } from '../../firebase';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { doc, updateDoc, collection, getDocs, addDoc, deleteDoc, DocumentData, getDoc, serverTimestamp } from 'firebase/firestore';
 import { generateSurveyToken, generateSurveyUrl } from '../../lib/surveyUtils';
-import { useSurveyLinkGeneration } from '../../hooks/useSurveyLinkGeneration';
 import { useAdminLanguage } from '../../hooks/useAdminLanguage';
 import { useLanguage } from '../../hooks/useLanguage';
 import { useAuth } from '../../contexts/AuthContext';
@@ -219,7 +218,7 @@ const ApartmentEditAdmin: React.FC = () => {
     }, []);
 
     // Automatically generate survey links for bookings that don't have them
-    useSurveyLinkGeneration(bookings, apartment?.id || '', setBookings);
+    // NOTE: Survey links are now only created during booking creation, not auto-generated
 
     // Confirmation dialog state
     const [confirmationDialog, setConfirmationDialog] = useState<{
@@ -543,6 +542,9 @@ const ApartmentEditAdmin: React.FC = () => {
 
     const handleSave = async () => {
         if (!currentApartmentData || !apartment) return;
+        
+        console.log('Saving apartment data:', currentApartmentData);
+        
         setLoading(true);
         setSaveSuccess(false);
 
@@ -617,7 +619,9 @@ const ApartmentEditAdmin: React.FC = () => {
         });
 
         try {
+            console.log('Updating apartment document with:', cleanApartmentData);
             await updateDoc(doc(db, 'apartments', apartment.id), cleanApartmentData);
+            console.log('Apartment saved successfully!');
             setSaveSuccess(true);
             setGalleryItems(finalPhotoUrls.map((url, index) => ({ id: `existing-${index}-${url}`, url })));
             setTimeout(() => setSaveSuccess(false), 3000);
@@ -749,20 +753,11 @@ const ApartmentEditAdmin: React.FC = () => {
         // Survey fields
         updatedBooking.surveyLanguage = data.surveyLanguage || null;
 
-        // Handle survey token and URL
+        // Handle survey token and URL - preserve existing values only
         if (data.surveyToken) updatedBooking.surveyToken = data.surveyToken;
         if (data.surveyUrl) updatedBooking.surveyUrl = data.surveyUrl;
 
-        // Generate survey token and URL if it doesn't exist and this is a booking
-        if (data.type === 'booked') {
-            const existingBooking = bookings.find(b => b.id === bookingId);
-            if (!existingBooking?.surveyToken && !data.surveyToken) {
-                const surveyToken = generateSurveyToken();
-                const surveyUrl = generateSurveyUrl(bookingId, surveyToken, undefined, data.surveyLanguage);
-                updatedBooking.surveyToken = surveyToken;
-                updatedBooking.surveyUrl = surveyUrl;
-            }
-        }
+        // Survey tokens are only created during initial booking creation, not during updates
 
         try {
             await updateDoc(doc(db, `apartments/${apartment.id}/bookings`, bookingId), updatedBooking);
