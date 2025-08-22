@@ -421,7 +421,10 @@ const ApartmentEditAdmin: React.FC = () => {
                 setApartment(aptData);
                 setCurrentApartmentData(JSON.parse(JSON.stringify(aptData)));
                 if (aptData.photos) {
-                    setGalleryItems(aptData.photos.map((url, index) => ({ id: `existing-${index}-${url}`, url })));
+                    setGalleryItems(aptData.photos.map((url) => ({ 
+                        id: `existing-${url.split('/').pop()?.split('?')[0] || Math.random().toString(36)}`, 
+                        url 
+                    })));
                 }
                 // Try to fetch bookings, but don't fail if it doesn't work
                 try {
@@ -445,13 +448,7 @@ const ApartmentEditAdmin: React.FC = () => {
         fetchAvailableAmenities();
     }, [fetchApartment, fetchAvailableAmenities]);
 
-    const handleOnDragEnd = (result: DropResult) => {
-        if (!result.destination) return;
-        const items = Array.from(galleryItems);
-        const [reorderedItem] = items.splice(result.source.index, 1);
-        items.splice(result.destination.index, 0, reorderedItem);
-        setGalleryItems(items);
-    };
+    // dnd-kit handles reordering directly in ApartmentGalleryTab
 
     const handleAmenitiesOnDragEnd = (result: DropResult) => {
         if (!result.destination) return;
@@ -623,7 +620,10 @@ const ApartmentEditAdmin: React.FC = () => {
             await updateDoc(doc(db, 'apartments', apartment.id), cleanApartmentData);
             console.log('Apartment saved successfully!');
             setSaveSuccess(true);
-            setGalleryItems(finalPhotoUrls.map((url, index) => ({ id: `existing-${index}-${url}`, url })));
+            setGalleryItems(finalPhotoUrls.map((url) => ({ 
+                id: `existing-${url.split('/').pop()?.split('?')[0] || Math.random().toString(36)}`, 
+                url 
+            })));
             setTimeout(() => setSaveSuccess(false), 3000);
         } catch (error) {
             console.error("Error saving apartment: ", error);
@@ -1140,7 +1140,6 @@ const ApartmentEditAdmin: React.FC = () => {
                         setCurrentApartmentData={setCurrentApartmentData}
                         galleryItems={galleryItems}
                         setGalleryItems={setGalleryItems}
-                        handleOnDragEnd={handleOnDragEnd}
                         handleImageDelete={handleImageDelete}
                         handleSetHeroImage={handleSetHeroImage}
                         handleToggleFavouriteImage={handleToggleFavouriteImage}

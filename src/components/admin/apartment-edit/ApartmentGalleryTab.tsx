@@ -1,9 +1,23 @@
-import React, { useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { useAdminLanguage } from '../../../hooks/useAdminLanguage';
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { MoreVertical, Trash2, Home, Star, AlertCircle } from 'lucide-react';
+import {
+    DndContext,
+    closestCenter,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent
+} from '@dnd-kit/core';
+import {
+    SortableContext,
+    useSortable,
+    rectSortingStrategy,
+    arrayMove
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +29,6 @@ import OptimizedImage from '../../ui/optimized-image';
 import { processImageFiles, getSupportedImageTypes, isSupportedImageFile, isHEICFile } from '../../../utils/imageUtils';
 
 interface ApartmentGalleryTabProps extends GalleryTabProps {
-    handleOnDragEnd: (result: DropResult) => void;
     handleSetHeroImage: (url: string) => void;
     handleToggleFavouriteImage: (url: string) => void;
     handleImageDelete: (id: string) => void;
@@ -23,10 +36,9 @@ interface ApartmentGalleryTabProps extends GalleryTabProps {
 
 const ApartmentGalleryTab: React.FC<ApartmentGalleryTabProps> = ({
     currentApartmentData,
-    setCurrentApartmentData,
+    setCurrentApartmentData: _setCurrentApartmentData,
     galleryItems,
     setGalleryItems,
-    handleOnDragEnd,
     handleSetHeroImage,
     handleToggleFavouriteImage,
     handleImageDelete
@@ -112,8 +124,8 @@ const ApartmentGalleryTab: React.FC<ApartmentGalleryTabProps> = ({
                         
                         // Create gallery items from successful conversions
                         if (successful.length > 0) {
-                            const newItems = successful.map((img, index) => ({
-                                id: `new-${Date.now()}-${index}`,
+                            const newItems = successful.map((img) => ({
+                                id: `new-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                                 url: URL.createObjectURL(img.file),
                                 file: img.file
                             }));
@@ -165,75 +177,125 @@ const ApartmentGalleryTab: React.FC<ApartmentGalleryTabProps> = ({
                 className="hidden"
             />
 
-            <h3 className="text-lg font-semibold mt-6 mb-2">{t('currentGallery')}</h3>
-            <p className="text-sm text-gray-500 mb-4">{t('dragAndDropImages')}</p>
-            <DragDropContext onDragEnd={handleOnDragEnd}>
-                <Droppable droppableId="photos" direction="horizontal">
-                    {(provided) => (
-                        <div
-                            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-                            {...provided.droppableProps}
-                            ref={provided.innerRef}
+                        <h3 className="text-lg font-semibold mt-6 mb-2">{t('currentGallery')}</h3>
+                        <p className="text-sm text-gray-500 mb-4">{t('dragAndDropImages')}</p>
+
+                        {/* dnd-kit sortable grid */}
+                        <DndSortableGrid
+                                items={galleryItems.map(i => i.id)}
+                                onReorder={(oldIndex, newIndex) => {
+                                        setGalleryItems(prev => arrayMove(prev, oldIndex, newIndex));
+                                }}
                         >
-                            {galleryItems.map((item, index) => (
-                                <Draggable key={item.id} draggableId={item.id} index={index}>
-                                    {(provided) => (
-                                        <div
-                                            ref={provided.innerRef}
-                                            {...provided.draggableProps}
-                                            {...provided.dragHandleProps}
-                                            className={`relative group bg-gray-100 rounded-lg overflow-hidden ${currentApartmentData.heroImage === item.url ? 'border-4 border-yellow-400' : item.file ? 'border-4 border-dashed border-blue-400' : ''}`}
-                                        >
-                                            <OptimizedImage 
-                                                src={item.url} 
-                                                className="w-full h-40 object-cover" 
-                                                alt="Apartment"
-                                                placeholder="skeleton"
-                                                lazy={false} // Admin images load immediately
-                                                height={160} // h-40 = 160px
-                                            />
-                                            <div className="absolute top-2 left-2 flex items-center gap-x-1 z-10">
-                                                {currentApartmentData.heroImage === item.url && (
-                                                    <div className="bg-yellow-400 p-1 rounded-full">
-                                                        <Home className="h-4 w-4 text-white" />
-                                                    </div>
-                                                )}
-                                                {(currentApartmentData.favouriteImages || []).includes(item.url) && (
-                                                    <div className="bg-pink-500 p-1 rounded-full">
-                                                        <Star className="h-4 w-4 text-white" />
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild className="absolute top-2 right-2 bg-white/70 hover:bg-white z-10">
-                                                    <Button variant="secondary" size="icon">
-                                                        <MoreVertical className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent>
-                                                    <DropdownMenuItem onClick={() => handleSetHeroImage(item.url)}>
-                                                        <Home className="mr-2 h-4 w-4" />
-                                                        <span>{t('setAsHomeImage')}</span>
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => handleToggleFavouriteImage(item.url)}>
-                                                        <Star className="mr-2 h-4 w-4" />
-                                                        <span>{(currentApartmentData.favouriteImages || []).includes(item.url) ? t('removeFromFavourites') : t('addToFavourites')}</span>
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => handleImageDelete(item.id)} className="text-red-500">
-                                                        <Trash2 className="mr-2 h-4 w-4" />
-                                                        <span>{t('delete')}</span>
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </div>
-                                    )}
-                                </Draggable>
-                            ))}
-                            {provided.placeholder}
-                        </div>
-                    )}
-                </Droppable>
-            </DragDropContext>
+                            {galleryItems.map((item) => (
+                                <SortablePhoto
+                                    key={item.id}
+                                    id={item.id}
+                                    className="w-full md:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.75rem)]"
+                                >
+                                    <div
+                                        className={`relative group bg-gray-100 rounded-lg overflow-hidden ${
+                                            currentApartmentData.heroImage === item.url ? 'border-4 border-yellow-400' :
+                                            item.file ? 'border-4 border-dashed border-blue-400' : ''
+                                        }`}
+                                    >
+                                                        <OptimizedImage
+                                                                src={item.url}
+                                                className="w-full h-48 object-cover"
+                                                                alt="Apartment"
+                                                                placeholder="skeleton"
+                                                                lazy={false}
+                                                height={192}
+                                                        />
+                                                        <div className="absolute top-2 left-2 flex items-center gap-x-1 z-10">
+                                                                {currentApartmentData.heroImage === item.url && (
+                                                                        <div className="bg-yellow-400 p-1 rounded-full">
+                                                                                <Home className="h-4 w-4 text-white" />
+                                                                        </div>
+                                                                )}
+                                                                {(currentApartmentData.favouriteImages || []).includes(item.url) && (
+                                                                        <div className="bg-pink-500 p-1 rounded-full">
+                                                                                <Star className="h-4 w-4 text-white" />
+                                                                        </div>
+                                                                )}
+                                                        </div>
+                                                        <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild className="absolute top-2 right-2 bg-white/70 hover:bg-white z-10">
+                                                                        <Button variant="secondary" size="icon">
+                                                                                <MoreVertical className="h-4 w-4" />
+                                                                        </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent>
+                                                                        <DropdownMenuItem onClick={() => handleSetHeroImage(item.url)}>
+                                                                                <Home className="mr-2 h-4 w-4" />
+                                                                                <span>{t('setAsHomeImage')}</span>
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem onClick={() => handleToggleFavouriteImage(item.url)}>
+                                                                                <Star className="mr-2 h-4 w-4" />
+                                                                                <span>{(currentApartmentData.favouriteImages || []).includes(item.url) ? t('removeFromFavourites') : t('addToFavourites')}</span>
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem onClick={() => handleImageDelete(item.id)} className="text-red-500">
+                                                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                                                <span>{t('delete')}</span>
+                                                                        </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                </div>
+                                        </SortablePhoto>
+                                ))}
+                        </DndSortableGrid>
+        </div>
+    );
+};
+
+// Sortable container using dnd-kit with a grid strategy
+const DndSortableGrid: React.FC<{
+    items: string[];
+    onReorder: (oldIndex: number, newIndex: number) => void;
+    children: React.ReactNode;
+}> = ({ items, onReorder, children }) => {
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: { distance: 5 }
+        })
+    );
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!over || active.id === over.id) return;
+        const oldIndex = items.indexOf(String(active.id));
+        const newIndex = items.indexOf(String(over.id));
+        if (oldIndex !== -1 && newIndex !== -1) {
+            onReorder(oldIndex, newIndex);
+        }
+    };
+
+    // Wrap children with sortable context so items can compute positions in a grid
+    return (
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                            <SortableContext items={items} strategy={rectSortingStrategy}>
+                                <div className="flex flex-wrap gap-4">
+                    {children}
+                </div>
+            </SortableContext>
+        </DndContext>
+    );
+};
+
+// Single sortable photo wrapper to handle transforms and drag attributes
+const SortablePhoto: React.FC<{ id: string; className?: string; children: React.ReactNode }> = ({ id, className, children }) => {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+    const style: React.CSSProperties = useMemo(() => ({
+        transform: CSS.Transform.toString(transform),
+        transition,
+        cursor: 'grab',
+        opacity: isDragging ? 0.6 : 1,
+        zIndex: isDragging ? 50 : 'auto'
+    }), [transform, transition, isDragging]);
+
+    return (
+        <div ref={setNodeRef} style={style} className={className} {...attributes} {...listeners}>
+            {children}
         </div>
     );
 };

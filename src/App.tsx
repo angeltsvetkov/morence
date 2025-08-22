@@ -24,11 +24,9 @@ const AppContent = () => {
       {!isAdminPage && !isSurveyPage && <Header />}
       <main className="flex-grow">
         <Routes>
-          {/* If we're on a subdomain, handle subdomain-specific routes */}
-          {subdomainInfo.isSubdomain && (
-            <Route path="/" element={<ApartmentDetail />} />
-          )}
-          <Route path="/" element={<DefaultApartmentRedirect />} />
+          <Route path="/" element={
+            subdomainInfo.isSubdomain ? <ApartmentDetail /> : <DefaultApartmentRedirect />
+          } />
           <Route path="/apartments/:slug" element={<ApartmentDetail />} />
           <Route path="/apartments/:apartmentId/calendar" element={<ApartmentCalendar />} />
           <Route path="/places" element={<Places />} />
