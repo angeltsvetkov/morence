@@ -872,19 +872,15 @@ const ApartmentDetail: React.FC = () => {
                     <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/60 z-10">
                         {/* Apartment Name - Top Left Corner (conditionally displayed) */}
                         {!apartment.hideName && (
-                            <div className="absolute top-6 left-6 md:top-8 md:left-8 z-30">
-                                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-lg tracking-tight">
+                            <div className="absolute top-6 left-6 md:top-8 md:left-8 z-30 max-w-[60%] sm:max-w-none">
+                                <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-lg tracking-tight">
                                     {apartmentName}
                                 </h1>
                             </div>
                         )}
 
-
-
-
-
-                        {/* Mobile Pricing Card - Centered Top */}
-                        <div className="block sm:hidden absolute top-8 left-1/2 -translate-x-1/2 w-80 max-w-[calc(100vw-2rem)] z-30">
+                        {/* Mobile Pricing Card - Positioned to avoid overlap */}
+                        <div className="block sm:hidden absolute top-32 left-1/2 -translate-x-1/2 w-80 max-w-[calc(100vw-2rem)] z-30">
                             {apartment?.pricing?.perNight && (
                                 <div className="group/price relative">
                                     {/* Animated background glow */}
@@ -1328,7 +1324,7 @@ const ApartmentDetail: React.FC = () => {
                         </div>
 
                         {/* Combined Special Offers Button / Scroll Down Indicator */}
-                        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center z-20">
+                        <div className="absolute bottom-20 sm:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center z-20">
                             {(apartment?.pricing?.perNight?.bg || apartment?.pricing?.perNight?.en || (apartment.pricingOffers && apartment.pricingOffers.length > 0)) ? (
                                 // Special Offers Section with Connected Design
                                 <div className="relative flex flex-col items-center">
@@ -1397,9 +1393,9 @@ const ApartmentDetail: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Vertical Image Thumbnails - Right Side */}
+                    {/* Vertical Image Thumbnails - Right Side - Hidden on Mobile */}
                     {slideshowImages.length > 0 && (
-                        <div className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 flex flex-col space-y-3 z-10">
+                        <div className="hidden sm:flex absolute right-4 md:right-8 top-1/2 -translate-y-1/2 flex-col space-y-3 z-10">
                             {/* Show up to 5 thumbnails */}
                             {slideshowImages.slice(0, 5).map((img, index) => (
                                 <div
