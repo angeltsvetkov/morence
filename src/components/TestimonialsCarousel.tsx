@@ -210,13 +210,20 @@ const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({ apartmentId
                 <p className="text-gray-600">{t('verifiedGuest')}</p>
             </div>
             
-            {/* Testimonials Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {testimonials.map((testimonial) => (
-                    <div key={testimonial.id} className="h-[500px]">
-                        <TestimonialCard testimonial={testimonial} />
+            {/* Testimonials Carousel - full width track, fixed-size cards */}
+            <div className="w-full">
+                <div className="px-4 sm:px-6 lg:px-8 py-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 items-stretch">
+                        {testimonials.map((testimonial) => (
+                            <div
+                                key={testimonial.id}
+                                className="w-full h-auto lg:h-[460px]"
+                            >
+                                <TestimonialCard testimonial={testimonial} />
+                            </div>
+                        ))}
                     </div>
-                ))}
+                </div>
             </div>
         </div>
     );

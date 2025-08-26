@@ -1768,7 +1768,7 @@ const ApartmentDetail: React.FC = () => {
             {/* Testimonials Section */}
             {apartment && (
                 <div className="py-16 sm:py-24 bg-gradient-to-br from-indigo-50 via-white to-blue-50">
-                    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="w-full px-0">
                         <TestimonialsCarousel apartmentId={apartment.id} />
                     </div>
                 </div>
