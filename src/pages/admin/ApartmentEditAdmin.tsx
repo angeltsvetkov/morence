@@ -17,7 +17,7 @@ import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 import { Button } from "../../components/ui/button";
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { slugify, formatPrice, getCurrencySymbol } from '../../lib/utils';
+import { slugify } from '../../lib/utils';
 import { safeToDate } from '../../utils/dateUtils';
 import {
     MoreVertical, Trash2, Home, Star, ExternalLink,
@@ -263,6 +263,8 @@ const ApartmentEditAdmin: React.FC = () => {
         price: 0,
         pricePerNightBGN: 0,
         pricePerNightEUR: 0,
+        isSuperSpecial: false,
+        superSpecialUntil: undefined,
         description: ''
     });
     const [isBasePriceModalOpen, setIsBasePriceModalOpen] = useState(false);
@@ -772,20 +774,27 @@ const ApartmentEditAdmin: React.FC = () => {
     };
 
     const handleAddPricingOffer = async () => {
-        if (!newPricingOffer.name || !newPricingOffer.days || !newPricingOffer.pricePerNightBGN || !newPricingOffer.pricePerNightEUR) {
+        if (!newPricingOffer.name || !newPricingOffer.days || !newPricingOffer.pricePerNightEUR) {
             alert(t('pleaseCompleteRequiredFields'));
             return;
         }
+        const computedPriceBGN = Math.round(convertEurToBgn(newPricingOffer.pricePerNightEUR!));
         const pricingOffer: PricingOffer = {
             id: `offer-${Date.now()}`,
             name: newPricingOffer.name!,
             days: newPricingOffer.days!,
             price: newPricingOffer.pricePerNightEUR!,
-            priceBGN: newPricingOffer.pricePerNightBGN!,
+            priceBGN: computedPriceBGN,
             priceEUR: newPricingOffer.pricePerNightEUR!,
+            isSuperSpecial: !!newPricingOffer.isSuperSpecial,
+            superSpecialUntil: newPricingOffer.isSuperSpecial ? (newPricingOffer.superSpecialUntil || undefined) : undefined,
             description: newPricingOffer.description || ''
         };
-        const updatedOffers = [...(currentApartmentData.pricingOffers || []), pricingOffer];
+        const existingOffers = currentApartmentData.pricingOffers || [];
+        const normalizedExistingOffers = pricingOffer.isSuperSpecial
+            ? existingOffers.map(o => ({ ...o, isSuperSpecial: false }))
+            : existingOffers;
+        const updatedOffers = [...normalizedExistingOffers, pricingOffer];
         setCurrentApartmentData(prev => ({ ...prev, pricingOffers: updatedOffers }));
         if (apartment) {
             try {
@@ -801,36 +810,43 @@ const ApartmentEditAdmin: React.FC = () => {
                 setLoading(false);
             }
         }
-        setNewPricingOffer({ name: '', days: 0, price: 0, pricePerNightBGN: 0, pricePerNightEUR: 0, description: '' });
+        setNewPricingOffer({ name: '', days: 0, price: 0, pricePerNightBGN: 0, pricePerNightEUR: 0, isSuperSpecial: false, superSpecialUntil: undefined, description: '' });
         setIsPricingOfferModalOpen(false);
     };
 
     const handleEditPricingOffer = (offer: PricingOffer) => {
         setEditingPricingOffer(offer);
-        const bgnPrice = (offer as any).priceBGN || convertEurToBgn(offer.price);
-        const eurPrice = (offer as any).priceEUR || offer.price;
+        const eurPrice = (offer as any).priceEUR || offer.price || ((offer as any).priceBGN ? convertBgnToEur((offer as any).priceBGN) : 0);
+        const bgnPrice = (offer as any).priceBGN || Math.round(convertEurToBgn(eurPrice));
         const bgnPricePerNight = bgnPrice > 500 ? bgnPrice / offer.days : bgnPrice;
         const eurPricePerNight = eurPrice > 250 ? eurPrice / offer.days : eurPrice;
-        setNewPricingOffer({ name: offer.name, days: offer.days, price: offer.price, pricePerNightBGN: bgnPricePerNight, pricePerNightEUR: eurPricePerNight, description: offer.description || '' });
+        setNewPricingOffer({ name: offer.name, days: offer.days, price: offer.price, pricePerNightBGN: bgnPricePerNight, pricePerNightEUR: eurPricePerNight, isSuperSpecial: !!(offer as any).isSuperSpecial, superSpecialUntil: (offer as any).superSpecialUntil || undefined, description: offer.description || '' });
         setIsPricingOfferModalOpen(true);
     };
 
     const handleUpdatePricingOffer = async () => {
-        if (!editingPricingOffer || !newPricingOffer.name || !newPricingOffer.days || !newPricingOffer.pricePerNightBGN || !newPricingOffer.pricePerNightEUR) {
+        if (!editingPricingOffer || !newPricingOffer.name || !newPricingOffer.days || !newPricingOffer.pricePerNightEUR) {
             alert(t('pleaseCompleteRequiredFields'));
             return;
         }
+        const computedPriceBGN = Math.round(convertEurToBgn(newPricingOffer.pricePerNightEUR!));
         const updatedOffer: PricingOffer = {
             ...editingPricingOffer,
             name: newPricingOffer.name!,
             days: newPricingOffer.days!,
             price: newPricingOffer.pricePerNightEUR!,
-            priceBGN: newPricingOffer.pricePerNightBGN!,
+            priceBGN: computedPriceBGN,
             priceEUR: newPricingOffer.pricePerNightEUR!,
+            isSuperSpecial: !!newPricingOffer.isSuperSpecial,
+            superSpecialUntil: newPricingOffer.isSuperSpecial ? (newPricingOffer.superSpecialUntil || undefined) : undefined,
             description: newPricingOffer.description || ''
         };
         const originalOffers = currentApartmentData.pricingOffers || [];
-        const updatedOffers = originalOffers.map(offer => offer.id === editingPricingOffer.id ? updatedOffer : offer);
+        const updatedOffers = originalOffers.map(offer => {
+            if (offer.id === editingPricingOffer.id) return updatedOffer;
+            if (updatedOffer.isSuperSpecial) return { ...offer, isSuperSpecial: false };
+            return offer;
+        });
         setCurrentApartmentData(prev => ({ ...prev, pricingOffers: updatedOffers }));
         if (apartment) {
             try {
@@ -846,7 +862,7 @@ const ApartmentEditAdmin: React.FC = () => {
                 setLoading(false);
             }
         }
-        setNewPricingOffer({ name: '', days: 0, price: 0, pricePerNightBGN: 0, pricePerNightEUR: 0, description: '' });
+        setNewPricingOffer({ name: '', days: 0, price: 0, pricePerNightBGN: 0, pricePerNightEUR: 0, isSuperSpecial: false, superSpecialUntil: undefined, description: '' });
         setEditingPricingOffer(null);
         setIsPricingOfferModalOpen(false);
     };
@@ -876,17 +892,50 @@ const ApartmentEditAdmin: React.FC = () => {
         );
     };
 
+    const handleReorderPricingOffer = async (offerId: string, direction: 'up' | 'down') => {
+        const originalOffers = currentApartmentData.pricingOffers || [];
+        const currentIndex = originalOffers.findIndex(o => o.id === offerId);
+        if (currentIndex === -1) return;
+
+        const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+        if (targetIndex < 0 || targetIndex >= originalOffers.length) return;
+
+        const updatedOffers = [...originalOffers];
+        const temp = updatedOffers[targetIndex];
+        updatedOffers[targetIndex] = updatedOffers[currentIndex];
+        updatedOffers[currentIndex] = temp;
+
+        setCurrentApartmentData(prev => ({ ...prev, pricingOffers: updatedOffers }));
+
+        if (!apartment) return;
+        try {
+            setLoading(true);
+            await updateDoc(doc(db, 'apartments', apartment.id), { pricingOffers: updatedOffers });
+            setSaveSuccess(true);
+            setTimeout(() => setSaveSuccess(false), 3000);
+        } catch (error) {
+            setCurrentApartmentData(prev => ({ ...prev, pricingOffers: originalOffers }));
+            alert(t('errorUpdatingPricingOffer'));
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleAddBasePrice = () => {
         setEditingBasePrice(false);
-        const bgnPrice = currentApartmentData.pricing?.perNight?.bg || 0;
-        setNewBasePrice({ priceBGN: bgnPrice, priceEUR: bgnPrice > 0 ? convertBgnToEur(bgnPrice) : 0, description: '' });
+        const existingEur = currentApartmentData.pricing?.perNight?.en || 0;
+        const existingBgn = currentApartmentData.pricing?.perNight?.bg || 0;
+        const eurPrice = existingEur || (existingBgn > 0 ? convertBgnToEur(existingBgn) : 0);
+        setNewBasePrice({ priceBGN: eurPrice > 0 ? Math.round(convertEurToBgn(eurPrice)) : 0, priceEUR: eurPrice, description: '' });
         setIsBasePriceModalOpen(true);
     };
 
     const handleEditBasePrice = () => {
         setEditingBasePrice(true);
-        const bgnPrice = currentApartmentData.pricing?.perNight?.bg || 0;
-        setNewBasePrice({ priceBGN: bgnPrice, priceEUR: currentApartmentData.pricing?.perNight?.en || (bgnPrice > 0 ? convertBgnToEur(bgnPrice) : 0), description: '' });
+        const existingEur = currentApartmentData.pricing?.perNight?.en || 0;
+        const existingBgn = currentApartmentData.pricing?.perNight?.bg || 0;
+        const eurPrice = existingEur || (existingBgn > 0 ? convertBgnToEur(existingBgn) : 0);
+        setNewBasePrice({ priceBGN: eurPrice > 0 ? Math.round(convertEurToBgn(eurPrice)) : 0, priceEUR: eurPrice, description: '' });
         setIsBasePriceModalOpen(true);
     };
 
@@ -919,16 +968,18 @@ const ApartmentEditAdmin: React.FC = () => {
     };
 
     const handleSaveBasePrice = async () => {
-        if (!newBasePrice.priceBGN || !newBasePrice.priceEUR) {
+        if (!newBasePrice.priceEUR) {
             alert(t('pleaseCompleteRequiredFields'));
             return;
         }
+
+        const computedPriceBGN = Math.round(convertEurToBgn(newBasePrice.priceEUR));
 
         const originalPricing = currentApartmentData.pricing;
         const updatedPricing = {
             ...currentApartmentData.pricing,
             perNight: {
-                bg: newBasePrice.priceBGN,
+                bg: computedPriceBGN,
                 en: newBasePrice.priceEUR
             }
         };
@@ -940,7 +991,7 @@ const ApartmentEditAdmin: React.FC = () => {
                 setLoading(true);
                 await updateDoc(doc(db, 'apartments', apartment.id), {
                     'pricing.perNight': {
-                        bg: newBasePrice.priceBGN,
+                        bg: computedPriceBGN,
                         en: newBasePrice.priceEUR
                     }
                 });
@@ -1158,6 +1209,7 @@ const ApartmentEditAdmin: React.FC = () => {
                         handleDeleteBasePrice={handleDeleteBasePrice}
                         handleEditPricingOffer={handleEditPricingOffer}
                         handleDeletePricingOffer={handleDeletePricingOffer}
+                        handleReorderPricingOffer={handleReorderPricingOffer}
                         setIsPricingOfferModalOpen={setIsPricingOfferModalOpen}
                         convertEurToBgn={convertEurToBgn}
                     />
@@ -1250,23 +1302,6 @@ const ApartmentEditAdmin: React.FC = () => {
 
                             <div className="space-y-4">
                                 <div>
-                                    <Label htmlFor="priceBGN">{t('priceInBGN')}</Label>
-                                    <Input
-                                        id="priceBGN"
-                                        type="number"
-                                        value={newBasePrice.priceBGN || ''}
-                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                                            setNewBasePrice(prev => ({
-                                                ...prev,
-                                                priceBGN: parseFloat(e.target.value) || 0
-                                            }))
-                                        }
-                                        placeholder="150"
-                                        className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                    />
-                                </div>
-
-                                <div>
                                     <Label htmlFor="priceEUR">{t('priceInEUR')}</Label>
                                     <Input
                                         id="priceEUR"
@@ -1275,7 +1310,8 @@ const ApartmentEditAdmin: React.FC = () => {
                                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                                             setNewBasePrice(prev => ({
                                                 ...prev,
-                                                priceEUR: parseFloat(e.target.value) || 0
+                                                priceEUR: parseFloat(e.target.value) || 0,
+                                                priceBGN: Math.round(convertEurToBgn(parseFloat(e.target.value) || 0))
                                             }))
                                         }
                                         placeholder="77"
@@ -1343,26 +1379,17 @@ const ApartmentEditAdmin: React.FC = () => {
                                     />
                                 </div>
                                 <div>
-                                    <Label htmlFor="pricePerNightBGN">{t('pricePerNightBGN')}</Label>
-                                    <Input
-                                        id="pricePerNightBGN"
-                                        type="number"
-                                        value={newPricingOffer.pricePerNightBGN || ''}
-                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                                            setNewPricingOffer(prev => ({ ...prev, pricePerNightBGN: Number(e.target.value) }))
-                                        }
-                                        placeholder="130"
-                                        className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                    />
-                                </div>
-                                <div>
                                     <Label htmlFor="pricePerNightEUR">{t('pricePerNightEUR')}</Label>
                                     <Input
                                         id="pricePerNightEUR"
                                         type="number"
                                         value={newPricingOffer.pricePerNightEUR || ''}
                                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                                            setNewPricingOffer(prev => ({ ...prev, pricePerNightEUR: Number(e.target.value) }))
+                                            setNewPricingOffer(prev => ({
+                                                ...prev,
+                                                pricePerNightEUR: Number(e.target.value),
+                                                pricePerNightBGN: Math.round(convertEurToBgn(Number(e.target.value) || 0))
+                                            }))
                                         }
                                         placeholder="67"
                                         className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
@@ -1381,6 +1408,46 @@ const ApartmentEditAdmin: React.FC = () => {
                                         className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                     />
                                 </div>
+                                <div className="flex items-start gap-3">
+                                    <input
+                                        id="isSuperSpecial"
+                                        type="checkbox"
+                                        checked={!!newPricingOffer.isSuperSpecial}
+                                        onChange={(e) => setNewPricingOffer(prev => ({
+                                            ...prev,
+                                            isSuperSpecial: e.target.checked,
+                                            superSpecialUntil: e.target.checked ? (prev.superSpecialUntil || undefined) : undefined
+                                        }))}
+                                        className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <div className="flex-1">
+                                        <Label htmlFor="isSuperSpecial">{t('superSpecialOfferInHero')}</Label>
+                                        <div className="text-xs text-gray-500 mt-1">
+                                            {t('superSpecialOfferInHeroHelp')}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {!!newPricingOffer.isSuperSpecial && (
+                                    <div>
+                                        <Label htmlFor="superSpecialUntil">{t('superSpecialOfferDueDate')}</Label>
+                                        <Input
+                                            id="superSpecialUntil"
+                                            type="date"
+                                            value={(newPricingOffer.superSpecialUntil as any) || ''}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                                setNewPricingOffer(prev => ({
+                                                    ...prev,
+                                                    superSpecialUntil: e.target.value || undefined
+                                                }))
+                                            }
+                                            className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                        />
+                                        <div className="text-xs text-gray-500 mt-1">
+                                            {t('superSpecialOfferDueDateHelp')}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="flex justify-end gap-2 mt-6">
@@ -1389,7 +1456,7 @@ const ApartmentEditAdmin: React.FC = () => {
                                     onClick={() => {
                                         setIsPricingOfferModalOpen(false);
                                         setEditingPricingOffer(null);
-                                        setNewPricingOffer({ name: '', days: 0, price: 0, pricePerNightBGN: 0, pricePerNightEUR: 0, description: '' });
+                                        setNewPricingOffer({ name: '', days: 0, price: 0, pricePerNightBGN: 0, pricePerNightEUR: 0, isSuperSpecial: false, superSpecialUntil: undefined, description: '' });
                                     }}
                                 >
                                     {t('cancel')}

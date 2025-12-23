@@ -430,18 +430,18 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
         return Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
     };
 
-    // Exchange rate: 1 EUR = 1.95583 BGN
+    // Exchange rate (used for legacy stored values)
     const EUR_TO_BGN_RATE = 1.95583;
 
     const convertBgnToEur = (bgnPrice: number): number => {
         return Math.round((bgnPrice / EUR_TO_BGN_RATE) * 100) / 100;
     };
 
-    const formatPriceDual = (price: number | undefined) => {
+    const formatPriceEUR = (price: number | undefined) => {
         if (!price) return '-';
-        // Price is stored in BGN, so we convert to EUR for display
+        // Stored legacy value; convert to EUR for display
         const eurPrice = convertBgnToEur(price);
-        return `${eurPrice.toFixed(2)} € / ${price.toFixed(2)} лв.`;
+        return `€${eurPrice.toFixed(2)}`;
     };
 
     const getSortIcon = (column: typeof sortColumn) => {
@@ -775,13 +775,13 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {booking.totalPrice ? formatPriceDual(booking.totalPrice) : '-'}
+                                                {booking.totalPrice ? formatPriceEUR(booking.totalPrice) : '-'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {booking.deposit ? formatPriceDual(booking.deposit) : '-'}
+                                                {booking.deposit ? formatPriceEUR(booking.deposit) : '-'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {calculateRemainingAmount(booking) > 0 ? formatPriceDual(calculateRemainingAmount(booking)) : '-'}
+                                                {calculateRemainingAmount(booking) > 0 ? formatPriceEUR(calculateRemainingAmount(booking)) : '-'}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -817,7 +817,7 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
                             </span>
                             <div className="text-right">
                                 <div>
-                                    <strong>{t('totalRevenue')}:</strong> {formatPriceDual(
+                                    <strong>{t('totalRevenue')}:</strong> {formatPriceEUR(
                                         filteredAndSortedBookings
                                             .filter(b => (b.type === 'booked' || b.type === 'rental') && b.totalPrice)
                                             .reduce((sum, b) => sum + (b.totalPrice || 0), 0)
@@ -825,14 +825,14 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
                                 </div>
                                 <div className="text-xs mt-1">
                                     <span className="mr-4">
-                                        {t('moneyReceived')}: {formatPriceDual(
+                                        {t('moneyReceived')}: {formatPriceEUR(
                                             filteredAndSortedBookings
                                                 .filter(b => (b.type === 'booked' || b.type === 'rental'))
                                                 .reduce((sum, b) => sum + calculateReceivedMoney(b), 0)
                                         )}
                                     </span>
                                     <span>
-                                        {t('totalRemaining')}: {formatPriceDual(
+                                        {t('totalRemaining')}: {formatPriceEUR(
                                             filteredAndSortedBookings
                                                 .filter(b => (b.type === 'booked' || b.type === 'rental'))
                                                 .reduce((sum, b) => sum + calculateRemainingAmount(b), 0)

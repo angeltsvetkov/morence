@@ -71,7 +71,7 @@ interface ApartmentGalleryTabProps {
 
 #### 4. `ApartmentPricingTab`
 Pricing and offers management:
-- Base price setting (BGN/EUR)
+- Base price setting (EUR)
 - Special offers management
 - Dual currency support
 - Price calculation helpers

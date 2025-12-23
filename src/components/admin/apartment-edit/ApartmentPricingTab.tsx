@@ -10,6 +10,7 @@ interface ApartmentPricingTabProps extends TabProps {
     handleDeleteBasePrice: () => void;
     handleEditPricingOffer: (offer: any) => void;
     handleDeletePricingOffer: (offerId: string) => void;
+    handleReorderPricingOffer: (offerId: string, direction: 'up' | 'down') => void;
     setIsPricingOfferModalOpen: (open: boolean) => void;
     convertEurToBgn: (eur: number) => number;
 }
@@ -21,27 +22,31 @@ const ApartmentPricingTab: React.FC<ApartmentPricingTabProps> = ({
     handleDeleteBasePrice,
     handleEditPricingOffer,
     handleDeletePricingOffer,
+    handleReorderPricingOffer,
     setIsPricingOfferModalOpen,
-    convertEurToBgn
+    convertEurToBgn: _convertEurToBgn
 }) => {
     const { t } = useAdminLanguage();
     const { language } = useLanguage();
+
+    const EUR_TO_BGN_RATE = 1.95583;
+    const basePriceEUR = currentApartmentData.pricing?.perNight?.en
+        ?? (typeof currentApartmentData.pricing?.perNight?.bg === 'number'
+            ? Math.ceil(currentApartmentData.pricing.perNight.bg / EUR_TO_BGN_RATE)
+            : undefined);
 
     return (
         <div className="space-y-6 pb-16">
             {/* Tab Header */}
             <div className="flex justify-between items-center mb-6 pb-4 border-b">
                 <h3 className="text-xl font-semibold text-gray-900">{t('pricing')}</h3>
-                <div className="text-sm text-gray-600">
-                    {t('dualCurrencyNote')}
-                </div>
             </div>
 
             {/* Base Price Section */}
             <div>
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold text-gray-900">{t('basePrice')}</h3>
-                    {!currentApartmentData.pricing?.perNight?.bg && (
+                    {!currentApartmentData.pricing?.perNight?.en && !currentApartmentData.pricing?.perNight?.bg && (
                         <Button
                             onClick={handleAddBasePrice}
                             className="bg-blue-600 hover:bg-blue-700"
@@ -53,7 +58,7 @@ const ApartmentPricingTab: React.FC<ApartmentPricingTabProps> = ({
 
                 {/* Base Price Card */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {currentApartmentData.pricing?.perNight?.bg && (
+                    {typeof basePriceEUR === 'number' && (
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
                             <div className="flex justify-between items-start mb-2">
                                 <div className="flex items-center gap-2">
@@ -83,43 +88,16 @@ const ApartmentPricingTab: React.FC<ApartmentPricingTabProps> = ({
                                     <span className="text-sm text-blue-600">{t('duration')}:</span>
                                     <span className="font-medium text-blue-900">1 {t('night')}</span>
                                 </div>
-                                {language === 'bg' ? (
-                                    <>
-                                        {/* Primary: BGN */}
-                                        <div className="flex justify-between">
-                                            <span className="text-sm text-blue-600">{t('priceInBGN')}:</span>
-                                            <span className="font-bold text-blue-700 text-lg">{currentApartmentData.pricing.perNight.bg} лв</span>
-                                        </div>
-                                        {/* Secondary: EUR */}
-                                        {currentApartmentData.pricing.perNight.en && (
-                                            <div className="flex justify-between">
-                                                <span className="text-xs text-blue-500 opacity-75">{t('priceInEUR')}:</span>
-                                                <span className="text-sm text-blue-600 opacity-75">≈ €{currentApartmentData.pricing.perNight.en}</span>
-                                            </div>
-                                        )}
-                                    </>
-                                ) : (
-                                    <>
-                                        {/* Primary: EUR */}
-                                        <div className="flex justify-between">
-                                            <span className="text-sm text-blue-600">{t('priceInEUR')}:</span>
-                                            <span className="font-bold text-blue-700 text-lg">€{currentApartmentData.pricing.perNight.en}</span>
-                                        </div>
-                                        {/* Secondary: BGN */}
-                                        {currentApartmentData.pricing.perNight.bg && (
-                                            <div className="flex justify-between">
-                                                <span className="text-xs text-blue-500 opacity-75">{t('priceInBGN')}:</span>
-                                                <span className="text-sm text-blue-600 opacity-75">≈ {currentApartmentData.pricing.perNight.bg} лв</span>
-                                            </div>
-                                        )}
-                                    </>
-                                )}
+                                <div className="flex justify-between">
+                                    <span className="text-sm text-blue-600">{t('priceInEUR')}:</span>
+                                    <span className="font-bold text-blue-700 text-lg">€{basePriceEUR}</span>
+                                </div>
                             </div>
                         </div>
                     )}
                 </div>
 
-                {!currentApartmentData.pricing?.perNight?.bg && (
+                {!currentApartmentData.pricing?.perNight?.en && !currentApartmentData.pricing?.perNight?.bg && (
                     <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
                         <p>{t('noBasePriceSet')}</p>
                     </div>
@@ -140,15 +118,51 @@ const ApartmentPricingTab: React.FC<ApartmentPricingTabProps> = ({
 
                 {/* Special offers grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {(currentApartmentData.pricingOffers || []).map((offer) => {
-                        const bgnPrice = (offer as any).priceBGN || convertEurToBgn(offer.price);
-                        const eurPrice = (offer as any).priceEUR || offer.price;
+                    {(currentApartmentData.pricingOffers || []).map((offer, index, allOffers) => {
+                        const eurPrice = (offer as any).priceEUR || offer.price || ((offer as any).priceBGN ? Math.round((offer as any).priceBGN / EUR_TO_BGN_RATE) : 0);
+                        const isFirst = index === 0;
+                        const isLast = index === allOffers.length - 1;
                         
                         return (
                             <div key={offer.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
                                 <div className="flex justify-between items-start mb-2">
-                                    <h4 className="font-semibold text-gray-900">{offer.name}</h4>
+                                    <div className="flex items-start gap-2">
+                                        <h4 className="font-semibold text-gray-900">{offer.name}</h4>
+                                        {!!(offer as any).isSuperSpecial && (
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 border border-orange-200">
+                                                {t('superSpecialOffer')}
+                                            </span>
+                                        )}
+                                    </div>
                                     <div className="flex space-x-1">
+                                        <Button
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                handleReorderPricingOffer(offer.id, 'up');
+                                            }}
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-8 w-8 p-0"
+                                            disabled={isFirst}
+                                            title="Move up"
+                                        >
+                                            ⬆️
+                                        </Button>
+                                        <Button
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                handleReorderPricingOffer(offer.id, 'down');
+                                            }}
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-8 w-8 p-0"
+                                            disabled={isLast}
+                                            title="Move down"
+                                        >
+                                            ⬇️
+                                        </Button>
                                         <Button
                                             onClick={() => handleEditPricingOffer(offer)}
                                             variant="outline"
@@ -176,33 +190,10 @@ const ApartmentPricingTab: React.FC<ApartmentPricingTabProps> = ({
                                         <span className="text-sm text-gray-600">{t('minimumNumberOfNights')}:</span>
                                         <span className="font-medium">{offer.days} {offer.days !== 1 ? t('days') : t('day')}</span>
                                     </div>
-                                    {language === 'bg' ? (
-                                        <>
-                                            {/* Primary: BGN */}
-                                            <div className="flex justify-between">
-                                                <span className="text-sm text-gray-600">{t('perNightBGN')}:</span>
-                                                <span className="text-sm font-semibold">{Math.round(bgnPrice)} лв</span>
-                                            </div>
-                                            {/* Secondary: EUR */}
-                                            <div className="flex justify-between">
-                                                <span className="text-xs text-gray-500 opacity-75">{t('perNightEUR')}:</span>
-                                                <span className="text-xs text-gray-600 opacity-75">≈ €{Math.round(eurPrice)}</span>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <>
-                                            {/* Primary: EUR */}
-                                            <div className="flex justify-between">
-                                                <span className="text-sm text-gray-600">{t('perNightEUR')}:</span>
-                                                <span className="text-sm font-semibold">€{Math.round(eurPrice)}</span>
-                                            </div>
-                                            {/* Secondary: BGN */}
-                                            <div className="flex justify-between">
-                                                <span className="text-xs text-gray-500 opacity-75">{t('perNightBGN')}:</span>
-                                                <span className="text-xs text-gray-600 opacity-75">≈ {Math.round(bgnPrice)} лв</span>
-                                            </div>
-                                        </>
-                                    )}
+                                    <div className="flex justify-between">
+                                        <span className="text-sm text-gray-600">{t('perNightEUR')}:</span>
+                                        <span className="text-sm font-semibold">€{Math.round(eurPrice)}</span>
+                                    </div>
                                     {offer.description && (
                                         <p className="text-sm text-gray-500 mt-2">{offer.description}</p>
                                     )}

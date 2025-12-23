@@ -33,7 +33,6 @@ import {
     Dog, Cat, Fish, Bird, Store, ShoppingBag, Gift, Award,
     Cloud, CloudSnow, CloudLightning, Sunrise, Sandwich, Apple
 } from 'lucide-react';
-import { formatPrice } from '../lib/utils';
 import { Amenity } from '../types';
 import SocialMetaTags from '../components/SocialMetaTags';
 import TestimonialsCarousel from '../components/TestimonialsCarousel';
@@ -51,6 +50,29 @@ const localizer = dateFnsLocalizer({
     getDay,
     locales,
 });
+
+const EUR_TO_BGN_RATE = 1.95583;
+
+const isOfferActiveSuperSpecial = (offer: PricingOffer, now: Date): boolean => {
+    if (!(offer as any)?.isSuperSpecial) return false;
+
+    const until = (offer as any)?.superSpecialUntil;
+    if (!until) return true;
+
+    // Expect YYYY-MM-DD. Consider active through the end of that day (local time).
+    const match = /^\d{4}-\d{2}-\d{2}$/.exec(String(until));
+    if (!match) return true;
+
+    const [yearStr, monthStr, dayStr] = String(until).split('-');
+    const year = Number(yearStr);
+    const month = Number(monthStr);
+    const day = Number(dayStr);
+    if (![year, month, day].every(n => Number.isFinite(n))) return true;
+
+    // Expire at the start of the next day.
+    const expiresAt = new Date(year, month - 1, day + 1, 0, 0, 0, 0);
+    return now < expiresAt;
+};
 
 // Available icons for amenities (same as in admin)
 const AVAILABLE_ICONS = [
@@ -242,6 +264,68 @@ const ApartmentDetail: React.FC = () => {
         if (!apartment) return '';
         return apartment.name?.[language] || apartment.name?.en || apartment.name?.bg || 'Unknown Apartment';
     }, [apartment, language]);
+
+    const perNightEUR = useMemo(() => {
+        const perNight = apartment?.pricing?.perNight;
+        if (!perNight) return null;
+
+        if (typeof perNight.en === 'number') return perNight.en;
+        if (typeof perNight.bg === 'number') return Math.round(perNight.bg / EUR_TO_BGN_RATE);
+        return null;
+    }, [apartment]);
+
+    const cheapestPerNightEUR = useMemo(() => {
+        const candidates: number[] = [];
+
+        if (typeof perNightEUR === 'number') candidates.push(perNightEUR);
+
+        for (const offer of apartment?.pricingOffers ?? []) {
+            const eurPerNight = (offer as any).priceEUR || offer.price || ((offer as any).priceBGN ? Math.round((offer as any).priceBGN / EUR_TO_BGN_RATE) : null);
+            if (typeof eurPerNight === 'number' && !Number.isNaN(eurPerNight)) {
+                candidates.push(Math.round(eurPerNight));
+            }
+        }
+
+        if (candidates.length === 0) return null;
+        return Math.min(...candidates);
+    }, [apartment, perNightEUR]);
+
+    const superSpecialOffer = useMemo(() => {
+        const offers = apartment?.pricingOffers ?? [];
+        const now = new Date();
+        return (offers.find(o => isOfferActiveSuperSpecial(o, now)) as any) || null;
+    }, [apartment]);
+
+    const superSpecialPerNightEUR = useMemo(() => {
+        if (!superSpecialOffer) return null;
+        const eurPerNight = (superSpecialOffer as any).priceEUR || superSpecialOffer.price || ((superSpecialOffer as any).priceBGN ? Math.round((superSpecialOffer as any).priceBGN / EUR_TO_BGN_RATE) : null);
+        if (typeof eurPerNight !== 'number' || Number.isNaN(eurPerNight)) return null;
+        return Math.round(eurPerNight);
+    }, [superSpecialOffer]);
+
+    const hasSuperSpecial = !!(superSpecialOffer && superSpecialPerNightEUR !== null);
+    const heroPrimaryPriceEUR = superSpecialPerNightEUR ?? cheapestPerNightEUR;
+    const heroPrimaryLabel = hasSuperSpecial ? t('superSpecialOffer') : t('priceStartsFrom');
+
+    const superSpecialUntilRibbonText = useMemo(() => {
+        if (!hasSuperSpecial) return null;
+        const until = (superSpecialOffer as any)?.superSpecialUntil;
+        if (!until) return null;
+
+        const match = /^\d{4}-\d{2}-\d{2}$/.exec(String(until));
+        if (!match) return null;
+
+        const [yearStr, monthStr, dayStr] = String(until).split('-');
+        const year = Number(yearStr);
+        const month = Number(monthStr);
+        const day = Number(dayStr);
+        if (![year, month, day].every(n => Number.isFinite(n))) return null;
+
+        const date = new Date(year, month - 1, day);
+        const pattern = language === 'bg' ? 'dd.MM.yyyy' : 'MMM d, yyyy';
+        const formatted = format(date, pattern, { locale: language === 'bg' ? bg : enUS });
+        return t('validUntil', { date: formatted });
+    }, [hasSuperSpecial, superSpecialOffer, language, t]);
 
     // Helper function to open lightbox with specific image
     const openLightbox = (imageIndex: number) => {
@@ -885,68 +969,59 @@ const ApartmentDetail: React.FC = () => {
                             {apartment?.pricing?.perNight && (
                                 <div className="group/price relative">
                                     {/* Animated background glow */}
-                                    <div className="absolute -inset-4 bg-gradient-to-r from-cyan-400/20 via-blue-500/20 to-purple-600/20 rounded-3xl blur-2xl opacity-75 group-hover/price:opacity-100 group-hover/price:scale-110 transition-all duration-500"></div>
+                                    <div className={`absolute -inset-4 rounded-3xl blur-2xl opacity-90 group-hover/price:opacity-100 group-hover/price:scale-110 transition-all duration-500 ${hasSuperSpecial ? 'bg-gradient-to-r from-red-600/60 via-rose-600/55 to-red-700/60' : 'bg-gradient-to-r from-cyan-400/20 via-blue-500/20 to-purple-600/20'}`}></div>
 
                                     {/* Main sleek card */}
-                                    <div className="relative bg-gradient-to-br from-white/15 via-white/10 to-white/5 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl hover:shadow-cyan-500/25 transition-all duration-500 overflow-hidden group-hover/price:scale-105">
+                                    <div className={`relative bg-gradient-to-br from-white/15 via-white/10 to-white/5 backdrop-blur-xl rounded-3xl border shadow-2xl transition-all duration-500 overflow-hidden group-hover/price:scale-105 ${hasSuperSpecial ? 'border-white/40 hover:shadow-red-500/60' : 'border-white/20 hover:shadow-cyan-500/25'}`}> 
+                                        {hasSuperSpecial && superSpecialUntilRibbonText && (
+                                            <div className="absolute -right-16 top-6 rotate-45 z-20">
+                                                <div className="bg-gradient-to-r from-red-700 to-red-600 text-white text-[10px] font-bold uppercase tracking-wider px-16 py-1 shadow-lg border border-white/20">
+                                                    {superSpecialUntilRibbonText}
+                                                </div>
+                                            </div>
+                                        )}
                                         {/* Animated border gradient */}
-                                        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/0 via-cyan-400/30 to-purple-500/0 opacity-0 group-hover/price:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
+                                        <div className={`absolute inset-0 opacity-0 group-hover/price:opacity-100 transition-opacity duration-500 rounded-3xl ${hasSuperSpecial ? 'bg-gradient-to-r from-red-600/0 via-red-500/65 to-red-700/0' : 'bg-gradient-to-r from-cyan-400/0 via-cyan-400/30 to-purple-500/0'}`}></div>
 
                                         {/* Content */}
                                         <div className="relative px-6 py-5">
                                             {/* Price label */}
-                                            <div className="text-xs font-semibold text-cyan-100 tracking-wider uppercase mb-2 opacity-90 text-center">
-                                                {t('lSTBd7fnvyXx34YwC5tL')}
+                                            <div className={`text-xs font-semibold tracking-wider uppercase mb-2 opacity-90 text-center ${hasSuperSpecial ? 'text-red-100' : 'text-cyan-100'}`}>
+                                                {heroPrimaryLabel}
                                             </div>
+
+                                            {superSpecialOffer?.name && (
+                                                <div className="-mt-1 mb-2 text-center text-xs font-semibold text-white/90">
+                                                    {superSpecialOffer.name}
+                                                </div>
+                                            )}
 
                                             {/* Main price - Dual currency display */}
                                             <div className="relative">
                                                 {/* Price highlight background */}
-                                                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-cyan-400/20 rounded-xl blur-sm"></div>
+                                                <div className={`absolute inset-0 rounded-xl blur-sm ${hasSuperSpecial ? 'bg-gradient-to-r from-red-950/20 via-red-600/45 to-red-500/50' : 'bg-gradient-to-r from-white/20 to-cyan-400/20'}`}></div>
                                                 <div className="relative text-center">
-                                                    {language === 'bg' ? (
-                                                        <>
-                                                            {/* Primary: BGN */}
-                                                            <div className="text-4xl font-black tracking-tight text-white drop-shadow-2xl px-4 py-2">
-                                                                {apartment.pricing.perNight.bg} <span className="text-2xl font-bold text-cyan-200">лв</span>
-                                                            </div>
-                                                            {/* Secondary: EUR */}
-                                                            {apartment.pricing.perNight.en && (
-                                                                <div className="text-sm font-semibold text-cyan-100 opacity-80 mt-1">
-                                                                    ≈ €{apartment.pricing.perNight.en}
-                                                                </div>
-                                                            )}
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            {/* Primary: EUR */}
-                                                            <div className="text-4xl font-black tracking-tight text-white drop-shadow-2xl px-4 py-2">
-                                                                €{apartment.pricing.perNight.en}
-                                                            </div>
-                                                            {/* Secondary: BGN */}
-                                                            {apartment.pricing.perNight.bg && (
-                                                                <div className="text-sm font-semibold text-cyan-100 opacity-80 mt-1">
-                                                                    ≈ {apartment.pricing.perNight.bg} лв
-                                                                </div>
-                                                            )}
-                                                        </>
+                                                    {heroPrimaryPriceEUR !== null && (
+                                                        <div className="text-4xl font-black tracking-tight text-white drop-shadow-2xl px-4 py-2">
+                                                            €{heroPrimaryPriceEUR}
+                                                        </div>
                                                     )}
                                                 </div>
                                             </div>
 
                                             {/* Minimum nights info */}
-                                            {apartment.minimumNights && (
+                                            {(superSpecialOffer?.days || apartment.minimumNights) && (
                                                 <div className="mt-4 text-center">
-                                                    <div className="inline-flex items-center bg-white/15 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20">
-                                                        <span className="text-sm font-medium text-cyan-100">
-                                                            {t('minimumStay')}: {apartment.minimumNights} {apartment.minimumNights === 1 ? t('night') : t('nights')}
+                                                    <div className={`inline-flex items-center bg-white/15 backdrop-blur-sm rounded-full px-4 py-2 border ${hasSuperSpecial ? 'border-white/30' : 'border-white/20'}`}>
+                                                        <span className={`text-sm font-medium ${hasSuperSpecial ? 'text-red-100' : 'text-cyan-100'}`}>
+                                                            {t('minimumStay')}: {superSpecialOffer?.days ?? apartment.minimumNights} {(superSpecialOffer?.days ?? apartment.minimumNights) === 1 ? t('night') : t('nights')}
                                                         </span>
                                                     </div>
                                                 </div>
                                             )}
 
                                             {/* Bottom accent */}
-                                            <div className="mt-4 h-0.5 bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent rounded-full"></div>
+                                            <div className={`mt-4 h-0.5 rounded-full ${hasSuperSpecial ? 'bg-gradient-to-r from-transparent via-red-400/85 to-transparent' : 'bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent'}`}></div>
                                         </div>
                                     </div>
                                 </div>
@@ -959,71 +1034,61 @@ const ApartmentDetail: React.FC = () => {
                             {apartment?.pricing?.perNight && (
                                 <div className="group/price relative max-w-xs">
                                     {/* Animated background glow */}
-                                    <div className="absolute -inset-4 bg-gradient-to-r from-cyan-400/20 via-blue-500/20 to-purple-600/20 rounded-3xl blur-2xl opacity-75 group-hover/price:opacity-100 group-hover/price:scale-110 transition-all duration-500"></div>
+                                    <div className={`absolute -inset-4 rounded-3xl blur-2xl opacity-90 group-hover/price:opacity-100 group-hover/price:scale-110 transition-all duration-500 ${hasSuperSpecial ? 'bg-gradient-to-r from-red-600/60 via-rose-600/55 to-red-700/60' : 'bg-gradient-to-r from-cyan-400/20 via-blue-500/20 to-purple-600/20'}`}></div>
 
                                     {/* Main sleek card */}
-                                    <div className="relative bg-gradient-to-br from-white/15 via-white/10 to-white/5 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl hover:shadow-cyan-500/25 transition-all duration-500 overflow-hidden group-hover/price:scale-105">
+                                    <div className={`relative bg-gradient-to-br from-white/15 via-white/10 to-white/5 backdrop-blur-xl rounded-3xl border shadow-2xl transition-all duration-500 overflow-hidden group-hover/price:scale-105 ${hasSuperSpecial ? 'border-white/40 hover:shadow-red-500/60' : 'border-white/20 hover:shadow-cyan-500/25'}`}>
+                                        {hasSuperSpecial && superSpecialUntilRibbonText && (
+                                            <div className="absolute -right-16 top-6 rotate-45 z-20">
+                                                <div className="bg-gradient-to-r from-red-700 to-red-600 text-white text-[10px] font-bold uppercase tracking-wider px-16 py-1 shadow-lg border border-white/20">
+                                                    {superSpecialUntilRibbonText}
+                                                </div>
+                                            </div>
+                                        )}
                                         {/* Animated border gradient */}
-                                        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/0 via-cyan-400/30 to-purple-500/0 opacity-0 group-hover/price:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
+                                        <div className={`absolute inset-0 opacity-0 group-hover/price:opacity-100 transition-opacity duration-500 rounded-3xl ${hasSuperSpecial ? 'bg-gradient-to-r from-red-600/0 via-red-500/65 to-red-700/0' : 'bg-gradient-to-r from-cyan-400/0 via-cyan-400/30 to-purple-500/0'}`}></div>
 
                                         {/* Content */}
                                         <div className="relative px-6 py-5">
                                             {/* Top section with icon */}
 
-
                                             {/* Price label */}
-                                            <div className="text-xs font-semibold text-cyan-100 tracking-wider uppercase mb-2 opacity-90">
-                                                {t('lSTBd7fnvyXx34YwC5tL')}
+                                            <div className={`text-xs font-semibold tracking-wider uppercase mb-2 opacity-90 ${hasSuperSpecial ? 'text-red-100' : 'text-cyan-100'}`}>
+                                                {heroPrimaryLabel}
                                             </div>
+
+                                            {superSpecialOffer?.name && (
+                                                <div className="-mt-1 mb-2 text-xs font-semibold text-white/90">
+                                                    {superSpecialOffer.name}
+                                                </div>
+                                            )}
 
                                             {/* Main price - Dual currency display */}
                                             <div className="relative">
                                                 {/* Price highlight background */}
-                                                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-cyan-400/20 rounded-xl blur-sm"></div>
+                                                <div className={`absolute inset-0 rounded-xl blur-sm ${hasSuperSpecial ? 'bg-gradient-to-r from-red-950/20 via-red-600/45 to-red-500/50' : 'bg-gradient-to-r from-white/20 to-cyan-400/20'}`}></div>
                                                 <div className="relative text-center">
-                                                    {language === 'bg' ? (
-                                                        <>
-                                                            {/* Primary: BGN */}
-                                                            <div className="text-5xl font-black tracking-tight text-white drop-shadow-2xl px-4 py-2">
-                                                                {apartment.pricing.perNight.bg} <span className="text-3xl font-bold text-cyan-200">лв</span>
-                                                            </div>
-                                                            {/* Secondary: EUR */}
-                                                            {apartment.pricing.perNight.en && (
-                                                                <div className="text-lg font-semibold text-cyan-100 opacity-80 mt-1">
-                                                                    ≈ €{apartment.pricing.perNight.en}
-                                                                </div>
-                                                            )}
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            {/* Primary: EUR */}
-                                                            <div className="text-5xl font-black tracking-tight text-white drop-shadow-2xl px-4 py-2">
-                                                                €{apartment.pricing.perNight.en}
-                                                            </div>
-                                                            {/* Secondary: BGN */}
-                                                            {apartment.pricing.perNight.bg && (
-                                                                <div className="text-lg font-semibold text-cyan-100 opacity-80 mt-1">
-                                                                    ≈ {apartment.pricing.perNight.bg} лв
-                                                                </div>
-                                                            )}
-                                                        </>
+                                                    {heroPrimaryPriceEUR !== null && (
+                                                        <div className="text-5xl font-black tracking-tight text-white drop-shadow-2xl px-4 py-2">
+                                                            €{heroPrimaryPriceEUR}
+                                                        </div>
                                                     )}
                                                 </div>
                                             </div>
 
                                             {/* Minimum nights info */}
-                                            {apartment.minimumNights && (
+                                            {(superSpecialOffer?.days || apartment.minimumNights) && (
                                                 <div className="mt-4 text-center">
-                                                    <div className="inline-flex items-center bg-white/15 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20">
-                                                        <span className="text-sm font-medium text-cyan-100">
-                                                            {t('minimumStay')}: {apartment.minimumNights} {apartment.minimumNights === 1 ? t('night') : t('nights')}
+                                                    <div className={`inline-flex items-center bg-white/15 backdrop-blur-sm rounded-full px-4 py-2 border ${hasSuperSpecial ? 'border-white/30' : 'border-white/20'}`}>
+                                                        <span className={`text-sm font-medium ${hasSuperSpecial ? 'text-red-100' : 'text-cyan-100'}`}>
+                                                            {t('minimumStay')}: {superSpecialOffer?.days ?? apartment.minimumNights} {(superSpecialOffer?.days ?? apartment.minimumNights) === 1 ? t('night') : t('nights')}
                                                         </span>
                                                     </div>
                                                 </div>
                                             )}
 
                                             {/* Bottom accent */}
-                                            <div className="mt-4 h-0.5 bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent rounded-full"></div>
+                                            <div className={`mt-4 h-0.5 rounded-full ${hasSuperSpecial ? 'bg-gradient-to-r from-transparent via-red-400/85 to-transparent' : 'bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent'}`}></div>
 
 
                                         </div>
@@ -1563,119 +1628,38 @@ const ApartmentDetail: React.FC = () => {
                             <p className="text-xl text-gray-600 text-center max-w-3xl mx-auto">
                                 {apartment.pricingOffers && apartment.pricingOffers.length > 0 ? t('specialOffersDescription') : t('pricingDescription')}
                             </p>
+
+                            {typeof perNightEUR === 'number' && (
+                                <div className="mt-6 text-center text-gray-700">
+                                    <span className="font-semibold">{t('standardRate')}:</span>
+                                    <span className="ml-2 text-gray-900 font-bold">€{perNightEUR}</span>
+                                    <span className="ml-1 text-gray-600">{t('perNight')}</span>
+                                </div>
+                            )}
             </div>
                         <div className="flex flex-wrap justify-center gap-6 mx-auto max-w-full">
-                            {/* Base Price Card */}
-                            <div className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 border-2 border-gray-300 hover:border-gray-400 transform hover:-translate-y-2 w-96 flex-shrink-0">
-                                {/* Standard background */}
-                                <div className="absolute inset-0 bg-gradient-to-br from-gray-500/5 via-slate-500/5 to-gray-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-                                {/* Content */}
-                                <div className="relative p-8">
-                                    {/* Base Price Badge */}
-                                    <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                                        <div className="bg-gradient-to-r from-gray-500 to-slate-600 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
-                                            {t('standardRate')}
-                                            </div>
-                                        </div>
-
-                                    {/* Price Name */}
-                                    <div className="text-center mt-4 mb-6">
-                                        <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('regularPrice')}</h3>
-                                        <div className="w-16 h-1 bg-gradient-to-r from-gray-500 to-slate-500 rounded-full mx-auto"></div>
-                                                    </div>
-
-                                    {/* Main Price Display */}
-                                    <div className="text-center mb-6">
-                                        <div className="relative">
-                                            {/* Price circle background */}
-                                            <div className="w-32 h-32 mx-auto bg-gradient-to-br from-gray-500 to-slate-600 rounded-full flex items-center justify-center shadow-xl group-hover:scale-105 transition-transform duration-300">
-                                                <div className="text-center">
-                                                    {language === 'bg' ? (
-                                                        <>
-                                                            {/* Primary: BGN */}
-                                                            <div className="text-3xl font-black text-white">
-                                                                {apartment.pricing.perNight.bg}
-                                                                <span className="text-lg font-bold text-gray-100 block">лв</span>
-                                                            </div>
-                                                            {/* Secondary: EUR */}
-                                                            {apartment.pricing.perNight.en && (
-                                                                <div className="text-sm font-semibold text-gray-200 opacity-75 mt-1">
-                                                                    ≈ €{apartment.pricing.perNight.en}
-                                                                </div>
-                                                            )}
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            {/* Primary: EUR */}
-                                                            <div className="text-3xl font-black text-white">
-                                                                €{apartment.pricing.perNight.en}
-                                                            </div>
-                                                            {/* Secondary: BGN */}
-                                                            {apartment.pricing.perNight.bg && (
-                                                                <div className="text-sm font-semibold text-gray-200 opacity-75 mt-1">
-                                                                    ≈ {apartment.pricing.perNight.bg} лв
-                                                                </div>
-                                                            )}
-                                                        </>
-                                                    )}
-                                            </div>
-                                                </div>
-                                            {/* Floating per night label */}
-                                            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white border border-gray-200 rounded-full px-4 py-1 text-sm font-semibold text-gray-700 shadow-md">
-                                                {t('perNight')}
-                                        </div>
-                                    </div>
-                        </div>
-
-                                    {/* Standard Details */}
-                                    <div className="space-y-4">
-                                        {/* Minimum stay requirement */}
-                                        <div className="bg-gray-50 rounded-xl p-4 text-center border border-gray-100">
-                                            <div className="text-sm text-gray-600 mb-1">{t('appliesTo')}</div>
-                                            <div className="font-bold text-gray-900">
-                                                {apartment.minimumNights ? (
-                                                    `${t('staysOf')} ${apartment.minimumNights}+ ${apartment.minimumNights === 1 ? t('night') : t('nights')}`
-                                                ) : (
-                                                    t('allStays')
-                                                )}
-                    </div>
-                </div>
-
-
-                                    </div>
-
-                                    {/* Standard description */}
-                                    <div className="mt-6 pt-6 border-t border-gray-100">
-                                        <p className="text-sm text-gray-600 text-center italic leading-relaxed">
-                                            {apartment.minimumNights ? (
-                                                t('standardRateDescriptionWithMinimum').replace('{nights}', apartment.minimumNights.toString())
-                                            ) : (
-                                                t('standardRateDescription')
-                                            )}
-                                        </p>
-                        </div>
-
-                                    {/* Decorative elements */}
-                                    <div className="absolute top-4 right-4 w-2 h-2 bg-gray-400 rounded-full opacity-60"></div>
-                                    <div className="absolute bottom-4 left-4 w-1 h-1 bg-slate-400 rounded-full opacity-60"></div>
-                                    </div>
-                                    </div>
-
                             {/* Special Offers Cards */}
                             {apartment.pricingOffers?.map((offer, index) => {
                                 // Get per-night prices (now stored directly as per-night rates)
-                                const bgnPerNight = (offer as any).priceBGN || Math.round(offer.price * 1.95583);
-                                const eurPerNight = (offer as any).priceEUR || offer.price;
+                                const eurPerNight = (offer as any).priceEUR || offer.price || ((offer as any).priceBGN ? Math.round((offer as any).priceBGN / EUR_TO_BGN_RATE) : null);
+                                const isActiveSuperSpecial = isOfferActiveSuperSpecial(offer, new Date());
 
                                 return (
                                     <div
                                         key={offer.id}
-                                        className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 hover:border-blue-200 transform hover:-translate-y-2 w-96 flex-shrink-0"
+                                        className={`group relative rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 border-2 transform hover:-translate-y-2 w-96 flex-shrink-0 ${
+                                            isActiveSuperSpecial
+                                                ? 'bg-gradient-to-br from-red-700 via-red-600 to-rose-700 border-red-300 hover:border-red-200'
+                                                : 'bg-white border-orange-200 hover:border-orange-300'
+                                        }`}
                                         style={{ animationDelay: `${index * 150}ms` }}
                                     >
                                         {/* Gradient background on hover */}
-                                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                        <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${
+                                            isActiveSuperSpecial
+                                                ? 'bg-gradient-to-br from-white/10 via-red-500/10 to-black/10'
+                                                : 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5'
+                                        }`}></div>
 
                                         {/* Content */}
                                         <div className="relative p-8">
@@ -1688,7 +1672,7 @@ const ApartmentDetail: React.FC = () => {
 
                                             {/* Offer Name */}
                                             <div className="text-center mt-4 mb-6">
-                                                <h3 className="text-2xl font-bold text-gray-900 mb-2">{offer.name}</h3>
+                                                <h3 className={`text-2xl font-bold mb-2 ${isActiveSuperSpecial ? 'text-white' : 'text-gray-900'}`}>{offer.name}</h3>
                                                 <div className="w-16 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto"></div>
                             </div>
 
@@ -1696,31 +1680,16 @@ const ApartmentDetail: React.FC = () => {
                                             <div className="text-center mb-6">
                                                 <div className="relative">
                                                     {/* Price circle background */}
-                                                    <div className="w-32 h-32 mx-auto bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-xl group-hover:scale-105 transition-transform duration-300">
+                                                    <div className={`w-32 h-32 mx-auto rounded-full flex items-center justify-center shadow-xl group-hover:scale-105 transition-transform duration-300 ${
+                                                        isActiveSuperSpecial
+                                                            ? 'bg-gradient-to-br from-red-950 via-red-700 to-rose-700'
+                                                            : 'bg-gradient-to-br from-blue-500 to-purple-600'
+                                                    }`}>
                                                         <div className="text-center">
-                                                            {language === 'bg' ? (
-                                                                <>
-                                                                    {/* Primary: BGN */}
-                                                                    <div className="text-3xl font-black text-white">
-                                                                        {Math.round(bgnPerNight)}
-                                                                        <span className="text-lg font-bold text-blue-100 block">лв</span>
-                                                                    </div>
-                                                                    {/* Secondary: EUR */}
-                                                                    <div className="text-sm font-semibold text-blue-200 opacity-75 mt-1">
-                                                                        ≈ €{Math.round(eurPerNight)}
-                                                                    </div>
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    {/* Primary: EUR */}
-                                                                    <div className="text-3xl font-black text-white">
-                                                                        €{Math.round(eurPerNight)}
-                                                                    </div>
-                                                                    {/* Secondary: BGN */}
-                                                                    <div className="text-sm font-semibold text-blue-200 opacity-75 mt-1">
-                                                                        ≈ {Math.round(bgnPerNight)} лв
-                                                                    </div>
-                                                                </>
+                                                            {eurPerNight !== null && (
+                                                                <div className="text-3xl font-black text-white">
+                                                                    €{Math.round(eurPerNight)}
+                                                                </div>
                                                             )}
                 </div>
             </div>
@@ -1731,12 +1700,24 @@ const ApartmentDetail: React.FC = () => {
                                             </div>
                                                 </div>
 
+                                                {typeof perNightEUR === 'number' && eurPerNight !== null && (
+                                                    <div className={`mt-4 text-center text-sm ${isActiveSuperSpecial ? 'text-red-100' : 'text-gray-600'}`}>
+                                                        <span className="mr-1">{t('regularPrice')}:</span>
+                                                        <span className="font-semibold line-through">€{perNightEUR}</span>
+                                                        <span className={`ml-1 ${isActiveSuperSpecial ? 'text-red-100/90' : ''}`}>{t('perNight')}</span>
+                                                    </div>
+                                                )}
+
                                             {/* Offer Details */}
                                             <div className="space-y-4">
                                                 {/* Minimum Stay */}
-                                                <div className="bg-gray-50 rounded-xl p-4 text-center border border-gray-100">
-                                                    <div className="text-sm text-gray-600 mb-1">{t('appliesTo')}</div>
-                                                    <div className="font-bold text-gray-900">
+                                                <div className={`rounded-xl p-4 text-center border ${
+                                                    isActiveSuperSpecial
+                                                        ? 'bg-white/10 border-white/15'
+                                                        : 'bg-gray-50 border-gray-100'
+                                                }`}>
+                                                    <div className={`text-sm mb-1 ${isActiveSuperSpecial ? 'text-red-100/90' : 'text-gray-600'}`}>{t('appliesTo')}</div>
+                                                    <div className={`font-bold ${isActiveSuperSpecial ? 'text-white' : 'text-gray-900'}`}>
                                                         {t('staysOf')} {offer.days}+ {offer.days === 1 ? t('night') : t('nights')}
                                                 </div>
                                                 </div>
@@ -1747,7 +1728,7 @@ const ApartmentDetail: React.FC = () => {
                                             {/* Description */}
                                         {offer.description && (
                                                 <div className="mt-6 pt-6 border-t border-gray-100">
-                                                    <p className="text-sm text-gray-600 text-center italic leading-relaxed">
+                                                    <p className={`text-sm text-center italic leading-relaxed ${isActiveSuperSpecial ? 'text-red-100/90' : 'text-gray-600'}`}>
                                                         {offer.description}
                                                     </p>
                                             </div>

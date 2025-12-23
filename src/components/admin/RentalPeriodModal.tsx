@@ -15,7 +15,6 @@ import { db } from '../../firebase';
 import { Booking, PricingOffer, SurveyResponse, SurveyQuestion } from '../../types';
 import { useAdminLanguage } from '../../hooks/useAdminLanguage';
 import { useLanguage } from '../../hooks/useLanguage';
-import { formatPrice, getCurrencySymbol } from '../../lib/utils';
 
 interface RentalPeriodModalProps {
     isOpen: boolean;
@@ -87,11 +86,9 @@ const RentalPeriodModal: React.FC<RentalPeriodModalProps> = ({
     const [endDate, setEndDate] = useState('');
     const [selectedPricingOfferId, setSelectedPricingOfferId] = useState('');
     const [customPrice, setCustomPrice] = useState('');
-    const [customPriceBGN, setCustomPriceBGN] = useState('');
     const [customPriceEUR, setCustomPriceEUR] = useState('');
     const [pricingMode, setPricingMode] = useState<'offer' | 'custom'>('offer');
     const [deposit, setDeposit] = useState('');
-    const [depositCurrency, setDepositCurrency] = useState<'EUR' | 'BGN'>('BGN');
     const [status, setStatus] = useState<'booked' | 'deposit_paid' | 'fully_paid'>('booked');
     const [guestEmail, setGuestEmail] = useState('');
     const [guestPhone, setGuestPhone] = useState('');
@@ -100,7 +97,7 @@ const RentalPeriodModal: React.FC<RentalPeriodModalProps> = ({
     const [loadingSurveyResponses, setLoadingSurveyResponses] = useState(false);
     const [surveyQuestions, setSurveyQuestions] = useState<SurveyQuestion[]>([]);
 
-    // Exchange rate: 1 EUR = 1.95583 BGN
+    // Exchange rate (used for legacy stored values)
     const EUR_TO_BGN_RATE = 1.95583;
     
     const convertBgnToEur = (bgnPrice: number): number => {
@@ -114,10 +111,7 @@ const RentalPeriodModal: React.FC<RentalPeriodModalProps> = ({
     const getDepositInBGN = (): number => {
         if (!deposit) return 0;
         const depositValue = parseFloat(deposit);
-        if (depositCurrency === 'EUR') {
-            return convertEurToBgn(depositValue);
-        }
-        return depositValue;
+        return convertEurToBgn(depositValue);
     };
 
     const isEditMode = !!editingBooking;
@@ -187,22 +181,17 @@ const RentalPeriodModal: React.FC<RentalPeriodModalProps> = ({
 
     const getCurrentPrice = () => {
         if (pricingMode === 'custom') {
-            // Use appropriate currency based on language
-            if (language === 'bg') {
-                return parseFloat(customPriceBGN) || 0;
-            } else {
-                return parseFloat(customPriceEUR) || 0;
-            }
+            // UI is EUR-only; store legacy values in the existing numeric fields
+            const eurTotal = parseFloat(customPriceEUR) || 0;
+            return eurTotal > 0 ? convertEurToBgn(eurTotal) : 0;
         }
         
         const selectedOffer = pricingOffers.find(offer => offer.id === selectedPricingOfferId);
         if (selectedOffer) {
             const bookingDays = calculateDays(startDate, endDate);
-            // Use the appropriate currency price based on user's language
-            const perNightRate = language === 'bg' 
-                ? (selectedOffer as any).priceBGN || selectedOffer.price * 1.95583
-                : (selectedOffer as any).priceEUR || selectedOffer.price;
-            return perNightRate * bookingDays;
+            // UI is EUR-only; store legacy values in the existing numeric fields
+            const perNightEUR = (selectedOffer as any).priceEUR || selectedOffer.price || ((selectedOffer as any).priceBGN ? convertBgnToEur((selectedOffer as any).priceBGN) : 0);
+            return convertEurToBgn(perNightEUR) * bookingDays;
         }
         
         return 0;
@@ -270,18 +259,10 @@ const RentalPeriodModal: React.FC<RentalPeriodModalProps> = ({
             
             // Handle deposit initialization
             if (editingBooking.deposit) {
-                const originalCurrency = editingBooking.depositCurrency || 'BGN';
-                if (originalCurrency === 'EUR') {
-                    // Convert stored BGN back to EUR for display
-                    setDeposit(convertBgnToEur(editingBooking.deposit).toString());
-                } else {
-                    // Already in BGN
-                    setDeposit(editingBooking.deposit.toString());
-                }
-                setDepositCurrency(originalCurrency);
+                // Deposit is stored in legacy units; display as EUR in admin
+                setDeposit(convertBgnToEur(editingBooking.deposit).toString());
             } else {
                 setDeposit('');
-                setDepositCurrency('BGN');
             }
             setStatus(editingBooking.status || 'booked');
             setGuestEmail(editingBooking.guestEmail || '');
@@ -294,14 +275,11 @@ const RentalPeriodModal: React.FC<RentalPeriodModalProps> = ({
                 setPricingMode('offer');
                 setCustomPrice('');
             } else if (editingBooking.customPrice) {
-                // Determine which currency the stored price is in based on language
-                if (language === 'bg') {
-                    setCustomPriceBGN(editingBooking.customPrice.toString());
-                    setCustomPriceEUR('');
-                } else {
-                    setCustomPriceEUR(editingBooking.customPrice.toString());
-                    setCustomPriceBGN('');
-                }
+                // Legacy heuristic: old values might be stored in different units depending on admin language at the time.
+                // Treat larger values as legacy and convert to EUR for display.
+                const stored = editingBooking.customPrice;
+                const eurValue = stored > 500 ? convertBgnToEur(stored) : stored;
+                setCustomPriceEUR(eurValue.toString());
                 setCustomPrice(editingBooking.customPrice.toString()); // Keep for backward compatibility
                 setPricingMode('custom');
                 setSelectedPricingOfferId('');
@@ -340,10 +318,8 @@ const RentalPeriodModal: React.FC<RentalPeriodModalProps> = ({
             setSelectedPricingOfferId('');
         }
         setCustomPrice('');
-        setCustomPriceBGN('');
         setCustomPriceEUR('');
         setDeposit('');
-        setDepositCurrency('BGN');
         setStatus('booked');
         setGuestEmail('');
     };
@@ -359,9 +335,8 @@ const RentalPeriodModal: React.FC<RentalPeriodModalProps> = ({
         // Validate pricing for booked periods
         if (type === 'booked') {
             if (pricingMode === 'custom') {
-                const bgnPrice = parseFloat(customPriceBGN) || 0;
                 const eurPrice = parseFloat(customPriceEUR) || 0;
-                if (bgnPrice <= 0 && eurPrice <= 0) {
+                if (eurPrice <= 0) {
                     alert(t('pleaseEnterValidCustomPrice'));
                     return;
                 }
@@ -384,7 +359,7 @@ const RentalPeriodModal: React.FC<RentalPeriodModalProps> = ({
             customPrice: type === 'booked' && pricingMode === 'custom' ? getCurrentPrice() : undefined,
             totalPrice: totalPrice,
             deposit: deposit ? getDepositInBGN() : undefined,
-            depositCurrency: deposit ? depositCurrency : undefined,
+            depositCurrency: deposit ? 'EUR' as const : undefined,
             status: type === 'booked' ? status : undefined,
             guestEmail: type === 'booked' && guestEmail.trim() ? guestEmail.trim() : undefined,
             guestPhone: type === 'booked' && guestPhone.trim() ? guestPhone.trim() : undefined,
@@ -404,7 +379,6 @@ const RentalPeriodModal: React.FC<RentalPeriodModalProps> = ({
         setStartDate('');
         setEndDate('');
         setDeposit('');
-        setDepositCurrency('BGN');
         setStatus('booked');
         setGuestEmail('');
         setGuestPhone('');
@@ -419,7 +393,6 @@ const RentalPeriodModal: React.FC<RentalPeriodModalProps> = ({
         setStartDate('');
         setEndDate('');
         setDeposit('');
-        setDepositCurrency('BGN');
         setStatus('booked');
         setGuestEmail('');
         setGuestPhone('');
@@ -568,24 +541,8 @@ const RentalPeriodModal: React.FC<RentalPeriodModalProps> = ({
                                                 step="0.01"
                                                 className="flex-1 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                             />
-                                            <select
-                                                value={depositCurrency}
-                                                onChange={(e) => setDepositCurrency(e.target.value as 'EUR' | 'BGN')}
-                                                className="w-20 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                            >
-                                                <option value="EUR">€</option>
-                                                <option value="BGN">лв.</option>
-                                            </select>
+                                            <div className="w-20 border border-gray-300 rounded-md p-2 text-center text-sm text-gray-700 bg-gray-50">€</div>
                                         </div>
-                                        {deposit && parseFloat(deposit) > 0 && (
-                                            <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
-                                                {depositCurrency === 'EUR' ? (
-                                                    <p>≈ {convertEurToBgn(parseFloat(deposit)).toFixed(2)} лв.</p>
-                                                ) : (
-                                                    <p>≈ €{convertBgnToEur(parseFloat(deposit))}</p>
-                                                )}
-                                            </div>
-                                        )}
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="status">{t('status')}</Label>
@@ -646,13 +603,10 @@ const RentalPeriodModal: React.FC<RentalPeriodModalProps> = ({
                                             >
                                                 <option value="">{t('selectAnOffer')}</option>
                                                 {pricingOffers.map((offer) => {
-                                                    // Use the appropriate currency price based on admin language
-                                                    const displayPrice = language === 'bg' 
-                                                        ? (offer as any).priceBGN || offer.price * 1.95583
-                                                        : (offer as any).priceEUR || offer.price;
+                                                    const displayPriceEUR = (offer as any).priceEUR || offer.price || ((offer as any).priceBGN ? convertBgnToEur((offer as any).priceBGN) : 0);
                                                     return (
                                                         <option key={offer.id} value={offer.id}>
-                                                            {offer.name} - {formatPrice(displayPrice, language)}/{t('perNight')}
+                                                            {offer.name} - €{Number(displayPriceEUR).toFixed(2)}/{t('perNight')}
                                                         </option>
                                                     );
                                                 })}
@@ -664,125 +618,39 @@ const RentalPeriodModal: React.FC<RentalPeriodModalProps> = ({
 
                                 {/* Custom Price Input */}
                                 {pricingMode === 'custom' && (
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="customPriceBGN">{t('customTotalPriceBGN') || 'Custom Total Price (BGN)'}</Label>
-                                            <div className="flex gap-2">
-                                                <Input
-                                                    id="customPriceBGN"
-                                                    type="number"
-                                                    min="0"
-                                                    step="0.01"
-                                                    value={customPriceBGN}
-                                                    onChange={(e) => {
-                                                        setCustomPriceBGN(e.target.value);
-                                                        // Clear the old customPrice field when new value is entered
-                                                        if (e.target.value) setCustomPrice('');
-                                                    }}
-                                                    placeholder="e.g., 450"
-                                                    className="flex-1 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                                />
-                                                <Button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        if (customPriceEUR && parseFloat(customPriceEUR) > 0) {
-                                                            const bgnPrice = parseFloat(customPriceEUR) * EUR_TO_BGN_RATE;
-                                                            setCustomPriceBGN(Math.round(bgnPrice).toString());
-                                                        }
-                                                    }}
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="px-3 py-2 text-xs whitespace-nowrap"
-                                                    disabled={!customPriceEUR || parseFloat(customPriceEUR) <= 0}
-                                                >
-                                                    🔄 {t('recalculateEUR') || 'Recalculate'}
-                                                </Button>
-                                            </div>
-                                        </div>
-                                        
-                                        <div className="space-y-2">
-                                            <Label htmlFor="customPriceEUR">{t('customTotalPriceEUR') || 'Custom Total Price (EUR)'}</Label>
-                                            <div className="flex gap-2">
-                                                <Input
-                                                    id="customPriceEUR"
-                                                    type="number"
-                                                    min="0"
-                                                    step="0.01"
-                                                    value={customPriceEUR}
-                                                    onChange={(e) => {
-                                                        setCustomPriceEUR(e.target.value);
-                                                        // Clear the old customPrice field when new value is entered
-                                                        if (e.target.value) setCustomPrice('');
-                                                    }}
-                                                    placeholder="e.g., 230"
-                                                    className="flex-1 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                                />
-                                                <Button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        if (customPriceBGN && parseFloat(customPriceBGN) > 0) {
-                                                            const eurPrice = convertBgnToEur(parseFloat(customPriceBGN));
-                                                            setCustomPriceEUR(eurPrice.toString());
-                                                        }
-                                                    }}
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="px-3 py-2 text-xs whitespace-nowrap"
-                                                    disabled={!customPriceBGN || parseFloat(customPriceBGN) <= 0}
-                                                >
-                                                    🔄 {t('recalculateEUR') || 'Recalculate'}
-                                                </Button>
-                                            </div>
-                                        </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="customPriceEUR">{t('customTotalPriceEUR') || 'Custom Total Price (EUR)'}</Label>
+                                        <Input
+                                            id="customPriceEUR"
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            value={customPriceEUR}
+                                            onChange={(e) => {
+                                                setCustomPriceEUR(e.target.value);
+                                                if (e.target.value) setCustomPrice('');
+                                            }}
+                                            placeholder="e.g., 230"
+                                            className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                        />
 
-                                        {/* Exchange rate helper text and price preview */}
-                                        <div className="lg:col-span-2 space-y-4">
-                                            {(customPriceBGN || customPriceEUR) && (
-                                                <div className="bg-gray-50 p-3 rounded-md">
-                                                    <p className="text-xs text-gray-600">
-                                                        {language === 'bg' ? 
-                                                            'Курс: 1€ = 1.95583лв. Можете да въведете цената в която и да е валута.' :
-                                                            'Rate: 1€ = 1.95583 BGN. You can enter the price in either currency.'
-                                                        }
-                                                    </p>
-                                                </div>
-                                            )}
-
-                                            {/* Price Preview */}
-                                            {(customPriceBGN || customPriceEUR) && startDate && endDate && calculateDays(startDate, endDate) > 0 && (
-                                                <div className="text-sm text-gray-600 bg-gray-50 p-4 rounded">
-                                                    <p><strong>{t('bookingLabel')}:</strong> {calculateDays(startDate, endDate)} day{calculateDays(startDate, endDate) !== 1 ? 's' : ''}</p>
-                                                    {(() => {
-                                                        const days = calculateDays(startDate, endDate);
-                                                        const bgnTotal = parseFloat(customPriceBGN) || 0;
-                                                        const eurTotal = parseFloat(customPriceEUR) || 0;
-                                                        
-                                                        if (bgnTotal > 0) {
-                                                            const bgnPerNight = bgnTotal / days;
-                                                            const eurPerNight = bgnPerNight / EUR_TO_BGN_RATE;
-                                                            const eurTotalConverted = bgnTotal / EUR_TO_BGN_RATE;
-                                                            return (
-                                                                <>
-                                                                    <p><strong>{t('perNightLabel')}:</strong> {Math.round(bgnPerNight)} лв <span className="text-gray-500">(≈ €{Math.round(eurPerNight)})</span></p>
-                                                                    <p><strong>{t('totalLabel')}:</strong> {Math.round(bgnTotal)} лв <span className="text-gray-500">(≈ €{Math.round(eurTotalConverted)})</span></p>
-                                                                </>
-                                                            );
-                                                        } else if (eurTotal > 0) {
-                                                            const eurPerNight = eurTotal / days;
-                                                            const bgnPerNight = eurPerNight * EUR_TO_BGN_RATE;
-                                                            const bgnTotalConverted = eurTotal * EUR_TO_BGN_RATE;
-                                                            return (
-                                                                <>
-                                                                    <p><strong>{t('perNightLabel')}:</strong> €{Math.round(eurPerNight)} <span className="text-gray-500">(≈ {Math.round(bgnPerNight)} лв)</span></p>
-                                                                    <p><strong>{t('totalLabel')}:</strong> €{Math.round(eurTotal)} <span className="text-gray-500">(≈ {Math.round(bgnTotalConverted)} лв)</span></p>
-                                                                </>
-                                                            );
-                                                        }
-                                                        return null;
-                                                    })()}
-                                                </div>
-                                            )}
-                                        </div>
+                                        {customPriceEUR && startDate && endDate && calculateDays(startDate, endDate) > 0 && (
+                                            <div className="text-sm text-gray-600 bg-gray-50 p-4 rounded">
+                                                {(() => {
+                                                    const days = calculateDays(startDate, endDate);
+                                                    const eurTotal = parseFloat(customPriceEUR) || 0;
+                                                    if (eurTotal <= 0) return null;
+                                                    const eurPerNight = eurTotal / days;
+                                                    return (
+                                                        <>
+                                                            <p><strong>{t('bookingLabel')}:</strong> {days} day{days !== 1 ? 's' : ''}</p>
+                                                            <p><strong>{t('perNightLabel')}:</strong> €{eurPerNight.toFixed(2)}</p>
+                                                            <p><strong>{t('totalLabel')}:</strong> €{eurTotal.toFixed(2)}</p>
+                                                        </>
+                                                    );
+                                                })()}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>

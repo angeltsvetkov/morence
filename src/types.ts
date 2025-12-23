@@ -5,6 +5,8 @@ export interface PricingOffer {
     price: number; // Kept for backward compatibility (EUR)
     priceBGN?: number; // Price in Bulgarian Lev
     priceEUR?: number; // Price in Euro
+    isSuperSpecial?: boolean; // Highlight this offer prominently in the public Hero section
+    superSpecialUntil?: string; // Optional due date (YYYY-MM-DD). After this date, the offer is no longer treated as active super special.
     description?: string;
 }
 

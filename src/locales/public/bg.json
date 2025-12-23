@@ -68,6 +68,8 @@
   "gallery": "Галерия",
   "apartmentFeatures": "Характеристики на апартамента",
   "specialOffer": "Специална оферта",
+  "superSpecialOffer": "Супер специална оферта",
+  "validUntil": "до {date}",
   "apartmentInfo": "Информация за апартамента",
   "pricing": "Цени",
   "guestTestimonials": "Отзиви от гости",
@@ -102,7 +104,8 @@
   "password": "Парола",
   "places": "Места наоколо",
   "prcKZWCZhUGrJ1jlCRUn": "Местоположение (напр. \"Созопол\" или Google Maps линк)",
-  "pricePill": "220 лв. / нощувка",
+  "pricePill": "€110 / нощувка",
+  "priceStartsFrom": "Цените започват от",
   "rooms": {
     "bedroom": "Спалня",
     "kitchen": "Кухня",

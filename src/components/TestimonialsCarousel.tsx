@@ -62,7 +62,7 @@ const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({ apartmentId
 
         return (
             <div 
-                className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg relative overflow-hidden group hover:shadow-xl transition-shadow duration-300 flex flex-col w-full h-full"
+                className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg relative overflow-hidden group hover:shadow-xl transition-shadow duration-300 flex flex-col w-full"
             >
                 {/* Booking Duration Ribbon */}
                 {testimonialWithRatings.bookingDuration && testimonialWithRatings.bookingDuration > 0 && (
@@ -82,7 +82,7 @@ const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({ apartmentId
                 <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full -translate-y-12 translate-x-12 opacity-50"></div>
                 <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-purple-50 to-pink-100 rounded-full translate-y-10 -translate-x-10 opacity-50"></div>
                 
-                <div className="relative flex flex-col h-full">
+                <div className="relative flex flex-col">
                     {/* Header with Stars and Guest Info - Fixed Height */}
                     <div className="text-center mb-4">
                         <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full mb-3 shadow-lg">
@@ -95,8 +95,8 @@ const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({ apartmentId
                         </div>
                         
                         {/* Guest Information - Fixed Height Section */}
-                        <div className="h-16 flex flex-col items-center justify-center">
-                            <div className="text-sm font-semibold text-gray-900 mb-1 truncate w-full px-2">
+                        <div className="flex flex-col items-center justify-center">
+                            <div className="text-sm font-semibold text-gray-900 mb-1 w-full px-2 break-words">
                                 {language === 'bg' ? testimonialWithRatings.guestType.bg : testimonialWithRatings.guestType.en}
                             </div>
                             {testimonialWithRatings.nationality ? (
@@ -106,12 +106,12 @@ const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({ apartmentId
                                         return country ? (
                                             <>
                                                 <span className="text-sm">{country.flag}</span>
-                                                <span className="text-blue-700 truncate">{country.name[language as 'bg' | 'en']}</span>
+                                                <span className="text-blue-700 break-words">{country.name[language as 'bg' | 'en']}</span>
                                             </>
                                         ) : (
                                             <>
                                                 <span className="text-sm">🌍</span>
-                                                <span className="text-blue-700 truncate">{testimonialWithRatings.nationality}</span>
+                                                <span className="text-blue-700 break-words">{testimonialWithRatings.nationality}</span>
                                             </>
                                         );
                                     })()}
@@ -217,7 +217,7 @@ const TestimonialsCarousel: React.FC<TestimonialsCarouselProps> = ({ apartmentId
                         {testimonials.map((testimonial) => (
                             <div
                                 key={testimonial.id}
-                                className="w-full h-auto lg:h-[460px]"
+                                className="w-full"
                             >
                                 <TestimonialCard testimonial={testimonial} />
                             </div>

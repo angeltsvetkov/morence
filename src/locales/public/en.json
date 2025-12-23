@@ -68,6 +68,8 @@
   "gallery": "Gallery",
   "apartmentFeatures": "Apartment Features",
   "specialOffer": "Special Offer",
+  "superSpecialOffer": "Super special offer",
+  "validUntil": "Valid until {date}",
   "apartmentInfo": "Apartment Info",
   "pricing": "Pricing",
   "guestTestimonials": "Guest Testimonials",
@@ -103,6 +105,7 @@
   "places": "Places to visit",
   "prcKZWCZhUGrJ1jlCRUn": "Location (e.g., \"Sozopol\" or a Google Maps link)",
   "pricePill": "€110 / night",
+  "priceStartsFrom": "Prices start from",
   "rooms": {
     "bedroom": "Bedroom",
     "kitchen": "Kitchen",

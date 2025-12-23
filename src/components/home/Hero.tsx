@@ -3,6 +3,10 @@ import { useLanguage } from '../../hooks/useLanguage';
 
 const Hero: React.FC = () => {
   const { t } = useLanguage();
+
+  const discountedPriceEUR = 90;
+  const cheapestPackagePriceEUR = discountedPriceEUR;
+
   return (
     <div className="relative min-h-[90vh] sm:h-[85vh] bg-cover bg-center bg-fixed motion-safe:animate-kenburns" style={{ backgroundImage: 'url("/photos/10040698_135550664_big.jpg")' }}>
       <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black/50 to-black/90" />
@@ -36,9 +40,9 @@ const Hero: React.FC = () => {
           <div className="bg-gradient-to-br from-blue-600/90 via-blue-500/90 to-blue-600/90 backdrop-blur-sm p-4 sm:p-8 rounded-2xl mb-6 sm:mb-10 border border-blue-400/30 transform hover:scale-105 transition-all duration-300 hover:shadow-[0_0_30px_rgba(37,99,235,0.3)] shadow-[0_0_20px_rgba(37,99,235,0.2)] max-w-2xl mx-auto">
             <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-10">
               <div className="text-center sm:text-left">
-                <div className="text-blue-100 text-xs sm:text-base mb-1">{t('standardPrice')}</div>
-                <div className="text-3xl sm:text-5xl font-bold text-white line-through opacity-80">
-                  220 лв.
+                <div className="text-blue-100 text-xs sm:text-base mb-1">{t('priceStartsFrom')}</div>
+                <div className="text-3xl sm:text-5xl font-bold text-white">
+                  €{cheapestPackagePriceEUR}
                 </div>
                 <div className="text-blue-100 text-xs sm:text-sm mt-1">{t('perNight')}</div>
               </div>
@@ -49,7 +53,7 @@ const Hero: React.FC = () => {
               <div className="text-center sm:text-left">
                 <div className="text-blue-100 text-xs sm:text-base mb-1">{t('discountedPrice')}</div>
                 <div className="text-4xl sm:text-6xl font-bold text-white">
-                  180 лв.
+                  €{discountedPriceEUR}
                   <span className="text-sm sm:text-lg text-blue-100 ml-1 sm:ml-2 font-normal block sm:inline">{t('perNight')}</span>
                 </div>
                 <div className="text-blue-100 text-xs sm:text-base font-medium mt-1">
@@ -61,7 +65,7 @@ const Hero: React.FC = () => {
             <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-blue-400/30">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0 text-xs sm:text-base text-blue-100">
                 <span>{t('totalSavings')}:</span>
-                <span className="font-bold text-white">280 лв. / {t('week')}</span>
+                <span className="font-bold text-white">€140 / {t('week')}</span>
               </div>
             </div>
 

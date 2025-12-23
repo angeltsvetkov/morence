@@ -10,6 +10,10 @@ interface HeroProps {
 
 const Hero: React.FC<HeroProps> = ({ mainImage, setMainImage, photos }) => {
     const { t } = useLanguage();
+
+    const discountedPriceEUR = 90;
+    const cheapestPackagePriceEUR = discountedPriceEUR;
+
     return (
         <div className="relative h-screen">
             {/* Main Image with Gradient Overlay */}
@@ -25,7 +29,10 @@ const Hero: React.FC<HeroProps> = ({ mainImage, setMainImage, photos }) => {
                     {/* Left Content */}
                     <div className="md:col-span-2 lg:col-span-3 flex flex-col justify-end text-white pb-16">
                         <div className="flex justify-center md:justify-start mb-8">
-                            <h2 className="text-5xl font-extrabold text-amber-300 drop-shadow-xl">{t('pricePill')}</h2>
+                            <div>
+                                <div className="text-white/80 text-sm md:text-base font-medium mb-1">{t('priceStartsFrom')}</div>
+                                <h2 className="text-5xl font-extrabold text-amber-300 drop-shadow-xl">€{cheapestPackagePriceEUR} / {t('perNight')}</h2>
+                            </div>
                         </div>
                         <div className="flex flex-wrap justify-center md:justify-start gap-3 mb-4">
                             <div className="bg-black/40 text-white text-base font-medium px-5 py-2 rounded-full border border-white/50 backdrop-blur-sm">
