@@ -200,6 +200,55 @@ const ApartmentDetailsTab: React.FC<ApartmentDetailsTabProps> = ({
                 {t('minimumNightsDescription') || 'Minimum number of nights guests must book. Leave empty for no minimum.'}
             </p>
 
+            {/* Season Availability (Booking Window) */}
+            <div>
+                <Label className="flex items-center gap-2">
+                    {t('availabilityPeriod') || 'Season availability'}
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                        {t('bookingWindow') || 'Booking window'}
+                    </span>
+                </Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                    <div className="space-y-2">
+                        <Label htmlFor="availabilityStart">
+                            {t('availabilityStart') || 'Season opens'}
+                        </Label>
+                        <Input
+                            id="availabilityStart"
+                            type="date"
+                            value={currentApartmentData.availabilityStart || ''}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                setCurrentApartmentData({
+                                    ...currentApartmentData,
+                                    availabilityStart: e.target.value || undefined
+                                })
+                            }
+                            className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="availabilityEnd">
+                            {t('availabilityEnd') || 'Season closes'}
+                        </Label>
+                        <Input
+                            id="availabilityEnd"
+                            type="date"
+                            value={currentApartmentData.availabilityEnd || ''}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                setCurrentApartmentData({
+                                    ...currentApartmentData,
+                                    availabilityEnd: e.target.value || undefined
+                                })
+                            }
+                            className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        />
+                    </div>
+                </div>
+                <p className="text-sm text-gray-500 mt-2">
+                    {t('availabilityPeriodHelp') || 'Only dates within this range will be available for booking on the public calendar.'}
+                </p>
+            </div>
+
             {/* Address */}
             <div>
                 <Label htmlFor="address" className="flex items-center gap-2">

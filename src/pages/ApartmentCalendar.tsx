@@ -368,6 +368,13 @@ const ApartmentCalendar: React.FC = () => {
                             const today = new Date();
                             const isToday = date.toDateString() === today.toDateString();
                             const isPast = date < today;
+                            const availabilityStart = apartment?.availabilityStart ? new Date(apartment.availabilityStart) : null;
+                            const availabilityEnd = apartment?.availabilityEnd ? new Date(apartment.availabilityEnd) : null;
+                            const currentDateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                            const isOutsideAvailability = (
+                                (availabilityStart && currentDateOnly < new Date(availabilityStart.getFullYear(), availabilityStart.getMonth(), availabilityStart.getDate())) ||
+                                (availabilityEnd && currentDateOnly > new Date(availabilityEnd.getFullYear(), availabilityEnd.getMonth(), availabilityEnd.getDate()))
+                            );
                             
                             // Check if this date has any bookings
                             const hasBooking = bookings.some(booking => {
@@ -383,7 +390,11 @@ const ApartmentCalendar: React.FC = () => {
                             let borderColor = '#e5e7eb';
                             let color = '#374151';
                             
-                            if (isPast) {
+                            if (isOutsideAvailability) {
+                                backgroundColor = '#f3f4f6';
+                                borderColor = '#e5e7eb';
+                                color = '#9ca3af';
+                            } else if (isPast) {
                                 backgroundColor = '#f9fafb';
                                 color = '#9ca3af';
                             } else if (hasBooking) {
@@ -396,7 +407,7 @@ const ApartmentCalendar: React.FC = () => {
                                 color = '#166534';
                             }
                             
-                            if (isToday) {
+                            if (isToday && !isOutsideAvailability) {
                                 borderColor = '#3b82f6';
                                 backgroundColor = isToday && hasBooking ? '#fef2f2' : isToday && !hasBooking ? '#f0fdf4' : '#dbeafe';
                             }

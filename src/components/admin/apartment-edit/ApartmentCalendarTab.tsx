@@ -156,7 +156,18 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
 }) => {
     const { t } = useAdminLanguage();
     const { language } = useLanguage();
-    const [currentDate, setCurrentDate] = useState(new Date());
+    
+    // Initialize calendar to availability start date if defined, otherwise current date
+    const getInitialDate = () => {
+        if (currentApartmentData.availabilityStart) {
+            const availStart = new Date(currentApartmentData.availabilityStart);
+            // Set to first day of the month
+            return new Date(availStart.getFullYear(), availStart.getMonth(), 1);
+        }
+        return new Date();
+    };
+    
+    const [currentDate, setCurrentDate] = useState(getInitialDate());
     const nextMonth = addMonths(currentDate, 1);
 
     // Table state
@@ -246,6 +257,55 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
         return {};
     };
 
+    const dayPropGetter = (date: Date) => {
+        const cellDate = new Date(date);
+        cellDate.setHours(0, 0, 0, 0);
+
+        const availabilityStart = currentApartmentData.availabilityStart
+            ? new Date(currentApartmentData.availabilityStart)
+            : null;
+        const availabilityEnd = currentApartmentData.availabilityEnd
+            ? new Date(currentApartmentData.availabilityEnd)
+            : null;
+        const availabilityStartDate = availabilityStart
+            ? new Date(availabilityStart.getFullYear(), availabilityStart.getMonth(), availabilityStart.getDate())
+            : null;
+        const availabilityEndDate = availabilityEnd
+            ? new Date(availabilityEnd.getFullYear(), availabilityEnd.getMonth(), availabilityEnd.getDate())
+            : null;
+        const isOutsideAvailability = (
+            (availabilityStartDate && cellDate < availabilityStartDate) ||
+            (availabilityEndDate && cellDate > availabilityEndDate)
+        );
+
+        const hasBooking = bookings.some(booking => {
+            if (!booking.start || !booking.end) return false;
+            const bookingStart = new Date(booking.start);
+            const bookingEnd = new Date(booking.end);
+            bookingStart.setHours(0, 0, 0, 0);
+            bookingEnd.setHours(0, 0, 0, 0);
+            return cellDate >= bookingStart && cellDate < bookingEnd;
+        });
+
+        let backgroundColor = '#ffffff';
+        let color = '#1f2937';
+
+        if (isOutsideAvailability) {
+            backgroundColor = '#f3f4f6';
+            color = '#9ca3af';
+        } else if (hasBooking) {
+            backgroundColor = '#d1fae5';
+            color = '#065f46';
+        }
+
+        return {
+            style: {
+                backgroundColor,
+                color
+            }
+        };
+    };
+
     // Generate translated title for calendar events
     const getEventTitle = (booking: Booking) => {
         if (booking.visitorName) {
@@ -264,83 +324,31 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
     }));
 
     const eventStyleGetter = (event: any) => {
-        const booking = bookings.find(b => b.id === event.resource?.id || b.id === event.id);
-        const bookingType = booking?.type || 'rental';
+        const booking = event.resource?.booking;
+        let backgroundColor = '#059669';
         
-        // Check if booking is currently active (today is between start and end dates)
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const isActive = booking && 
-            new Date(booking.start) <= today && 
-            new Date(booking.end) >= today;
-        
-        let backgroundColor = '#3174ad';
-        let borderColor = '#265a87';
-        
-        if (isActive) {
-            // Active booking - use brighter, more vibrant colors with special styling
-            switch (bookingType) {
-                case 'blocked':
-                    backgroundColor = '#ff0000'; // Bright red
-                    borderColor = '#cc0000';
-                    break;
-                case 'maintenance':
-                    backgroundColor = '#ff8c00'; // Bright orange
-                    borderColor = '#e67c00';
-                    break;
-                case 'rental':
-                case 'booked':
-                default:
-                    backgroundColor = '#00cc66'; // Bright green
-                    borderColor = '#00b359';
-                    break;
-            }
-            
-            return {
-                style: {
-                    backgroundColor,
-                    borderColor,
-                    color: 'white',
-                    border: `3px solid ${borderColor}`,
-                    borderRadius: '6px',
-                    fontSize: '12px',
-                    padding: '2px 4px',
-                    fontWeight: 'bold',
-                    boxShadow: `0 0 10px ${backgroundColor}66`,
-                    animation: 'pulse 2s infinite'
-                }
-            };
-        } else {
-            // Non-active booking - use regular colors
-        switch (bookingType) {
-            case 'blocked':
-                backgroundColor = '#ef4444';
-                borderColor = '#dc2626';
-                break;
-            case 'maintenance':
-                backgroundColor = '#f59e0b';
-                borderColor = '#d97706';
-                break;
-            case 'rental':
-            case 'booked':
-            default:
-                backgroundColor = '#10b981';
-                borderColor = '#059669';
-                break;
+        if (booking?.type === 'blocked') {
+            backgroundColor = '#dc2626';
+        } else if (booking?.type === 'maintenance') {
+            backgroundColor = '#f59e0b';
         }
-
+        
         return {
             style: {
                 backgroundColor,
-                borderColor,
-                color: 'white',
                 border: 'none',
                 borderRadius: '4px',
-                fontSize: '12px',
-                padding: '2px 4px'
+                color: '#ffffff',
+                padding: '2px 4px',
+                fontSize: '11px',
+                fontWeight: '600',
+                opacity: 0.95
             }
         };
-        }
+    };
+
+    const CalendarEvent = ({ event }: { event: any }) => {
+        return <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{event.title}</span>;
     };
 
     const navigateCalendar = (direction: 'prev' | 'next') => {
@@ -569,7 +577,56 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
             </div>
 
             {/* Dual Calendar Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 admin-reservations-calendar">
+                <style>
+                    {`
+                        .admin-reservations-calendar .rbc-calendar {
+                            border: 1px solid #e5e7eb;
+                            border-radius: 8px;
+                            overflow: hidden;
+                        }
+                        .admin-reservations-calendar .rbc-month-view {
+                            border: none;
+                        }
+                        .admin-reservations-calendar .rbc-day-bg {
+                            border: 1px solid #e5e7eb;
+                        }
+                        .admin-reservations-calendar .rbc-month-row {
+                            min-height: 100px;
+                        }
+                        .admin-reservations-calendar .rbc-date-cell {
+                            padding: 4px 6px;
+                        }
+                        .admin-reservations-calendar .rbc-date-cell > a,
+                        .admin-reservations-calendar .rbc-date-cell > button {
+                            font-weight: 600;
+                            font-size: 14px;
+                        }
+                        .admin-reservations-calendar .rbc-header {
+                            border-bottom: 2px solid #e5e7eb;
+                            background-color: #f8fafc;
+                            font-weight: 600;
+                            padding: 12px 8px;
+                            text-align: center;
+                        }
+                        .admin-reservations-calendar .rbc-event {
+                            padding: 2px 4px;
+                        }
+                        .admin-reservations-calendar .rbc-event-content {
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            font-size: 11px;
+                            font-weight: 600;
+                        }
+                        .admin-reservations-calendar .rbc-off-range {
+                            color: #9ca3af;
+                        }
+                        .admin-reservations-calendar .rbc-off-range-bg {
+                            background-color: #f9fafb;
+                        }
+                    `}
+                </style>
                 {/* Current Month Calendar */}
                 <div className="bg-white border rounded-lg p-3 sm:p-4 flex flex-col" style={{ height: '600px' }}>
                     <h4 className="text-base sm:text-lg font-semibold text-center mb-3 sm:mb-4 text-gray-700 flex-shrink-0">
@@ -593,6 +650,10 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
                             resizable
                             eventPropGetter={eventStyleGetter}
                             slotPropGetter={slotPropGetter}
+                            dayPropGetter={dayPropGetter}
+                            components={{
+                                event: CalendarEvent
+                            }}
                             views={['month']}
                             defaultView="month"
                             date={currentDate}
@@ -646,6 +707,10 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
                             resizable
                             eventPropGetter={eventStyleGetter}
                             slotPropGetter={slotPropGetter}
+                            dayPropGetter={dayPropGetter}
+                            components={{
+                                event: CalendarEvent
+                            }}
                             views={['month']}
                             defaultView="month"
                             date={nextMonth}
@@ -869,6 +934,8 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
                     selectedSlot={selectedSlot}
                     editingBooking={editingBooking}
                     pricingOffers={currentApartmentData.pricingOffers || []}
+                    availabilityStart={currentApartmentData.availabilityStart}
+                    availabilityEnd={currentApartmentData.availabilityEnd}
                 />
             )}
         </div>

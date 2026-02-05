@@ -1923,20 +1923,47 @@ const ApartmentDetail: React.FC = () => {
                                     const isPast = cellDate < today;
                                     const isToday = cellDate.getTime() === today.getTime();
                                     const isBooked = isDateBooked(cellDate);
+                                    const availabilityStart = apartment?.availabilityStart ? new Date(apartment.availabilityStart) : null;
+                                    const availabilityEnd = apartment?.availabilityEnd ? new Date(apartment.availabilityEnd) : null;
+                                    const availabilityStartDate = availabilityStart
+                                        ? new Date(availabilityStart.getFullYear(), availabilityStart.getMonth(), availabilityStart.getDate())
+                                        : null;
+                                    const availabilityEndDate = availabilityEnd
+                                        ? new Date(availabilityEnd.getFullYear(), availabilityEnd.getMonth(), availabilityEnd.getDate())
+                                        : null;
+                                    const isOutsideAvailability = (
+                                        (availabilityStartDate && cellDate < availabilityStartDate) ||
+                                        (availabilityEndDate && cellDate > availabilityEndDate)
+                                    );
                                     
                                     let circleColor = '';
                                     let statusText = '';
-                                    
-                                                                            // Only show circles for current/future dates (including today)
-                                        if (!isPast) {
-                                            if (isBooked) {
-                                                circleColor = '#ef4444'; // Red
-                                                statusText = language === 'bg' ? 'Заето' : 'Booked';
-                                            } else {
-                                                circleColor = '#22c55e'; // Green
-                                                statusText = language === 'bg' ? 'Свободно' : 'Available';
-                                            }
+                                    let cellBackground = '#ffffff';
+                                    let cellBorder = '#e5e7eb';
+                                    let statusTextColor = '#374151';
+
+                                    // Only show status for current/future dates (including today) and within availability window
+                                    if (!isPast && !isOutsideAvailability) {
+                                        if (isBooked) {
+                                            circleColor = '#ef4444'; // Red
+                                            statusText = language === 'bg' ? 'Заето' : 'Booked';
+                                            cellBackground = '#fef2f2';
+                                            cellBorder = '#fecaca';
+                                            statusTextColor = '#b91c1c';
+                                        } else {
+                                            circleColor = '#22c55e'; // Green
+                                            statusText = language === 'bg' ? 'Свободно' : 'Available';
+                                            cellBackground = '#f0fdf4';
+                                            cellBorder = '#bbf7d0';
+                                            statusTextColor = '#15803d';
                                         }
+                                    }
+
+                                    if (isOutsideAvailability) {
+                                        cellBackground = '#f3f4f6';
+                                        cellBorder = '#e5e7eb';
+                                        statusTextColor = '#9ca3af';
+                                    }
                                     
                                     return (
                                         <div 
@@ -1945,11 +1972,13 @@ const ApartmentDetail: React.FC = () => {
                                                 height: '100%',
                                                 minHeight: '60px',
                                                 position: 'relative',
-                                                backgroundColor: isPast ? '#f9fafb' : '#ffffff',
+                                                backgroundColor: isPast ? '#f9fafb' : cellBackground,
+                                                border: `1px solid ${cellBorder}`,
                                                 opacity: isPast ? 0.6 : 1,
                                                 display: 'flex',
                                                 alignItems: 'center',
-                                                justifyContent: 'center'
+                                                justifyContent: 'center',
+                                                boxShadow: isToday && !isOutsideAvailability ? '0 0 0 2px #3b82f6 inset' : 'none'
                                             }}
                                             title={statusText}
                                         >
@@ -1989,6 +2018,29 @@ const ApartmentDetail: React.FC = () => {
                                                         zIndex: 5
                                                     }}
                                                 />
+                                            )}
+
+                                            {/* Status label */}
+                                            {statusText && (
+                                                <span
+                                                    style={{
+                                                        position: 'absolute',
+                                                        bottom: '8px',
+                                                        left: '50%',
+                                                        transform: 'translateX(-50%)',
+                                                        fontSize: '11px',
+                                                        fontWeight: 600,
+                                                        padding: '2px 6px',
+                                                        borderRadius: '999px',
+                                                        backgroundColor: '#ffffff',
+                                                        color: statusTextColor,
+                                                        border: `1px solid ${cellBorder}`,
+                                                        zIndex: 10,
+                                                        whiteSpace: 'nowrap'
+                                                    }}
+                                                >
+                                                    {statusText}
+                                                </span>
                                             )}
                                         </div>
                                     );
