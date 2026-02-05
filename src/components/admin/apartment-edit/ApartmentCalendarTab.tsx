@@ -425,6 +425,22 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
         return filtered;
     }, [bookings, sortColumn, sortDirection, filterType, searchTerm]);
 
+    // Group bookings by year
+    const bookingsByYear = useMemo(() => {
+        const grouped = new Map<number, Booking[]>();
+        
+        filteredAndSortedBookings.forEach(booking => {
+            const year = new Date(booking.start).getFullYear();
+            if (!grouped.has(year)) {
+                grouped.set(year, []);
+            }
+            grouped.get(year)!.push(booking);
+        });
+        
+        // Sort years in descending order (most recent first)
+        return Array.from(grouped.entries()).sort((a, b) => b[0] - a[0]);
+    }, [filteredAndSortedBookings]);
+
     const handleSort = (column: typeof sortColumn) => {
         if (column === sortColumn) {
             setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -749,160 +765,222 @@ const ApartmentCalendarTab: React.FC<ApartmentCalendarTabProps> = ({
                 </div>
                 
 
-                {/* Table */}
-                <div>
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th 
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                    onClick={() => handleSort('start')}
-                                >
-                                    <div className="flex items-center">
-                                        {t('dates')} {getSortIcon('start')}
-                                    </div>
-                                </th>
-                                <th 
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                    onClick={() => handleSort('visitorName')}
-                                >
-                                    <div className="flex items-center">
-                                        {t('visitorName')} {getSortIcon('visitorName')}
-                                    </div>
-                                </th>
-                                <th 
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                    onClick={() => handleSort('totalPrice')}
-                                >
-                                    <div className="flex items-center">
-                                        {t('totalPrice')} {getSortIcon('totalPrice')}
-                                    </div>
-                                </th>
-                                <th 
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                    onClick={() => handleSort('deposit')}
-                                >
-                                    <div className="flex items-center">
-                                        {t('deposit')} {getSortIcon('deposit')}
-                                    </div>
-                                </th>
-                                <th 
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                    onClick={() => handleSort('remainingAmount')}
-                                >
-                                    <div className="flex items-center">
-                                        {t('remainingAmount')} {getSortIcon('remainingAmount')}
-                                    </div>
-                                </th>
-                                <th 
-                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                    onClick={() => handleSort('status')}
-                                >
-                                    <div className="flex items-center">
-                                        {t('status')} {getSortIcon('status')}
-                                    </div>
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {filteredAndSortedBookings.length === 0 ? (
-                                <tr>
-                                    <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
-                                        {t('noBookingsFound')}
-                                    </td>
-                                </tr>
-                            ) : (
-                                filteredAndSortedBookings.map((booking) => {
-                                    const duration = calculateDuration(booking.start, booking.end);
-                                    
-                                    return (
-                                        <tr key={booking.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {formatDateRange(booking.start, booking.end)}
-                                                <span className="block text-xs text-gray-500">
-                                                    ({duration} {duration === 1 ? t('day') : t('days')})
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                <div className="flex items-center gap-2">
-                                                    {booking.visitorName ? (
-                                                        <button
-                                                            onClick={() => handleEditBooking(booking)}
-                                                            className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer font-medium transition-colors"
-                                                            title={t('edit')}
-                                                        >
-                                                            {booking.visitorName}
-                                                        </button>
-                                                    ) : (
-                                                        '-'
+                {/* Tables grouped by year */}
+                <div className="space-y-8">
+                    {bookingsByYear.length === 0 ? (
+                        <div className="text-center text-gray-500 py-8">
+                            {t('noBookingsFound')}
+                        </div>
+                    ) : (
+                        bookingsByYear.map(([year, yearBookings]) => (
+                            <div key={year} className="space-y-4">
+                                {/* Year Header */}
+                                <div className="flex items-center gap-4">
+                                    <h5 className="text-2xl font-bold text-gray-800">{year}</h5>
+                                    <div className="flex-1 h-px bg-gray-200"></div>
+                                    <span className="text-sm text-gray-500">
+                                        {yearBookings.length} {yearBookings.length === 1 ? t('booking') : t('bookings')}
+                                    </span>
+                                </div>
+
+                                {/* Table for this year */}
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th 
+                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                                    onClick={() => handleSort('start')}
+                                                >
+                                                    <div className="flex items-center">
+                                                        {t('dates')} {getSortIcon('start')}
+                                                    </div>
+                                                </th>
+                                                <th 
+                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                                    onClick={() => handleSort('visitorName')}
+                                                >
+                                                    <div className="flex items-center">
+                                                        {t('visitorName')} {getSortIcon('visitorName')}
+                                                    </div>
+                                                </th>
+                                                <th 
+                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                                    onClick={() => handleSort('totalPrice')}
+                                                >
+                                                    <div className="flex items-center">
+                                                        {t('totalPrice')} {getSortIcon('totalPrice')}
+                                                    </div>
+                                                </th>
+                                                <th 
+                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                                    onClick={() => handleSort('deposit')}
+                                                >
+                                                    <div className="flex items-center">
+                                                        {t('deposit')} {getSortIcon('deposit')}
+                                                    </div>
+                                                </th>
+                                                <th 
+                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                                    onClick={() => handleSort('remainingAmount')}
+                                                >
+                                                    <div className="flex items-center">
+                                                        {t('remainingAmount')} {getSortIcon('remainingAmount')}
+                                                    </div>
+                                                </th>
+                                                <th 
+                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                                    onClick={() => handleSort('status')}
+                                                >
+                                                    <div className="flex items-center">
+                                                        {t('status')} {getSortIcon('status')}
+                                                    </div>
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {yearBookings.map((booking) => {
+                                                const duration = calculateDuration(booking.start, booking.end);
+                                                
+                                                return (
+                                                    <tr key={booking.id} className="hover:bg-gray-50">
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            {formatDateRange(booking.start, booking.end)}
+                                                            <span className="block text-xs text-gray-500">
+                                                                ({duration} {duration === 1 ? t('day') : t('days')})
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            <div className="flex items-center gap-2">
+                                                                {booking.visitorName ? (
+                                                                    <button
+                                                                        onClick={() => handleEditBooking(booking)}
+                                                                        className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer font-medium transition-colors"
+                                                                        title={t('edit')}
+                                                                    >
+                                                                        {booking.visitorName}
+                                                                    </button>
+                                                                ) : (
+                                                                    '-'
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            {booking.totalPrice ? formatPriceEUR(booking.totalPrice) : '-'}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            {booking.deposit ? formatPriceEUR(booking.deposit) : '-'}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            {calculateRemainingAmount(booking) > 0 ? formatPriceEUR(calculateRemainingAmount(booking)) : '-'}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                                                booking.status === 'fully_paid' ? 'bg-green-100 text-green-800' :
+                                                                booking.status === 'deposit_paid' ? 'bg-yellow-100 text-yellow-800' :
+                                                                'bg-gray-100 text-gray-800'
+                                                            }`}>
+                                                                {getStatusTranslation(booking.status)}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                            <ActionDropdown
+                                                                booking={booking}
+                                                                onEdit={handleEditBooking}
+                                                                onDelete={handleDeleteBooking}
+                                                                t={t}
+                                                            />
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                {/* Year Summary */}
+                                <div className="mt-2 text-sm text-gray-600 bg-gray-50 rounded-lg p-4">
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-medium">
+                                            {year} {t('summary')}
+                                        </span>
+                                        <div className="flex gap-6 text-right">
+                                            <div>
+                                                <div className="font-semibold text-gray-900">
+                                                    {formatPriceEUR(
+                                                        yearBookings
+                                                            .filter(b => (b.type === 'booked' || b.type === 'rental') && b.totalPrice)
+                                                            .reduce((sum, b) => sum + (b.totalPrice || 0), 0)
                                                     )}
                                                 </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {booking.totalPrice ? formatPriceEUR(booking.totalPrice) : '-'}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {booking.deposit ? formatPriceEUR(booking.deposit) : '-'}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {calculateRemainingAmount(booking) > 0 ? formatPriceEUR(calculateRemainingAmount(booking)) : '-'}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                                    booking.status === 'fully_paid' ? 'bg-green-100 text-green-800' :
-                                                    booking.status === 'deposit_paid' ? 'bg-yellow-100 text-yellow-800' :
-                                                    'bg-gray-100 text-gray-800'
-                                                }`}>
-                                                    {getStatusTranslation(booking.status)}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                <ActionDropdown
-                                                    booking={booking}
-                                                    onEdit={handleEditBooking}
-                                                    onDelete={handleDeleteBooking}
-                                                    t={t}
-                                                />
-                                            </td>
-                                        </tr>
-                                    );
-                                })
-                            )}
-                        </tbody>
-                    </table>
+                                                <div className="text-xs text-gray-500">{t('totalRevenue')}</div>
+                                            </div>
+                                            <div>
+                                                <div className="font-semibold text-green-700">
+                                                    {formatPriceEUR(
+                                                        yearBookings
+                                                            .filter(b => (b.type === 'booked' || b.type === 'rental'))
+                                                            .reduce((sum, b) => sum + calculateReceivedMoney(b), 0)
+                                                    )}
+                                                </div>
+                                                <div className="text-xs text-gray-500">{t('moneyReceived')}</div>
+                                            </div>
+                                            <div>
+                                                <div className="font-semibold text-orange-700">
+                                                    {formatPriceEUR(
+                                                        yearBookings
+                                                            .filter(b => (b.type === 'booked' || b.type === 'rental'))
+                                                            .reduce((sum, b) => sum + calculateRemainingAmount(b), 0)
+                                                    )}
+                                                </div>
+                                                <div className="text-xs text-gray-500">{t('totalRemaining')}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
 
-                {/* Table Summary */}
+                {/* Overall Summary */}
                 {filteredAndSortedBookings.length > 0 && (
-                    <div className="mt-4 text-sm text-gray-600 border-t pt-4">
-                        <div className="flex justify-between">
-                            <span>
-                                {t('showing')} {filteredAndSortedBookings.length} {t('of')} {bookings.length} {t('bookings')}
+                    <div className="mt-6 text-sm text-gray-700 border-t-2 border-gray-300 pt-4">
+                        <div className="flex justify-between items-center bg-blue-50 rounded-lg p-4">
+                            <span className="font-bold text-lg text-gray-900">
+                                {t('overallTotal')}
                             </span>
-                            <div className="text-right">
+                            <div className="flex gap-6 text-right">
                                 <div>
-                                    <strong>{t('totalRevenue')}:</strong> {formatPriceEUR(
-                                        filteredAndSortedBookings
-                                            .filter(b => (b.type === 'booked' || b.type === 'rental') && b.totalPrice)
-                                            .reduce((sum, b) => sum + (b.totalPrice || 0), 0)
-                                    )}
+                                    <div className="font-bold text-lg text-gray-900">
+                                        {formatPriceEUR(
+                                            filteredAndSortedBookings
+                                                .filter(b => (b.type === 'booked' || b.type === 'rental') && b.totalPrice)
+                                                .reduce((sum, b) => sum + (b.totalPrice || 0), 0)
+                                        )}
+                                    </div>
+                                    <div className="text-xs text-gray-600">{t('totalRevenue')}</div>
                                 </div>
-                                <div className="text-xs mt-1">
-                                    <span className="mr-4">
-                                        {t('moneyReceived')}: {formatPriceEUR(
+                                <div>
+                                    <div className="font-bold text-lg text-green-700">
+                                        {formatPriceEUR(
                                             filteredAndSortedBookings
                                                 .filter(b => (b.type === 'booked' || b.type === 'rental'))
                                                 .reduce((sum, b) => sum + calculateReceivedMoney(b), 0)
                                         )}
-                                    </span>
-                                    <span>
-                                        {t('totalRemaining')}: {formatPriceEUR(
+                                    </div>
+                                    <div className="text-xs text-gray-600">{t('moneyReceived')}</div>
+                                </div>
+                                <div>
+                                    <div className="font-bold text-lg text-orange-700">
+                                        {formatPriceEUR(
                                             filteredAndSortedBookings
                                                 .filter(b => (b.type === 'booked' || b.type === 'rental'))
                                                 .reduce((sum, b) => sum + calculateRemainingAmount(b), 0)
                                         )}
-                                    </span>
+                                    </div>
+                                    <div className="text-xs text-gray-600">{t('totalRemaining')}</div>
                                 </div>
                             </div>
                         </div>
