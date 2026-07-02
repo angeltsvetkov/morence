@@ -6,7 +6,7 @@ import { useLanguage } from '../hooks/useLanguage';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { Apartment } from '../types';
-import { AlertTriangle, ImageOff, ChevronRight } from 'lucide-react';
+import { AlertTriangle, ImageOff } from 'lucide-react';
 
 const slugifyTitle = (title: string, idx: number) =>
     `section-${idx}-${title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')}`;
@@ -99,26 +99,35 @@ const GuestBrochure: React.FC = () => {
             <BrochureHeader apartmentName={apartmentName} hideName={apartment.hideName} lang={lang} />
             <main className="w-[95%] mx-auto py-6">
 
-                {/* Table of contents — only rendered when at least one image has a title */}
+                {/* TOC carousel — thumbnail cards that snap-scroll horizontally */}
                 {tocItems.length > 0 && (
-                    <section className="mb-8">
-                        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4 snap-x snap-mandatory">
+                    <section className="mb-6 -mx-[2.5%]">
+                        <div className="flex gap-3 overflow-x-auto scrollbar-hide px-[2.5%] pb-2 snap-x snap-mandatory">
                             {tocItems.map(item => (
                                 <button
                                     key={item.idx}
                                     type="button"
                                     onClick={() => scrollTo(slugifyTitle(item.title!, item.idx))}
-                                    className="inline-flex items-center gap-1.5 flex-shrink-0 snap-start px-4 py-2.5 rounded-full bg-white border border-gray-300 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 active:bg-blue-100 text-gray-900 text-sm font-semibold shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    className="group flex-shrink-0 snap-start w-40 rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-200 active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white text-left"
                                 >
-                                    {item.title}
-                                    <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+                                    <div className="aspect-video w-full overflow-hidden bg-gray-100">
+                                        <img
+                                            src={item.url}
+                                            alt={item.title}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                            loading="lazy"
+                                        />
+                                    </div>
+                                    <div className="px-2.5 py-2">
+                                        <p className="text-xs font-semibold text-gray-800 leading-snug line-clamp-2">{item.title}</p>
+                                    </div>
                                 </button>
                             ))}
                         </div>
                     </section>
                 )}
 
-                {/* Divider between TOC and content */}
+                {/* Divider */}
                 {tocItems.length > 0 && (
                     <div className="border-t border-gray-100 mb-6" />
                 )}
