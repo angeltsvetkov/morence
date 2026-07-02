@@ -6,7 +6,10 @@ import { useLanguage } from '../hooks/useLanguage';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { Apartment } from '../types';
-import { AlertTriangle, ImageOff } from 'lucide-react';
+import { AlertTriangle, ImageOff, ChevronRight } from 'lucide-react';
+
+const slugifyTitle = (title: string, idx: number) =>
+    `section-${idx}-${title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')}`;
 
 const GuestBrochure: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
@@ -36,13 +39,25 @@ const GuestBrochure: React.FC = () => {
     }, [slug]);
 
     const lang = (language as string) === 'bg' ? 'bg' : 'en';
-    // Fall back to the other language if current one has no images
     const images: { url: string; title?: string }[] =
         (apartment?.guestBrochure?.[lang] && apartment.guestBrochure[lang]!.length > 0)
             ? apartment.guestBrochure[lang]!
             : (lang === 'bg' ? apartment?.guestBrochure?.en : apartment?.guestBrochure?.bg) || [];
 
     const apartmentName = apartment?.name?.[lang] || apartment?.name?.en || apartment?.name?.bg || '';
+
+    // Only images that have a title are shown in the table of contents
+    const tocItems = images
+        .map((item, idx) => ({ ...item, idx }))
+        .filter(item => !!item.title);
+
+    const scrollTo = (id: string) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const headerHeight = 80;
+        const top = el.getBoundingClientRect().top + window.scrollY - headerHeight;
+        window.scrollTo({ top, behavior: 'smooth' });
+    };
 
     if (loading) {
         return (
@@ -82,23 +97,72 @@ const GuestBrochure: React.FC = () => {
     return (
         <div className="min-h-screen bg-white">
             <BrochureHeader apartmentName={apartmentName} hideName={apartment.hideName} lang={lang} />
-            <main className="max-w-2xl mx-auto px-0 sm:px-4 py-6 space-y-3">
-                {images.map((item, idx) => (
-                    <div key={idx} className="flex flex-col">
-                        {item.title && (
-                            <h2 className="text-base font-semibold text-gray-800 px-4 sm:px-0 pt-4 pb-2">
-                                {item.title}
-                            </h2>
-                        )}
-                        <img
-                            src={item.url}
-                            alt={item.title || `${lang === 'bg' ? 'Брошура' : 'Brochure'} ${idx + 1}`}
-                            className="w-full block rounded-none sm:rounded-xl shadow-sm"
-                            loading={idx === 0 ? 'eager' : 'lazy'}
-                        />
-                    </div>
-                ))}
-                <p className="text-center text-xs text-gray-300 pb-8 pt-2">morence.top</p>
+            <main className="max-w-2xl mx-auto px-0 sm:px-4 py-6">
+
+                {/* Table of contents — only rendered when at least one image has a title */}
+                {tocItems.length > 0 && (
+                    <section className="px-4 sm:px-0 mb-8">
+                        <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">
+                            {lang === 'bg' ? 'Съдържание' : 'Contents'}
+                        </h2>
+                        <div className="grid grid-cols-2 gap-3">
+                            {tocItems.map(item => (
+                                <button
+                                    key={item.idx}
+                                    type="button"
+                                    onClick={() => scrollTo(slugifyTitle(item.title!, item.idx))}
+                                    className="group relative overflow-hidden rounded-xl bg-gray-50 border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-all text-left focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                >
+                                    {/* Thumbnail */}
+                                    <div className="aspect-video w-full overflow-hidden">
+                                        <img
+                                            src={item.url}
+                                            alt={item.title}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                            loading="lazy"
+                                        />
+                                    </div>
+                                    {/* Label */}
+                                    <div className="flex items-center justify-between px-3 py-2 gap-1">
+                                        <span className="text-xs font-medium text-gray-800 leading-snug line-clamp-2">
+                                            {item.title}
+                                        </span>
+                                        <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-500 flex-shrink-0 transition-colors" />
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </section>
+                )}
+
+                {/* Divider between TOC and content */}
+                {tocItems.length > 0 && (
+                    <div className="border-t border-gray-100 mx-4 sm:mx-0 mb-6" />
+                )}
+
+                {/* Images */}
+                <div className="space-y-3">
+                    {images.map((item, idx) => {
+                        const sectionId = item.title ? slugifyTitle(item.title, idx) : undefined;
+                        return (
+                            <div key={idx} id={sectionId} className="flex flex-col scroll-mt-20">
+                                {item.title && (
+                                    <h2 className="text-base font-semibold text-gray-800 px-4 sm:px-0 pt-4 pb-2">
+                                        {item.title}
+                                    </h2>
+                                )}
+                                <img
+                                    src={item.url}
+                                    alt={item.title || `${lang === 'bg' ? 'Брошура' : 'Brochure'} ${idx + 1}`}
+                                    className="w-full block rounded-none sm:rounded-xl shadow-sm"
+                                    loading={idx === 0 ? 'eager' : 'lazy'}
+                                />
+                            </div>
+                        );
+                    })}
+                </div>
+
+                <p className="text-center text-xs text-gray-300 pb-8 pt-6">morence.top</p>
             </main>
         </div>
     );
