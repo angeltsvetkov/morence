@@ -31,21 +31,6 @@ function getPlaceStatus(workingHours?: { [day: string]: { open: string; close: s
     return 'open';
 }
 
-const PlaceStatusBadge: React.FC<{ status: PlaceStatus; lang: 'bg' | 'en' }> = ({ status, lang }) => {
-    if (status === 'unknown') return null;
-    const labels: Record<PlaceStatus, { bg: string; en: string; cls: string }> = {
-        'open':         { bg: 'Отворено', en: 'Open',         cls: 'bg-green-100 text-green-700' },
-        'closing-soon': { bg: 'Затваря скоро', en: 'Closing soon', cls: 'bg-amber-100 text-amber-700' },
-        'closed':       { bg: 'Затворено', en: 'Closed',      cls: 'bg-red-100 text-red-600' },
-        'unknown':      { bg: '', en: '', cls: '' },
-    };
-    const l = labels[status];
-    return (
-        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${l.cls}`}>
-            {lang === 'bg' ? l.bg : l.en}
-        </span>
-    );
-};
 const GuestBrochure: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const { language } = useLanguage();
@@ -180,39 +165,54 @@ const GuestBrochure: React.FC = () => {
                                 />
                                 {item.places && item.places.length > 0 && (
                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 px-1 pt-3 pb-2">
-                                        {item.places.map((place, pi) => (
-                                            <div
-                                                key={pi}
-                                                className="flex flex-col items-center justify-center gap-2 px-3 py-4 rounded-2xl bg-gray-50 border border-gray-100 text-center"
-                                            >
-                                                <span className="text-xs font-semibold text-gray-800 leading-snug line-clamp-2">
-                                                    {place.name}
-                                                </span>
-                                                <PlaceStatusBadge status={getPlaceStatus(place.workingHours)} lang={lang} />
-                                                <div className="flex items-center gap-2">
-                                                    {place.mapsUrl && (
-                                                        <a
-                                                            href={place.mapsUrl}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:bg-red-50 hover:border-red-300 active:scale-95 transition-all"
-                                                            aria-label="Open in Google Maps"
-                                                        >
-                                                            <MapPin className="w-6 h-6 text-red-500" />
-                                                        </a>
+                                        {item.places.map((place, pi) => {
+                                            const status = getPlaceStatus(place.workingHours);
+                                            const bgCls =
+                                                status === 'open' ? 'bg-green-50 border-green-100' :
+                                                status === 'closing-soon' ? 'bg-amber-50 border-amber-100' :
+                                                status === 'closed' ? 'bg-red-50 border-red-100' :
+                                                'bg-gray-50 border-gray-100';
+                                            const statusLabel =
+                                                status === 'open' ? (lang === 'bg' ? 'отворено' : 'open') :
+                                                status === 'closing-soon' ? (lang === 'bg' ? 'затваря скоро' : 'closing soon') :
+                                                status === 'closed' ? (lang === 'bg' ? 'затворено' : 'closed') :
+                                                null;
+                                            return (
+                                                <div
+                                                    key={pi}
+                                                    className={`flex flex-col items-center justify-center gap-2 px-3 py-4 rounded-2xl border text-center ${bgCls}`}
+                                                >
+                                                    <span className="text-xs font-semibold text-gray-800 leading-snug line-clamp-2">
+                                                        {place.name}
+                                                    </span>
+                                                    {statusLabel && (
+                                                        <span className="text-[10px] text-gray-500 -mt-1">{statusLabel}</span>
                                                     )}
-                                                    {place.phone && (
-                                                        <a
-                                                            href={`tel:${place.phone}`}
-                                                            className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:bg-blue-50 hover:border-blue-300 active:scale-95 transition-all"
-                                                            aria-label={`Call ${place.phone}`}
-                                                        >
-                                                            <Phone className="w-6 h-6 text-blue-500" />
-                                                        </a>
-                                                    )}
+                                                    <div className="flex items-center gap-2">
+                                                        {place.mapsUrl && (
+                                                            <a
+                                                                href={place.mapsUrl}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:bg-red-50 hover:border-red-300 active:scale-95 transition-all"
+                                                                aria-label="Open in Google Maps"
+                                                            >
+                                                                <MapPin className="w-6 h-6 text-red-500" />
+                                                            </a>
+                                                        )}
+                                                        {place.phone && (
+                                                            <a
+                                                                href={`tel:${place.phone}`}
+                                                                className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:bg-blue-50 hover:border-blue-300 active:scale-95 transition-all"
+                                                                aria-label={`Call ${place.phone}`}
+                                                            >
+                                                                <Phone className="w-6 h-6 text-blue-500" />
+                                                            </a>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>
