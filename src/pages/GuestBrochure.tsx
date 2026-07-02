@@ -116,8 +116,6 @@ const GuestBrochure: React.FC = () => {
                                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                                 </button>
                             ))}
-                                </button>
-                            ))}
                         </div>
                     </section>
                 )}
