@@ -97,7 +97,7 @@ const GuestBrochure: React.FC = () => {
     return (
         <div className="min-h-screen bg-white">
             <BrochureHeader apartmentName={apartmentName} hideName={apartment.hideName} lang={lang} />
-            <main className="w-full mx-auto py-6">
+            <main className="w-[95%] mx-auto py-6">
 
                 {/* Table of contents — only rendered when at least one image has a title */}
                 {tocItems.length > 0 && (
