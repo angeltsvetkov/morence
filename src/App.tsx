@@ -10,6 +10,7 @@ import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider } from './contexts/AuthContext';
 import ApartmentDetail from './pages/ApartmentDetail';
 import ApartmentCalendar from './pages/ApartmentCalendar';
+import GuestBrochure from './pages/GuestBrochure';
 import DefaultApartmentRedirect from './pages/DefaultApartmentRedirect';
 import { getSubdomainInfo } from './utils/subdomain';
 
@@ -17,24 +18,26 @@ const AppContent = () => {
   const location = useLocation();
   const isAdminPage = location.pathname.startsWith('/admin');
   const isSurveyPage = location.pathname.startsWith('/survey');
+  const isBrochurePage = /^\/apartments\/[^/]+\/brochure/.test(location.pathname);
   const subdomainInfo = getSubdomainInfo();
 
   return (
     <div className="flex flex-col min-h-screen">
-      {!isAdminPage && !isSurveyPage && <Header />}
+      {!isAdminPage && !isSurveyPage && !isBrochurePage && <Header />}
       <main className="flex-grow">
         <Routes>
           <Route path="/" element={
             subdomainInfo.isSubdomain ? <ApartmentDetail /> : <DefaultApartmentRedirect />
           } />
           <Route path="/apartments/:slug" element={<ApartmentDetail />} />
+          <Route path="/apartments/:slug/brochure" element={<GuestBrochure />} />
           <Route path="/apartments/:apartmentId/calendar" element={<ApartmentCalendar />} />
           <Route path="/places" element={<Places />} />
           <Route path="/survey/:bookingId" element={<GuestSurvey />} />
           <Route path="/login" element={<Login />} />
         </Routes>
       </main>
-      {!isAdminPage && !isSurveyPage && <Footer />}
+      {!isAdminPage && !isSurveyPage && !isBrochurePage && <Footer />}
     </div>
   );
 };
