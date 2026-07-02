@@ -6,6 +6,8 @@ type GalleryItem = {
     file?: File;
 };
 
+export type BrochureGalleryItem = GalleryItem;
+
 export interface TabProps {
     currentApartmentData: Partial<Apartment>;
     setCurrentApartmentData: React.Dispatch<React.SetStateAction<Partial<Apartment>>>;
@@ -17,6 +19,12 @@ export interface TabProps {
 export interface GalleryTabProps extends TabProps {
     galleryItems: GalleryItem[];
     setGalleryItems: React.Dispatch<React.SetStateAction<GalleryItem[]>>;
+}
+
+export interface BrochureTabProps extends TabProps {
+    brochureItems: { bg: BrochureGalleryItem[]; en: BrochureGalleryItem[] };
+    setBrochureItems: React.Dispatch<React.SetStateAction<{ bg: BrochureGalleryItem[]; en: BrochureGalleryItem[] }>>;
+    slug?: string;
 }
 
 export interface ApartmentShareTabProps {

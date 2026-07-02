@@ -122,6 +122,10 @@ export interface Apartment {
     };
     surveyQuestions?: SurveyQuestion[];
     surveyLanguageMode?: 'multilingual' | 'bulgarian' | 'english';
+    guestBrochure?: {
+        bg?: string[];
+        en?: string[];
+    };
     socialSharing?: {
         ogImage?: string;
         ogTitle?: { bg?: string; en?: string };

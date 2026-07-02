@@ -58,7 +58,8 @@ import {
     ApartmentPricingTab,
     ApartmentCalendarTab,
     ApartmentFeedbackTab,
-    ApartmentTestimonialsTab
+    ApartmentTestimonialsTab,
+    ApartmentBrochureTab
 } from '../../components/admin/apartment-edit';
 
 const storage = getStorage();
@@ -196,6 +197,7 @@ const ApartmentEditAdmin: React.FC = () => {
     const [apartment, setApartment] = useState<Apartment | null>(null);
     const [currentApartmentData, setCurrentApartmentData] = useState<Partial<Apartment>>({});
     const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
+    const [brochureItems, setBrochureItems] = useState<{ bg: GalleryItem[]; en: GalleryItem[] }>({ bg: [], en: [] });
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [loading, setLoading] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
@@ -250,7 +252,7 @@ const ApartmentEditAdmin: React.FC = () => {
         });
     };
 
-    const [view, setView] = useState<'details' | 'amenities' | 'calendar' | 'pricing' | 'gallery' | 'feedback' | 'testimonials'>('details');
+    const [view, setView] = useState<'details' | 'amenities' | 'calendar' | 'pricing' | 'gallery' | 'feedback' | 'testimonials' | 'brochure'>('details');
     const [formLanguage, setFormLanguage] = useState<'bg' | 'en'>('bg');
     const [isRentalModalOpen, setIsRentalModalOpen] = useState(false);
     const [selectedSlot, setSelectedSlot] = useState<{ start: Date; end: Date } | null>(null);
@@ -428,6 +430,16 @@ const ApartmentEditAdmin: React.FC = () => {
                         url 
                     })));
                 }
+                setBrochureItems({
+                    bg: (aptData.guestBrochure?.bg || []).map(url => ({
+                        id: `existing-${url.split('/').pop()?.split('?')[0] || Math.random().toString(36)}`,
+                        url
+                    })),
+                    en: (aptData.guestBrochure?.en || []).map(url => ({
+                        id: `existing-${url.split('/').pop()?.split('?')[0] || Math.random().toString(36)}`,
+                        url
+                    }))
+                });
                 // Try to fetch bookings, but don't fail if it doesn't work
                 try {
                     await fetchBookings(aptDoc.id);
@@ -607,6 +619,39 @@ const ApartmentEditAdmin: React.FC = () => {
             heroImage: finalHeroImage,
             favouriteImages: finalFavouriteImages,
         };
+
+        // Upload brochure images (both languages)
+        const uploadBrochureLang = async (lang: 'bg' | 'en'): Promise<string[]> => {
+            const items = brochureItems[lang];
+            const newFiles = items.filter(i => i.file);
+            const uploadedUrls: Record<string, string> = {};
+            if (newFiles.length > 0) {
+                await Promise.all(newFiles.map(async item => {
+                    if (!item.file) return;
+                    const fileName = `${Date.now()}_${item.file.name}`;
+                    const storageRef = ref(storage, `apartments/${apartment.id}/brochure/${lang}/${fileName}`);
+                    await uploadBytes(storageRef, item.file);
+                    uploadedUrls[item.id] = await getDownloadURL(storageRef);
+                }));
+            }
+            return items.map(item => uploadedUrls[item.id] || item.url);
+        };
+
+        let finalBrochureBg: string[] = [];
+        let finalBrochureEn: string[] = [];
+        try {
+            [finalBrochureBg, finalBrochureEn] = await Promise.all([
+                uploadBrochureLang('bg'),
+                uploadBrochureLang('en')
+            ]);
+        } catch (error) {
+            console.error('Error uploading brochure images:', error);
+            setLoading(false);
+            return;
+        }
+
+        apartmentData.guestBrochure = { bg: finalBrochureBg, en: finalBrochureEn };
+
         delete apartmentData.id;
         delete (apartmentData as any).surveyQuestions; // Remove old array
 
@@ -626,6 +671,10 @@ const ApartmentEditAdmin: React.FC = () => {
                 id: `existing-${url.split('/').pop()?.split('?')[0] || Math.random().toString(36)}`, 
                 url 
             })));
+            setBrochureItems({
+                bg: finalBrochureBg.map(url => ({ id: `existing-${url.split('/').pop()?.split('?')[0] || Math.random().toString(36)}`, url })),
+                en: finalBrochureEn.map(url => ({ id: `existing-${url.split('/').pop()?.split('?')[0] || Math.random().toString(36)}`, url }))
+            });
             setTimeout(() => setSaveSuccess(false), 3000);
         } catch (error) {
             console.error("Error saving apartment: ", error);
@@ -1157,6 +1206,7 @@ const ApartmentEditAdmin: React.FC = () => {
                         <button onClick={() => setView('calendar')} className={`px-3 sm:px-4 py-2 text-sm sm:text-base whitespace-nowrap ${view === 'calendar' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}>{t('calendarAndBookings')}</button>
                         <button onClick={() => setView('feedback')} className={`px-3 sm:px-4 py-2 text-sm sm:text-base whitespace-nowrap ${view === 'feedback' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}>{t('feedback')}</button>
                         <button onClick={() => setView('testimonials')} className={`px-3 sm:px-4 py-2 text-sm sm:text-base whitespace-nowrap ${view === 'testimonials' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}>{t('testimonials')}</button>
+                        <button onClick={() => setView('brochure')} className={`px-3 sm:px-4 py-2 text-sm sm:text-base whitespace-nowrap ${view === 'brochure' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}>{t('guestBrochure')}</button>
                     </div>
                 </div>
                 {view === 'details' && (
@@ -1250,6 +1300,17 @@ const ApartmentEditAdmin: React.FC = () => {
                         apartmentId={apartment?.id || ''}
                         formLanguage={formLanguage as 'bg' | 'en'}
                         setFormLanguage={setFormLanguage as (lang: 'bg' | 'en') => void}
+                    />
+                )}
+                {view === 'brochure' && (
+                    <ApartmentBrochureTab
+                        currentApartmentData={currentApartmentData}
+                        setCurrentApartmentData={setCurrentApartmentData}
+                        formLanguage={formLanguage as 'bg' | 'en'}
+                        setFormLanguage={setFormLanguage as (lang: 'bg' | 'en') => void}
+                        brochureItems={brochureItems}
+                        setBrochureItems={setBrochureItems}
+                        slug={slug}
                     />
                 )}
 
