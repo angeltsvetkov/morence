@@ -73,6 +73,15 @@ const ApartmentBrochureTab: React.FC<BrochureTabProps> = ({
         if (oldIndex !== -1 && newIndex !== -1) handleReorder(oldIndex, newIndex);
     };
 
+    const handleUpdateTitle = (id: string, title: string) => {
+        setBrochureItems(prev => ({
+            ...prev,
+            [formLanguage]: prev[formLanguage].map(item =>
+                item.id === id ? { ...item, title } : item
+            )
+        }));
+    };
+
     return (
         <div className="space-y-4 pb-16">
             {/* Header */}
@@ -203,22 +212,35 @@ const ApartmentBrochureTab: React.FC<BrochureTabProps> = ({
                             <div className="flex flex-wrap gap-4">
                                 {items.map(item => (
                                     <SortableBrochurePhoto key={item.id} id={item.id}>
-                                        <div className={`relative group bg-gray-100 rounded-lg overflow-hidden w-48 h-48 ${item.file ? 'border-4 border-dashed border-blue-400' : ''}`}>
-                                            <OptimizedImage
-                                                src={item.url}
-                                                className="w-full h-full object-cover"
-                                                alt="Brochure"
-                                                placeholder="skeleton"
-                                                lazy={false}
-                                                height={192}
+                                        <div className="w-48 flex flex-col gap-1">
+                                            {/* Image (drag handle area) */}
+                                            <div className={`relative group bg-gray-100 rounded-lg overflow-hidden h-48 ${item.file ? 'border-4 border-dashed border-blue-400' : ''}`}>
+                                                <OptimizedImage
+                                                    src={item.url}
+                                                    className="w-full h-full object-cover"
+                                                    alt="Brochure"
+                                                    placeholder="skeleton"
+                                                    lazy={false}
+                                                    height={192}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onPointerDown={e => e.stopPropagation()}
+                                                    onClick={() => handleDelete(item.id)}
+                                                    className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </button>
+                                            </div>
+                                            {/* Title input — outside drag handle */}
+                                            <input
+                                                type="text"
+                                                value={item.title || ''}
+                                                onPointerDown={e => e.stopPropagation()}
+                                                onChange={e => handleUpdateTitle(item.id, e.target.value)}
+                                                placeholder={formLanguage === 'bg' ? 'Заглавие...' : 'Title...'}
+                                                className="w-full text-xs border border-gray-200 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white"
                                             />
-                                            <button
-                                                type="button"
-                                                onClick={() => handleDelete(item.id)}
-                                                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                                            >
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                            </button>
                                         </div>
                                     </SortableBrochurePhoto>
                                 ))}

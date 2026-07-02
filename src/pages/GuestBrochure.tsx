@@ -37,7 +37,7 @@ const GuestBrochure: React.FC = () => {
 
     const lang = (language as string) === 'bg' ? 'bg' : 'en';
     // Fall back to the other language if current one has no images
-    const images: string[] =
+    const images: { url: string; title?: string }[] =
         (apartment?.guestBrochure?.[lang] && apartment.guestBrochure[lang]!.length > 0)
             ? apartment.guestBrochure[lang]!
             : (lang === 'bg' ? apartment?.guestBrochure?.en : apartment?.guestBrochure?.bg) || [];
@@ -83,14 +83,20 @@ const GuestBrochure: React.FC = () => {
         <div className="min-h-screen bg-white">
             <BrochureHeader apartmentName={apartmentName} hideName={apartment.hideName} lang={lang} />
             <main className="max-w-2xl mx-auto px-0 sm:px-4 py-6 space-y-3">
-                {images.map((url, idx) => (
-                    <img
-                        key={idx}
-                        src={url}
-                        alt={`${lang === 'bg' ? 'Брошура' : 'Brochure'} ${idx + 1}`}
-                        className="w-full block rounded-none sm:rounded-xl shadow-sm"
-                        loading={idx === 0 ? 'eager' : 'lazy'}
-                    />
+                {images.map((item, idx) => (
+                    <div key={idx} className="flex flex-col">
+                        {item.title && (
+                            <h2 className="text-base font-semibold text-gray-800 px-4 sm:px-0 pt-4 pb-2">
+                                {item.title}
+                            </h2>
+                        )}
+                        <img
+                            src={item.url}
+                            alt={item.title || `${lang === 'bg' ? 'Брошура' : 'Brochure'} ${idx + 1}`}
+                            className="w-full block rounded-none sm:rounded-xl shadow-sm"
+                            loading={idx === 0 ? 'eager' : 'lazy'}
+                        />
+                    </div>
                 ))}
                 <p className="text-center text-xs text-gray-300 pb-8 pt-2">morence.top</p>
             </main>

@@ -6,7 +6,12 @@ type GalleryItem = {
     file?: File;
 };
 
-export type BrochureGalleryItem = GalleryItem;
+export type BrochureGalleryItem = {
+    id: string;
+    url: string;
+    title?: string;
+    file?: File;
+};
 
 export interface TabProps {
     currentApartmentData: Partial<Apartment>;
