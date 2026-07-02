@@ -105,6 +105,20 @@ const ApartmentBrochureTab: React.FC<BrochureTabProps> = ({
         }));
     };
 
+    const handleUpdateWorkingHours = (id: string, placeIdx: number, day: string, value: { open: string; close: string } | null) => {
+        setBrochureItems(prev => ({
+            ...prev,
+            [formLanguage]: prev[formLanguage].map(item => {
+                if (item.id !== id) return item;
+                const places = [...(item.places || [])];
+                const wh = { ...(places[placeIdx].workingHours || {}) };
+                if (value === null) { wh[day] = null; } else { wh[day] = value; }
+                places[placeIdx] = { ...places[placeIdx], workingHours: wh };
+                return { ...item, places };
+            })
+        }));
+    };
+
     const handleDeletePlace = (id: string, placeIdx: number) => {
         setBrochureItems(prev => ({
             ...prev,
@@ -115,6 +129,16 @@ const ApartmentBrochureTab: React.FC<BrochureTabProps> = ({
             })
         }));
     };
+
+    const DAYS = [
+        { key: 'mon', bg: 'Пон', en: 'Mon' },
+        { key: 'tue', bg: 'Вт', en: 'Tue' },
+        { key: 'wed', bg: 'Ср', en: 'Wed' },
+        { key: 'thu', bg: 'Чет', en: 'Thu' },
+        { key: 'fri', bg: 'Пет', en: 'Fri' },
+        { key: 'sat', bg: 'Съб', en: 'Sat' },
+        { key: 'sun', bg: 'Нед', en: 'Sun' },
+    ];
 
     return (
         <div className="space-y-4 pb-16">
@@ -315,6 +339,37 @@ const ApartmentBrochureTab: React.FC<BrochureTabProps> = ({
                                                                 placeholder={formLanguage === 'bg' ? 'Телефон...' : 'Phone...'}
                                                                 className="flex-1 text-xs border border-gray-200 rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white"
                                                             />
+                                                        </div>
+                                                        {/* Working hours */}
+                                                        <div className="mt-1">
+                                                            <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">
+                                                                {formLanguage === 'bg' ? 'Работно време' : 'Working hours'}
+                                                            </p>
+                                                            <div className="flex flex-col gap-0.5">
+                                                                {DAYS.map(d => {
+                                                                    const slot = place.workingHours?.[d.key];
+                                                                    const isClosed = slot === null || slot === undefined;
+                                                                    return (
+                                                                        <div key={d.key} className="flex items-center gap-1">
+                                                                            <span className="text-[10px] w-7 text-gray-500 font-medium">{formLanguage === 'bg' ? d.bg : d.en}</span>
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                checked={!isClosed}
+                                                                                onChange={e => handleUpdateWorkingHours(item.id, pi, d.key, e.target.checked ? { open: '09:00', close: '18:00' } : null)}
+                                                                                className="w-3 h-3"
+                                                                            />
+                                                                            {!isClosed && (
+                                                                                <>
+                                                                                    <input type="time" value={slot?.open || '09:00'} onChange={e => handleUpdateWorkingHours(item.id, pi, d.key, { open: e.target.value, close: slot?.close || '18:00' })} className="text-[10px] border border-gray-200 rounded px-1 py-0.5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-400 w-16" />
+                                                                                    <span className="text-[10px] text-gray-400">–</span>
+                                                                                    <input type="time" value={slot?.close || '18:00'} onChange={e => handleUpdateWorkingHours(item.id, pi, d.key, { open: slot?.open || '09:00', close: e.target.value })} className="text-[10px] border border-gray-200 rounded px-1 py-0.5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-400 w-16" />
+                                                                                </>
+                                                                            )}
+                                                                            {isClosed && <span className="text-[10px] text-gray-400">{formLanguage === 'bg' ? 'Затворено' : 'Closed'}</span>}
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 ))}

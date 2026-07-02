@@ -11,6 +11,41 @@ import { AlertTriangle, ImageOff, MapPin, Phone } from 'lucide-react';
 const slugifyTitle = (title: string, idx: number) =>
     `section-${idx}-${title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')}`;
 
+const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+
+type PlaceStatus = 'open' | 'closing-soon' | 'closed' | 'unknown';
+
+function getPlaceStatus(workingHours?: { [day: string]: { open: string; close: string } | null }): PlaceStatus {
+    if (!workingHours) return 'unknown';
+    const now = new Date();
+    const dayKey = DAY_KEYS[now.getDay()];
+    const slot = workingHours[dayKey];
+    if (!slot) return 'closed';
+    const [oh, om] = slot.open.split(':').map(Number);
+    const [ch, cm] = slot.close.split(':').map(Number);
+    const nowMins = now.getHours() * 60 + now.getMinutes();
+    const openMins = oh * 60 + om;
+    const closeMins = ch * 60 + cm;
+    if (nowMins < openMins || nowMins >= closeMins) return 'closed';
+    if (closeMins - nowMins <= 60) return 'closing-soon';
+    return 'open';
+}
+
+const PlaceStatusBadge: React.FC<{ status: PlaceStatus; lang: 'bg' | 'en' }> = ({ status, lang }) => {
+    if (status === 'unknown') return null;
+    const labels: Record<PlaceStatus, { bg: string; en: string; cls: string }> = {
+        'open':         { bg: 'Отворено', en: 'Open',         cls: 'bg-green-100 text-green-700' },
+        'closing-soon': { bg: 'Затваря скоро', en: 'Closing soon', cls: 'bg-amber-100 text-amber-700' },
+        'closed':       { bg: 'Затворено', en: 'Closed',      cls: 'bg-red-100 text-red-600' },
+        'unknown':      { bg: '', en: '', cls: '' },
+    };
+    const l = labels[status];
+    return (
+        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${l.cls}`}>
+            {lang === 'bg' ? l.bg : l.en}
+        </span>
+    );
+};
 const GuestBrochure: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const { language } = useLanguage();
@@ -153,6 +188,7 @@ const GuestBrochure: React.FC = () => {
                                                 <span className="text-xs font-semibold text-gray-800 leading-snug line-clamp-2">
                                                     {place.name}
                                                 </span>
+                                                <PlaceStatusBadge status={getPlaceStatus(place.workingHours)} lang={lang} />
                                                 <div className="flex items-center gap-2">
                                                     {place.mapsUrl && (
                                                         <a
