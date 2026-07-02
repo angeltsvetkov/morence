@@ -104,30 +104,18 @@ const GuestBrochure: React.FC = () => {
                     <section className="mb-8">
                         <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">                            {lang === 'bg' ? 'Съдържание' : 'Contents'}
                         </h2>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="flex flex-col gap-2">
                             {tocItems.map(item => (
                                 <button
                                     key={item.idx}
                                     type="button"
                                     onClick={() => scrollTo(slugifyTitle(item.title!, item.idx))}
-                                    className="group relative overflow-hidden rounded-xl bg-gray-50 border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-all text-left focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    className="group flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50 border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-all text-left focus:outline-none focus:ring-2 focus:ring-blue-400"
                                 >
-                                    {/* Thumbnail */}
-                                    <div className="aspect-video w-full overflow-hidden">
-                                        <img
-                                            src={item.url}
-                                            alt={item.title}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                            loading="lazy"
-                                        />
-                                    </div>
-                                    {/* Label */}
-                                    <div className="flex items-center justify-between px-3 py-2 gap-1">
-                                        <span className="text-xs font-medium text-gray-800 leading-snug line-clamp-2">
-                                            {item.title}
-                                        </span>
-                                        <ChevronRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-500 flex-shrink-0 transition-colors" />
-                                    </div>
+                                    <span className="text-sm font-medium text-gray-800 leading-snug">
+                                        {item.title}
+                                    </span>
+                                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-blue-500 flex-shrink-0 transition-colors" />
                                 </button>
                             ))}
                         </div>
