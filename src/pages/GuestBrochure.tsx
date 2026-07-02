@@ -102,13 +102,13 @@ const GuestBrochure: React.FC = () => {
                 {/* Table of contents — only rendered when at least one image has a title */}
                 {tocItems.length > 0 && (
                     <section className="mb-8">
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4 snap-x snap-mandatory">
                             {tocItems.map(item => (
                                 <button
                                     key={item.idx}
                                     type="button"
                                     onClick={() => scrollTo(slugifyTitle(item.title!, item.idx))}
-                                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-white border border-gray-300 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 active:bg-blue-100 text-gray-900 text-sm font-semibold shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    className="inline-flex items-center gap-1.5 flex-shrink-0 snap-start px-4 py-2.5 rounded-full bg-white border border-gray-300 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 active:bg-blue-100 text-gray-900 text-sm font-semibold shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400"
                                 >
                                     {item.title}
                                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
