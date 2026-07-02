@@ -110,12 +110,12 @@ const GuestBrochure: React.FC = () => {
                                     key={item.idx}
                                     type="button"
                                     onClick={() => scrollTo(slugifyTitle(item.title!, item.idx))}
-                                    className="group flex flex-col items-center justify-center text-center px-3 py-5 rounded-2xl bg-gray-50 border border-gray-100 hover:border-blue-200 hover:bg-blue-50 active:bg-blue-100 transition-all focus:outline-none focus:ring-2 focus:ring-blue-400 min-h-[90px] gap-1"
+                                    className="group flex flex-col items-center justify-center text-center px-2 py-3 rounded-xl bg-gray-50 border border-gray-100 hover:border-blue-200 hover:bg-blue-50 active:bg-blue-100 transition-all focus:outline-none focus:ring-2 focus:ring-blue-400 min-h-[64px] gap-1"
                                 >
-                                    <span className="text-sm font-semibold text-gray-800 leading-snug">
+                                    <span className="text-xs font-semibold text-gray-800 leading-snug">
                                         {item.title}
                                     </span>
-                                    <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-blue-400 transition-colors rotate-90" />
+                                    <ChevronRight className="w-3 h-3 text-gray-300 group-hover:text-blue-400 transition-colors rotate-90" />
                                 </button>
                             ))}
                         </div>
