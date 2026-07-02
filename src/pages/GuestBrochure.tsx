@@ -159,19 +159,19 @@ const GuestBrochure: React.FC = () => {
                                                             href={place.mapsUrl}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:bg-red-50 hover:border-red-300 active:scale-95 transition-all"
+                                                            className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:bg-red-50 hover:border-red-300 active:scale-95 transition-all"
                                                             aria-label="Open in Google Maps"
                                                         >
-                                                            <MapPin className="w-4 h-4 text-red-500" />
+                                                            <MapPin className="w-6 h-6 text-red-500" />
                                                         </a>
                                                     )}
                                                     {place.phone && (
                                                         <a
                                                             href={`tel:${place.phone}`}
-                                                            className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:bg-blue-50 hover:border-blue-300 active:scale-95 transition-all"
+                                                            className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:bg-blue-50 hover:border-blue-300 active:scale-95 transition-all"
                                                             aria-label={`Call ${place.phone}`}
                                                         >
-                                                            <Phone className="w-4 h-4 text-blue-500" />
+                                                            <Phone className="w-6 h-6 text-blue-500" />
                                                         </a>
                                                     )}
                                                 </div>
