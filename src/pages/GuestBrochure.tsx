@@ -159,7 +159,7 @@ const BrochureHeader: React.FC<{ apartmentName: string; hideName?: boolean; lang
     apartmentName, hideName, lang
 }) => (
     <header className="bg-white border-b border-gray-100 sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="w-[95%] mx-auto py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
                 <div className="bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600 px-3 py-1.5 rounded-full flex items-center gap-1">
                     <span className="text-white text-xs font-bold tracking-wider uppercase">morence</span>
@@ -171,7 +171,7 @@ const BrochureHeader: React.FC<{ apartmentName: string; hideName?: boolean; lang
             </div>
             <LanguageSwitcher />
         </div>
-        <div className="max-w-2xl mx-auto px-4 pb-2">
+        <div className="w-[95%] mx-auto pb-2">
             <p className="text-xs text-gray-400">{lang === 'bg' ? 'Брошура за гости' : 'Guest Brochure'}</p>
         </div>
     </header>
