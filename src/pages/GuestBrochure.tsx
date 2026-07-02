@@ -104,18 +104,18 @@ const GuestBrochure: React.FC = () => {
                     <section className="mb-8">
                         <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">                            {lang === 'bg' ? 'Съдържание' : 'Contents'}
                         </h2>
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-3">
                             {tocItems.map(item => (
                                 <button
                                     key={item.idx}
                                     type="button"
                                     onClick={() => scrollTo(slugifyTitle(item.title!, item.idx))}
-                                    className="group flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50 border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-all text-left focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    className="group flex items-center justify-between px-5 py-4 rounded-xl bg-gray-50 border border-gray-100 hover:border-blue-200 hover:bg-blue-50 active:bg-blue-100 transition-all text-left focus:outline-none focus:ring-2 focus:ring-blue-400 min-h-[56px]"
                                 >
-                                    <span className="text-sm font-medium text-gray-800 leading-snug">
+                                    <span className="text-base font-medium text-gray-800 leading-snug">
                                         {item.title}
                                     </span>
-                                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-blue-500 flex-shrink-0 transition-colors" />
+                                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-500 flex-shrink-0 transition-colors" />
                                 </button>
                             ))}
                         </div>
