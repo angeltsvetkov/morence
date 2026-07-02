@@ -97,42 +97,36 @@ const GuestBrochure: React.FC = () => {
     return (
         <div className="min-h-screen bg-white">
             <BrochureHeader apartmentName={apartmentName} hideName={apartment.hideName} lang={lang} />
+
+            {/* TOC carousel — sticky below header, always visible */}
+            {tocItems.length > 0 && (
+                <div className="sticky top-[56px] z-10 bg-white border-b border-gray-100 py-3">
+                    <div className="flex gap-3 overflow-x-auto scrollbar-hide px-[2.5%] snap-x snap-mandatory">
+                        {tocItems.map(item => (
+                            <button
+                                key={item.idx}
+                                type="button"
+                                onClick={() => scrollTo(slugifyTitle(item.title!, item.idx))}
+                                className="group flex-shrink-0 snap-start w-36 rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-200 active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white text-left"
+                            >
+                                <div className="aspect-video w-full overflow-hidden bg-gray-100">
+                                    <img
+                                        src={item.url}
+                                        alt={item.title}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                        loading="lazy"
+                                    />
+                                </div>
+                                <div className="px-2 py-1.5">
+                                    <p className="text-xs font-semibold text-gray-800 leading-snug line-clamp-2">{item.title}</p>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <main className="w-[95%] mx-auto py-6">
-
-                {/* TOC carousel — thumbnail cards that snap-scroll horizontally */}
-                {tocItems.length > 0 && (
-                    <section className="mb-6 -mx-[2.5%]">
-                        <div className="flex gap-3 overflow-x-auto scrollbar-hide px-[2.5%] pb-2 snap-x snap-mandatory">
-                            {tocItems.map(item => (
-                                <button
-                                    key={item.idx}
-                                    type="button"
-                                    onClick={() => scrollTo(slugifyTitle(item.title!, item.idx))}
-                                    className="group flex-shrink-0 snap-start w-40 rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-200 active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white text-left"
-                                >
-                                    <div className="aspect-video w-full overflow-hidden bg-gray-100">
-                                        <img
-                                            src={item.url}
-                                            alt={item.title}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                            loading="lazy"
-                                        />
-                                    </div>
-                                    <div className="px-2.5 py-2">
-                                        <p className="text-xs font-semibold text-gray-800 leading-snug line-clamp-2">{item.title}</p>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    </section>
-                )}
-
-                {/* Divider */}
-                {tocItems.length > 0 && (
-                    <div className="border-t border-gray-100 mb-6" />
-                )}
-
-                {/* Images */}
                 <div className="space-y-3">
                     {images.map((item, idx) => {
                         const sectionId = item.title ? slugifyTitle(item.title, idx) : undefined;
