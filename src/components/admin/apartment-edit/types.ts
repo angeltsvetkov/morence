@@ -10,7 +10,7 @@ export type BrochureGalleryItem = {
     id: string;
     url: string;
     title?: string;
-    places?: { name: string; mapsUrl: string }[];
+    places?: { name: string; mapsUrl: string; phone?: string }[];
     file?: File;
 };
 

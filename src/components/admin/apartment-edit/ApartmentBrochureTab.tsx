@@ -3,7 +3,7 @@ import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { BrochureTabProps } from './types';
 import { useAdminLanguage } from '../../../hooks/useAdminLanguage';
-import { Share2, Check, Trash2, AlertCircle, MapPin, Plus, X } from 'lucide-react';
+import { Share2, Check, Trash2, AlertCircle, MapPin, Plus, X, Phone } from 'lucide-react';
 import {
     DndContext,
     closestCenter,
@@ -93,7 +93,7 @@ const ApartmentBrochureTab: React.FC<BrochureTabProps> = ({
         }));
     };
 
-    const handleUpdatePlace = (id: string, placeIdx: number, field: 'name' | 'mapsUrl', value: string) => {
+    const handleUpdatePlace = (id: string, placeIdx: number, field: 'name' | 'mapsUrl' | 'phone', value: string) => {
         setBrochureItems(prev => ({
             ...prev,
             [formLanguage]: prev[formLanguage].map(item => {
@@ -306,6 +306,16 @@ const ApartmentBrochureTab: React.FC<BrochureTabProps> = ({
                                                             placeholder="Google Maps URL..."
                                                             className="w-full text-xs border border-gray-200 rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white font-mono"
                                                         />
+                                                        <div className="flex items-center gap-1">
+                                                            <Phone className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                                                            <input
+                                                                type="tel"
+                                                                value={place.phone || ''}
+                                                                onChange={e => handleUpdatePlace(item.id, pi, 'phone', e.target.value)}
+                                                                placeholder={formLanguage === 'bg' ? 'Телефон...' : 'Phone...'}
+                                                                className="flex-1 text-xs border border-gray-200 rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white"
+                                                            />
+                                                        </div>
                                                     </div>
                                                 ))}
                                                 <button

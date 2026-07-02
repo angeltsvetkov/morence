@@ -6,7 +6,7 @@ import { useLanguage } from '../hooks/useLanguage';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { Apartment } from '../types';
-import { AlertTriangle, ImageOff, MapPin } from 'lucide-react';
+import { AlertTriangle, ImageOff, MapPin, Phone } from 'lucide-react';
 
 const slugifyTitle = (title: string, idx: number) =>
     `section-${idx}-${title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')}`;
@@ -159,6 +159,16 @@ const GuestBrochure: React.FC = () => {
                                                 <span className="text-xs font-semibold text-gray-800 leading-snug line-clamp-2 group-hover:text-red-700">
                                                     {place.name}
                                                 </span>
+                                                {place.phone && (
+                                                    <a
+                                                        href={`tel:${place.phone}`}
+                                                        onClick={e => e.stopPropagation()}
+                                                        className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium mt-0.5"
+                                                    >
+                                                        <Phone className="w-3 h-3" />
+                                                        {place.phone}
+                                                    </a>
+                                                )}
                                             </a>
                                         ))}
                                     </div>
