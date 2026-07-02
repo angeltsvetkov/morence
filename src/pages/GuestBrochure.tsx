@@ -97,13 +97,12 @@ const GuestBrochure: React.FC = () => {
     return (
         <div className="min-h-screen bg-white">
             <BrochureHeader apartmentName={apartmentName} hideName={apartment.hideName} lang={lang} />
-            <main className="max-w-2xl mx-auto px-0 sm:px-4 py-6">
+            <main className="w-full mx-auto py-6">
 
                 {/* Table of contents — only rendered when at least one image has a title */}
                 {tocItems.length > 0 && (
-                    <section className="px-4 sm:px-0 mb-8">
-                        <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">
-                            {lang === 'bg' ? 'Съдържание' : 'Contents'}
+                    <section className="mb-8">
+                        <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">                            {lang === 'bg' ? 'Съдържание' : 'Contents'}
                         </h2>
                         <div className="grid grid-cols-2 gap-3">
                             {tocItems.map(item => (
@@ -137,7 +136,7 @@ const GuestBrochure: React.FC = () => {
 
                 {/* Divider between TOC and content */}
                 {tocItems.length > 0 && (
-                    <div className="border-t border-gray-100 mx-4 sm:mx-0 mb-6" />
+                    <div className="border-t border-gray-100 mb-6" />
                 )}
 
                 {/* Images */}
