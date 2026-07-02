@@ -146,30 +146,36 @@ const GuestBrochure: React.FC = () => {
                                 {item.places && item.places.length > 0 && (
                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 px-1 pt-3 pb-2">
                                         {item.places.map((place, pi) => (
-                                            <a
+                                            <div
                                                 key={pi}
-                                                href={place.mapsUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex flex-col items-center justify-center gap-1.5 px-3 py-4 rounded-2xl bg-gray-50 border border-gray-100 hover:bg-red-50 hover:border-red-200 active:scale-95 transition-all text-center group"
+                                                className="flex flex-col items-center justify-center gap-2 px-3 py-4 rounded-2xl bg-gray-50 border border-gray-100 text-center"
                                             >
-                                                <div className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm group-hover:border-red-300 transition-colors">
-                                                    <MapPin className="w-5 h-5 text-red-500" />
-                                                </div>
-                                                <span className="text-xs font-semibold text-gray-800 leading-snug line-clamp-2 group-hover:text-red-700">
+                                                <span className="text-xs font-semibold text-gray-800 leading-snug line-clamp-2">
                                                     {place.name}
                                                 </span>
-                                                {place.phone && (
-                                                    <a
-                                                        href={`tel:${place.phone}`}
-                                                        onClick={e => e.stopPropagation()}
-                                                        className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium mt-0.5"
-                                                    >
-                                                        <Phone className="w-3 h-3" />
-                                                        {place.phone}
-                                                    </a>
-                                                )}
-                                            </a>
+                                                <div className="flex items-center gap-2">
+                                                    {place.mapsUrl && (
+                                                        <a
+                                                            href={place.mapsUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:bg-red-50 hover:border-red-300 active:scale-95 transition-all"
+                                                            aria-label="Open in Google Maps"
+                                                        >
+                                                            <MapPin className="w-4 h-4 text-red-500" />
+                                                        </a>
+                                                    )}
+                                                    {place.phone && (
+                                                        <a
+                                                            href={`tel:${place.phone}`}
+                                                            className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:bg-blue-50 hover:border-blue-300 active:scale-95 transition-all"
+                                                            aria-label={`Call ${place.phone}`}
+                                                        >
+                                                            <Phone className="w-4 h-4 text-blue-500" />
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            </div>
                                         ))}
                                     </div>
                                 )}
