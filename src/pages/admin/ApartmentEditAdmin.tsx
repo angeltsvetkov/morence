@@ -434,12 +434,14 @@ const ApartmentEditAdmin: React.FC = () => {
                     bg: (aptData.guestBrochure?.bg || []).map(item => ({
                         id: `existing-${item.url.split('/').pop()?.split('?')[0] || Math.random().toString(36)}`,
                         url: item.url,
-                        title: item.title
+                        title: item.title,
+                        places: item.places
                     })),
                     en: (aptData.guestBrochure?.en || []).map(item => ({
                         id: `existing-${item.url.split('/').pop()?.split('?')[0] || Math.random().toString(36)}`,
                         url: item.url,
-                        title: item.title
+                        title: item.title,
+                        places: item.places
                     }))
                 });
                 // Try to fetch bookings, but don't fail if it doesn't work
@@ -623,7 +625,7 @@ const ApartmentEditAdmin: React.FC = () => {
         };
 
         // Upload brochure images (both languages)
-        const uploadBrochureLang = async (lang: 'bg' | 'en'): Promise<{ url: string; title?: string }[]> => {
+        const uploadBrochureLang = async (lang: 'bg' | 'en'): Promise<{ url: string; title?: string; places?: { name: string; mapsUrl: string }[] }[]> => {
             const items = brochureItems[lang];
             const uploadedUrls: Record<string, string> = {};
             const newFiles = items.filter(i => i.file);
@@ -638,12 +640,13 @@ const ApartmentEditAdmin: React.FC = () => {
             }
             return items.map(item => ({
                 url: uploadedUrls[item.id] || item.url,
-                ...(item.title ? { title: item.title } : {})
+                ...(item.title ? { title: item.title } : {}),
+                ...(item.places && item.places.length > 0 ? { places: item.places.filter(p => p.name || p.mapsUrl) } : {})
             }));
         };
 
-        let finalBrochureBg: { url: string; title?: string }[] = [];
-        let finalBrochureEn: { url: string; title?: string }[] = [];
+        let finalBrochureBg: { url: string; title?: string; places?: { name: string; mapsUrl: string }[] }[] = [];
+        let finalBrochureEn: { url: string; title?: string; places?: { name: string; mapsUrl: string }[] }[] = [];
         try {
             [finalBrochureBg, finalBrochureEn] = await Promise.all([
                 uploadBrochureLang('bg'),
@@ -677,8 +680,8 @@ const ApartmentEditAdmin: React.FC = () => {
                 url 
             })));
             setBrochureItems({
-                bg: finalBrochureBg.map(item => ({ id: `existing-${item.url.split('/').pop()?.split('?')[0] || Math.random().toString(36)}`, url: item.url, title: item.title })),
-                en: finalBrochureEn.map(item => ({ id: `existing-${item.url.split('/').pop()?.split('?')[0] || Math.random().toString(36)}`, url: item.url, title: item.title }))
+                bg: finalBrochureBg.map(item => ({ id: `existing-${item.url.split('/').pop()?.split('?')[0] || Math.random().toString(36)}`, url: item.url, title: item.title, places: item.places })),
+                en: finalBrochureEn.map(item => ({ id: `existing-${item.url.split('/').pop()?.split('?')[0] || Math.random().toString(36)}`, url: item.url, title: item.title, places: item.places }))
             });
             setTimeout(() => setSaveSuccess(false), 3000);
         } catch (error) {

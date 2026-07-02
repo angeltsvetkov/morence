@@ -6,7 +6,7 @@ import { useLanguage } from '../hooks/useLanguage';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { Apartment } from '../types';
-import { AlertTriangle, ImageOff } from 'lucide-react';
+import { AlertTriangle, ImageOff, MapPin } from 'lucide-react';
 
 const slugifyTitle = (title: string, idx: number) =>
     `section-${idx}-${title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')}`;
@@ -143,6 +143,22 @@ const GuestBrochure: React.FC = () => {
                                     className="w-full block rounded-none sm:rounded-xl shadow-sm"
                                     loading={idx === 0 ? 'eager' : 'lazy'}
                                 />
+                                {item.places && item.places.length > 0 && (
+                                    <div className="flex flex-col gap-1 px-1 pt-3 pb-2">
+                                        {item.places.map((place, pi) => (
+                                            <a
+                                                key={pi}
+                                                href={place.mapsUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-100 hover:bg-blue-50 hover:border-blue-200 active:bg-blue-100 transition-colors group"
+                                            >
+                                                <MapPin className="w-4 h-4 text-red-400 flex-shrink-0" />
+                                                <span className="text-sm font-medium text-gray-800 group-hover:text-blue-700">{place.name}</span>
+                                            </a>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         );
                     })}

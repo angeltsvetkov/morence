@@ -3,7 +3,7 @@ import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { BrochureTabProps } from './types';
 import { useAdminLanguage } from '../../../hooks/useAdminLanguage';
-import { Share2, Check, Trash2, AlertCircle } from 'lucide-react';
+import { Share2, Check, Trash2, AlertCircle, MapPin, Plus, X } from 'lucide-react';
 import {
     DndContext,
     closestCenter,
@@ -79,6 +79,40 @@ const ApartmentBrochureTab: React.FC<BrochureTabProps> = ({
             [formLanguage]: prev[formLanguage].map(item =>
                 item.id === id ? { ...item, title } : item
             )
+        }));
+    };
+
+    const handleAddPlace = (id: string) => {
+        setBrochureItems(prev => ({
+            ...prev,
+            [formLanguage]: prev[formLanguage].map(item =>
+                item.id === id
+                    ? { ...item, places: [...(item.places || []), { name: '', mapsUrl: '' }] }
+                    : item
+            )
+        }));
+    };
+
+    const handleUpdatePlace = (id: string, placeIdx: number, field: 'name' | 'mapsUrl', value: string) => {
+        setBrochureItems(prev => ({
+            ...prev,
+            [formLanguage]: prev[formLanguage].map(item => {
+                if (item.id !== id) return item;
+                const places = [...(item.places || [])];
+                places[placeIdx] = { ...places[placeIdx], [field]: value };
+                return { ...item, places };
+            })
+        }));
+    };
+
+    const handleDeletePlace = (id: string, placeIdx: number) => {
+        setBrochureItems(prev => ({
+            ...prev,
+            [formLanguage]: prev[formLanguage].map(item => {
+                if (item.id !== id) return item;
+                const places = (item.places || []).filter((_, i) => i !== placeIdx);
+                return { ...item, places };
+            })
         }));
     };
 
@@ -212,7 +246,7 @@ const ApartmentBrochureTab: React.FC<BrochureTabProps> = ({
                             <div className="flex flex-wrap gap-4">
                                 {items.map(item => (
                                     <SortableBrochurePhoto key={item.id} id={item.id}>
-                                        <div className="w-48 flex flex-col gap-1">
+                                        <div className="w-64 flex flex-col gap-1">
                                             {/* Image (drag handle area) */}
                                             <div className={`relative group bg-gray-100 rounded-lg overflow-hidden h-48 ${item.file ? 'border-4 border-dashed border-blue-400' : ''}`}>
                                                 <OptimizedImage
@@ -232,7 +266,7 @@ const ApartmentBrochureTab: React.FC<BrochureTabProps> = ({
                                                     <Trash2 className="w-3.5 h-3.5" />
                                                 </button>
                                             </div>
-                                            {/* Title input — outside drag handle */}
+                                            {/* Title input */}
                                             <input
                                                 type="text"
                                                 value={item.title || ''}
@@ -241,6 +275,48 @@ const ApartmentBrochureTab: React.FC<BrochureTabProps> = ({
                                                 placeholder={formLanguage === 'bg' ? 'Заглавие...' : 'Title...'}
                                                 className="w-full text-xs border border-gray-200 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white"
                                             />
+                                            {/* Places */}
+                                            <div
+                                                className="flex flex-col gap-1 mt-1"
+                                                onPointerDown={e => e.stopPropagation()}
+                                            >
+                                                {(item.places || []).map((place, pi) => (
+                                                    <div key={pi} className="flex flex-col gap-0.5 bg-gray-50 border border-gray-100 rounded-md p-1.5">
+                                                        <div className="flex items-center gap-1">
+                                                            <MapPin className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                                                            <input
+                                                                type="text"
+                                                                value={place.name}
+                                                                onChange={e => handleUpdatePlace(item.id, pi, 'name', e.target.value)}
+                                                                placeholder={formLanguage === 'bg' ? 'Място...' : 'Place name...'}
+                                                                className="flex-1 text-xs border border-gray-200 rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleDeletePlace(item.id, pi)}
+                                                                className="text-gray-400 hover:text-red-500 transition-colors"
+                                                            >
+                                                                <X className="w-3 h-3" />
+                                                            </button>
+                                                        </div>
+                                                        <input
+                                                            type="url"
+                                                            value={place.mapsUrl}
+                                                            onChange={e => handleUpdatePlace(item.id, pi, 'mapsUrl', e.target.value)}
+                                                            placeholder="Google Maps URL..."
+                                                            className="w-full text-xs border border-gray-200 rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white font-mono"
+                                                        />
+                                                    </div>
+                                                ))}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleAddPlace(item.id)}
+                                                    className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 mt-0.5 px-1"
+                                                >
+                                                    <Plus className="w-3 h-3" />
+                                                    {formLanguage === 'bg' ? 'Добави място' : 'Add place'}
+                                                </button>
+                                            </div>
                                         </div>
                                     </SortableBrochurePhoto>
                                 ))}

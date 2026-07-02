@@ -5,4 +5,5 @@ export { default as ApartmentPricingTab } from './ApartmentPricingTab';
 export { default as ApartmentCalendarTab } from './ApartmentCalendarTab';
 export { default as ApartmentFeedbackTab } from './ApartmentFeedbackTab';
 export { default as ApartmentTestimonialsTab } from './ApartmentTestimonialsTab';
-export * from './types'; 
+export { default as ApartmentBrochureTab } from './ApartmentBrochureTab';
+export * from './types';
