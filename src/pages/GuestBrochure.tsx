@@ -102,8 +102,6 @@ const GuestBrochure: React.FC = () => {
                 {/* Table of contents — only rendered when at least one image has a title */}
                 {tocItems.length > 0 && (
                     <section className="mb-8">
-                        <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">                            {lang === 'bg' ? 'Съдържание' : 'Contents'}
-                        </h2>
                         <div className="flex flex-wrap gap-2">
                             {tocItems.map(item => (
                                 <button
@@ -165,9 +163,6 @@ const BrochureHeader: React.FC<{ apartmentName: string; hideName?: boolean; lang
                 </div>
             </div>
             <LanguageSwitcher />
-        </div>
-        <div className="w-[95%] mx-auto pb-2">
-            <p className="text-xs text-gray-400">{lang === 'bg' ? 'Брошура за гости' : 'Guest Brochure'}</p>
         </div>
     </header>
 );
