@@ -163,9 +163,6 @@ const BrochureHeader: React.FC<{ apartmentName: string; hideName?: boolean; lang
                     <span className="text-white text-xs font-bold tracking-wider uppercase">morence</span>
                     <span className="text-blue-100 text-xs font-light">.top</span>
                 </div>
-                {apartmentName && !hideName && (
-                    <span className="text-gray-900 text-sm font-semibold truncate max-w-[200px]">{apartmentName}</span>
-                )}
             </div>
             <LanguageSwitcher />
         </div>
