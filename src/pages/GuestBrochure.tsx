@@ -104,18 +104,18 @@ const GuestBrochure: React.FC = () => {
                     <section className="mb-8">
                         <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">                            {lang === 'bg' ? 'Съдържание' : 'Contents'}
                         </h2>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <div className="flex flex-wrap gap-2">
                             {tocItems.map(item => (
                                 <button
                                     key={item.idx}
                                     type="button"
                                     onClick={() => scrollTo(slugifyTitle(item.title!, item.idx))}
-                                    className="group flex flex-col items-center justify-center text-center px-2 py-3 rounded-xl bg-gray-50 border border-gray-100 hover:border-blue-200 hover:bg-blue-50 active:bg-blue-100 transition-all focus:outline-none focus:ring-2 focus:ring-blue-400 min-h-[64px] gap-1"
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-gray-100 hover:bg-blue-100 hover:text-blue-700 active:bg-blue-200 text-gray-700 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400"
                                 >
-                                    <span className="text-xs font-semibold text-gray-800 leading-snug">
-                                        {item.title}
-                                    </span>
-                                    <ChevronRight className="w-3 h-3 text-gray-300 group-hover:text-blue-400 transition-colors rotate-90" />
+                                    {item.title}
+                                    <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+                                </button>
+                            ))}
                                 </button>
                             ))}
                         </div>
