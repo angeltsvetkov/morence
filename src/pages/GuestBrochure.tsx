@@ -144,17 +144,21 @@ const GuestBrochure: React.FC = () => {
                                     loading={idx === 0 ? 'eager' : 'lazy'}
                                 />
                                 {item.places && item.places.length > 0 && (
-                                    <div className="flex flex-col gap-1 px-1 pt-3 pb-2">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 px-1 pt-3 pb-2">
                                         {item.places.map((place, pi) => (
                                             <a
                                                 key={pi}
                                                 href={place.mapsUrl}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-2 px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-100 hover:bg-blue-50 hover:border-blue-200 active:bg-blue-100 transition-colors group"
+                                                className="flex flex-col items-center justify-center gap-1.5 px-3 py-4 rounded-2xl bg-gray-50 border border-gray-100 hover:bg-red-50 hover:border-red-200 active:scale-95 transition-all text-center group"
                                             >
-                                                <MapPin className="w-4 h-4 text-red-400 flex-shrink-0" />
-                                                <span className="text-sm font-medium text-gray-800 group-hover:text-blue-700">{place.name}</span>
+                                                <div className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm group-hover:border-red-300 transition-colors">
+                                                    <MapPin className="w-5 h-5 text-red-500" />
+                                                </div>
+                                                <span className="text-xs font-semibold text-gray-800 leading-snug line-clamp-2 group-hover:text-red-700">
+                                                    {place.name}
+                                                </span>
                                             </a>
                                         ))}
                                     </div>
