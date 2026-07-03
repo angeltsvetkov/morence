@@ -6,7 +6,7 @@ import { useLanguage } from '../hooks/useLanguage';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { Apartment } from '../types';
-import { AlertTriangle, ArrowLeft, MapPin, Phone, Clock } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, MapPin, Phone, Clock, Tag } from 'lucide-react';
 
 const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 
@@ -158,6 +158,32 @@ const GuestBrochurePlaceDetail: React.FC = () => {
                                 {place.phone}
                             </a>
                         )}
+                    </div>
+                )}
+
+                {/* pricelist */}
+                {place.priceList && place.priceList.length > 0 && (
+                    <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+                        <div className="flex items-center gap-2 mb-3">
+                            <Tag className="w-4 h-4 text-gray-500" />
+                            <span className="text-sm font-semibold text-gray-800">
+                                {lang === 'bg' ? 'Ценова листа' : 'Price list'}
+                            </span>
+                        </div>
+                        <div className="divide-y divide-gray-100">
+                            {place.priceList.map((item, idx) => {
+                                const itemName = item.name?.[lang] || item.name?.en || item.name?.bg || '';
+                                const unit = item.unit?.[lang] || item.unit?.en || item.unit?.bg || '';
+                                return (
+                                    <div key={idx} className="flex items-center justify-between py-2.5">
+                                        <span className="text-sm text-gray-700">{itemName}</span>
+                                        <span className="text-sm font-semibold text-gray-900">
+                                            {item.price}{unit ? <span className="text-xs text-gray-400 font-normal ml-1">/ {unit}</span> : null}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
                 )}
 

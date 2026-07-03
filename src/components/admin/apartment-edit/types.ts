@@ -15,6 +15,7 @@ export type BrochurePlaceItem = {
     mapsUrl?: string;
     phone?: string;
     workingHours?: { [day: string]: { open: string; close: string } | null };
+    priceList?: { name: { bg: string; en: string }; price: string; unit?: { bg: string; en: string } }[];
 };
 
 export interface TabProps {

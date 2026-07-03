@@ -440,6 +440,7 @@ const ApartmentEditAdmin: React.FC = () => {
                         mapsUrl: p.mapsUrl,
                         phone: p.phone,
                         workingHours: p.workingHours,
+                        priceList: p.priceList,
                     }))
                 );
                 // Try to fetch bookings, but don't fail if it doesn't work
@@ -657,6 +658,18 @@ const ApartmentEditAdmin: React.FC = () => {
                     if (val !== undefined) wh[day] = val;
                 });
                 if (Object.keys(wh).length > 0) obj.workingHours = wh;
+            }
+            if (p.priceList && p.priceList.length > 0) {
+                obj.priceList = p.priceList
+                    .filter(item => item.name.bg || item.name.en || item.price)
+                    .map(item => {
+                        const r: Record<string, any> = {
+                            name: { bg: item.name.bg || '', en: item.name.en || '' },
+                            price: item.price || '',
+                        };
+                        if (item.unit?.bg || item.unit?.en) r.unit = { bg: item.unit?.bg || '', en: item.unit?.en || '' };
+                        return r;
+                    });
             }
             return obj;
         };

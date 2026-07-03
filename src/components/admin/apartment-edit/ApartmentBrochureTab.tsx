@@ -3,7 +3,7 @@ import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { BrochureTabProps, BrochurePlaceItem } from './types';
 import { useAdminLanguage } from '../../../hooks/useAdminLanguage';
-import { Share2, Check, Trash2, Plus, Phone, MapPin, Clock, ChevronDown, ChevronUp, GripVertical } from 'lucide-react';
+import { Share2, Check, Trash2, Plus, Phone, MapPin, Clock, ChevronDown, ChevronUp, GripVertical, Tag } from 'lucide-react';
 import {
     DndContext,
     closestCenter,
@@ -289,6 +289,84 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, onChange, onDelete }) => {
                                 );
                             })}
                         </div>
+                    </div>
+
+                    {/* pricelist */}
+                    <div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <Tag size={13} className="text-gray-500" />
+                            <span className="text-xs font-medium text-gray-600">Ценова листа</span>
+                        </div>
+                        <div className="space-y-2">
+                            {(place.priceList || []).map((item, idx) => (
+                                <div key={idx} className="grid grid-cols-[1fr_1fr_80px_80px_28px] gap-2 items-center">
+                                    <Input
+                                        value={item.name.bg}
+                                        onChange={e => {
+                                            const list = [...(place.priceList || [])];
+                                            list[idx] = { ...item, name: { ...item.name, bg: e.target.value } };
+                                            onChange({ ...place, priceList: list });
+                                        }}
+                                        placeholder="Елемент (БГ)"
+                                        className="h-7 text-xs"
+                                        onPointerDown={e => e.stopPropagation()}
+                                    />
+                                    <Input
+                                        value={item.name.en}
+                                        onChange={e => {
+                                            const list = [...(place.priceList || [])];
+                                            list[idx] = { ...item, name: { ...item.name, en: e.target.value } };
+                                            onChange({ ...place, priceList: list });
+                                        }}
+                                        placeholder="Item (EN)"
+                                        className="h-7 text-xs"
+                                        onPointerDown={e => e.stopPropagation()}
+                                    />
+                                    <Input
+                                        value={item.price}
+                                        onChange={e => {
+                                            const list = [...(place.priceList || [])];
+                                            list[idx] = { ...item, price: e.target.value };
+                                            onChange({ ...place, priceList: list });
+                                        }}
+                                        placeholder="Цена"
+                                        className="h-7 text-xs"
+                                        onPointerDown={e => e.stopPropagation()}
+                                    />
+                                    <Input
+                                        value={item.unit?.bg || ''}
+                                        onChange={e => {
+                                            const list = [...(place.priceList || [])];
+                                            list[idx] = { ...item, unit: { bg: e.target.value, en: item.unit?.en || '' } };
+                                            onChange({ ...place, priceList: list });
+                                        }}
+                                        placeholder="бр/кг…"
+                                        className="h-7 text-xs"
+                                        onPointerDown={e => e.stopPropagation()}
+                                    />
+                                    <button
+                                        onClick={() => {
+                                            const list = (place.priceList || []).filter((_, i) => i !== idx);
+                                            onChange({ ...place, priceList: list });
+                                        }}
+                                        className="text-red-400 hover:text-red-600 flex-shrink-0"
+                                        onPointerDown={e => e.stopPropagation()}
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                        <button
+                            onClick={() => {
+                                const list = [...(place.priceList || []), { name: { bg: '', en: '' }, price: '' }];
+                                onChange({ ...place, priceList: list });
+                            }}
+                            className="mt-2 flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700"
+                            onPointerDown={e => e.stopPropagation()}
+                        >
+                            <Plus size={13} /> Добави ред
+                        </button>
                     </div>
                 </div>
             )}
