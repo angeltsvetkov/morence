@@ -68,9 +68,10 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, onChange, onDelete }) => {
         setIsProcessing(true);
         setConversionStatus('Обработване…');
         try {
-            const processed = await processImageFiles([file]);
-            if (processed.length > 0) {
-                const { file: processedFile, preview } = processed[0];
+            const { successful } = await processImageFiles([file]);
+            if (successful.length > 0) {
+                const processedFile = successful[0].file;
+                const preview = URL.createObjectURL(processedFile);
                 onChange({ ...place, image: preview, imageFile: processedFile });
             }
         } finally {
