@@ -1,9 +1,9 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
-import { BrochureTabProps } from './types';
+import { BrochureTabProps, BrochurePlaceItem } from './types';
 import { useAdminLanguage } from '../../../hooks/useAdminLanguage';
-import { Share2, Check, Trash2, AlertCircle, MapPin, Plus, X, Phone } from 'lucide-react';
+import { Share2, Check, Trash2, Plus, Phone, MapPin, Clock, ChevronDown, ChevronUp, GripVertical } from 'lucide-react';
 import {
     DndContext,
     closestCenter,
@@ -15,27 +15,295 @@ import {
 import {
     SortableContext,
     useSortable,
-    rectSortingStrategy,
+    verticalListSortingStrategy,
     arrayMove
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import OptimizedImage from '../../ui/optimized-image';
 import { processImageFiles, getSupportedImageTypes, isSupportedImageFile, isHEICFile } from '../../../utils/imageUtils';
 
-const ApartmentBrochureTab: React.FC<BrochureTabProps> = ({
-    formLanguage,
-    setFormLanguage,
-    brochureItems,
-    setBrochureItems,
-    slug
-}) => {
-    const { t } = useAdminLanguage();
-    const [isLinkCopied, setIsLinkCopied] = useState(false);
+const DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
+const DAY_LABELS: Record<string, string> = {
+    mon: 'Пон', tue: 'Вт', wed: 'Ср', thu: 'Чет', fri: 'Пет', sat: 'Съб', sun: 'Нед'
+};
+
+function newPlace(): BrochurePlaceItem {
+    return {
+        id: `place-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        name: { bg: '', en: '' },
+        description: { bg: '', en: '' },
+        mapsUrl: '',
+        phone: '',
+        workingHours: undefined,
+    };
+}
+
+// ─── sortable place card ─────────────────────────────────────────────────────
+interface PlaceCardProps {
+    place: BrochurePlaceItem;
+    onChange: (updated: BrochurePlaceItem) => void;
+    onDelete: () => void;
+}
+
+const PlaceCard: React.FC<PlaceCardProps> = ({ place, onChange, onDelete }) => {
+    const [expanded, setExpanded] = useState(true);
     const [isProcessing, setIsProcessing] = useState(false);
     const [conversionStatus, setConversionStatus] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const items = brochureItems[formLanguage];
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: place.id });
+    const style: React.CSSProperties = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+    };
+
+    const handleImageSelect = async (files: FileList | null) => {
+        if (!files || files.length === 0) return;
+        const file = files[0];
+        if (!isSupportedImageFile(file) && !isHEICFile(file)) {
+            alert('Unsupported image format');
+            return;
+        }
+        setIsProcessing(true);
+        setConversionStatus('Обработване…');
+        try {
+            const processed = await processImageFiles([file]);
+            if (processed.length > 0) {
+                const { file: processedFile, preview } = processed[0];
+                onChange({ ...place, image: preview, imageFile: processedFile });
+            }
+        } finally {
+            setIsProcessing(false);
+            setConversionStatus('');
+        }
+    };
+
+    const setHours = (day: string, val: { open: string; close: string } | null) => {
+        const wh = { ...(place.workingHours || {}) };
+        if (val === null) {
+            wh[day] = null;
+        } else {
+            wh[day] = val;
+        }
+        onChange({ ...place, workingHours: wh });
+    };
+
+    const toggleDay = (day: string) => {
+        const current = place.workingHours?.[day];
+        if (current === null || current === undefined) {
+            setHours(day, { open: '09:00', close: '18:00' });
+        } else {
+            setHours(day, null);
+        }
+    };
+
+    const previewSrc = place.image || '';
+
+    return (
+        <div ref={setNodeRef} style={style} className="border border-gray-200 rounded-xl bg-white shadow-sm">
+            {/* header row */}
+            <div className="flex items-center gap-2 px-4 py-3">
+                <button
+                    className="cursor-grab text-gray-400 hover:text-gray-600 touch-none"
+                    {...attributes}
+                    {...listeners}
+                >
+                    <GripVertical size={18} />
+                </button>
+                {previewSrc ? (
+                    <img src={previewSrc} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />
+                ) : (
+                    <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center flex-shrink-0">
+                        <MapPin size={16} className="text-gray-400" />
+                    </div>
+                )}
+                <span className="flex-1 font-medium text-sm text-gray-800 truncate">
+                    {place.name.bg || place.name.en || <span className="text-gray-400 italic">Ново място</span>}
+                </span>
+                <button onClick={() => setExpanded(e => !e)} className="text-gray-400 hover:text-gray-600 p-1">
+                    {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </button>
+                <button
+                    onClick={onDelete}
+                    className="text-red-400 hover:text-red-600 p-1"
+                    onPointerDown={e => e.stopPropagation()}
+                >
+                    <Trash2 size={16} />
+                </button>
+            </div>
+
+            {expanded && (
+                <div className="px-4 pb-4 space-y-4 border-t border-gray-100 pt-4">
+                    {/* image */}
+                    <div>
+                        <p className="text-xs font-medium text-gray-600 mb-2">Снимка</p>
+                        <div className="flex items-center gap-3">
+                            {previewSrc ? (
+                                <div className="relative w-24 h-16 rounded overflow-hidden flex-shrink-0">
+                                    <OptimizedImage src={previewSrc} alt="" className="w-full h-full object-cover" />
+                                    <button
+                                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs"
+                                        onClick={() => onChange({ ...place, image: undefined, imageFile: undefined })}
+                                        onPointerDown={e => e.stopPropagation()}
+                                    >×</button>
+                                </div>
+                            ) : null}
+                            <div>
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept={getSupportedImageTypes()}
+                                    className="hidden"
+                                    onChange={e => handleImageSelect(e.target.files)}
+                                />
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={isProcessing}
+                                    onPointerDown={e => e.stopPropagation()}
+                                >
+                                    {isProcessing ? conversionStatus : previewSrc ? 'Смени снимка' : 'Добави снимка'}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* names */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Ime (БГ)</label>
+                            <Input
+                                value={place.name.bg}
+                                onChange={e => onChange({ ...place, name: { ...place.name, bg: e.target.value } })}
+                                placeholder="Ресторант…"
+                                onPointerDown={e => e.stopPropagation()}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Name (EN)</label>
+                            <Input
+                                value={place.name.en}
+                                onChange={e => onChange({ ...place, name: { ...place.name, en: e.target.value } })}
+                                placeholder="Restaurant…"
+                                onPointerDown={e => e.stopPropagation()}
+                            />
+                        </div>
+                    </div>
+
+                    {/* descriptions */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Описание (БГ)</label>
+                            <textarea
+                                value={place.description?.bg || ''}
+                                onChange={e => onChange({ ...place, description: { ...(place.description || { bg: '', en: '' }), bg: e.target.value } })}
+                                placeholder="Кратко описание…"
+                                rows={2}
+                                className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                onPointerDown={e => e.stopPropagation()}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Description (EN)</label>
+                            <textarea
+                                value={place.description?.en || ''}
+                                onChange={e => onChange({ ...place, description: { ...(place.description || { bg: '', en: '' }), en: e.target.value } })}
+                                placeholder="Short description…"
+                                rows={2}
+                                className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                onPointerDown={e => e.stopPropagation()}
+                            />
+                        </div>
+                    </div>
+
+                    {/* location + phone */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1 flex items-center gap-1">
+                                <MapPin size={12} /> Google Maps URL
+                            </label>
+                            <Input
+                                value={place.mapsUrl || ''}
+                                onChange={e => onChange({ ...place, mapsUrl: e.target.value })}
+                                placeholder="https://maps.google.com/…"
+                                onPointerDown={e => e.stopPropagation()}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1 flex items-center gap-1">
+                                <Phone size={12} /> Телефон
+                            </label>
+                            <Input
+                                value={place.phone || ''}
+                                onChange={e => onChange({ ...place, phone: e.target.value })}
+                                placeholder="+359…"
+                                onPointerDown={e => e.stopPropagation()}
+                            />
+                        </div>
+                    </div>
+
+                    {/* working hours */}
+                    <div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <Clock size={13} className="text-gray-500" />
+                            <span className="text-xs font-medium text-gray-600">Работно време</span>
+                        </div>
+                        <div className="space-y-1">
+                            {DAY_KEYS.map(day => {
+                                const entry = place.workingHours?.[day];
+                                const isOpen = entry !== null && entry !== undefined;
+                                return (
+                                    <div key={day} className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => toggleDay(day)}
+                                            onPointerDown={e => e.stopPropagation()}
+                                            className={`w-10 text-xs font-medium rounded px-1 py-0.5 border transition-colors ${isOpen ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-gray-50 border-gray-200 text-gray-400'}`}
+                                        >
+                                            {DAY_LABELS[day]}
+                                        </button>
+                                        {isOpen && entry ? (
+                                            <>
+                                                <Input
+                                                    type="time"
+                                                    value={entry.open}
+                                                    onChange={e => setHours(day, { ...entry, open: e.target.value })}
+                                                    className="h-7 text-xs w-24"
+                                                    onPointerDown={e => e.stopPropagation()}
+                                                />
+                                                <span className="text-xs text-gray-400">–</span>
+                                                <Input
+                                                    type="time"
+                                                    value={entry.close}
+                                                    onChange={e => setHours(day, { ...entry, close: e.target.value })}
+                                                    className="h-7 text-xs w-24"
+                                                    onPointerDown={e => e.stopPropagation()}
+                                                />
+                                            </>
+                                        ) : (
+                                            <span className="text-xs text-gray-400 italic">затворено</span>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+// ─── main tab ────────────────────────────────────────────────────────────────
+const ApartmentBrochureTab: React.FC<BrochureTabProps> = ({
+    brochureItems,
+    setBrochureItems,
+    slug
+}) => {
+    const [isLinkCopied, setIsLinkCopied] = useState(false);
+
+    const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
     const handleCopyBrochureLink = () => {
         if (!slug) return;
@@ -46,373 +314,67 @@ const ApartmentBrochureTab: React.FC<BrochureTabProps> = ({
         });
     };
 
-    const handleDelete = (id: string) => {
-        setBrochureItems(prev => ({
-            ...prev,
-            [formLanguage]: prev[formLanguage].filter(item => item.id !== id)
-        }));
-    };
-
-    const handleReorder = (oldIndex: number, newIndex: number) => {
-        setBrochureItems(prev => ({
-            ...prev,
-            [formLanguage]: arrayMove(prev[formLanguage], oldIndex, newIndex)
-        }));
-    };
-
-    const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
-    );
-
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
-        if (!over || active.id === over.id) return;
-        const ids = items.map(i => i.id);
-        const oldIndex = ids.indexOf(String(active.id));
-        const newIndex = ids.indexOf(String(over.id));
-        if (oldIndex !== -1 && newIndex !== -1) handleReorder(oldIndex, newIndex);
+        if (over && active.id !== over.id) {
+            setBrochureItems(prev => {
+                const oldIdx = prev.findIndex(i => i.id === active.id);
+                const newIdx = prev.findIndex(i => i.id === over.id);
+                return arrayMove(prev, oldIdx, newIdx);
+            });
+        }
     };
 
-    const handleUpdateTitle = (id: string, title: string) => {
-        setBrochureItems(prev => ({
-            ...prev,
-            [formLanguage]: prev[formLanguage].map(item =>
-                item.id === id ? { ...item, title } : item
-            )
-        }));
-    };
+    const addPlace = () => setBrochureItems(prev => [...prev, newPlace()]);
 
-    const handleAddPlace = (id: string) => {
-        setBrochureItems(prev => ({
-            ...prev,
-            [formLanguage]: prev[formLanguage].map(item =>
-                item.id === id
-                    ? { ...item, places: [...(item.places || []), { name: '', mapsUrl: '' }] }
-                    : item
-            )
-        }));
-    };
+    const updatePlace = (id: string, updated: BrochurePlaceItem) =>
+        setBrochureItems(prev => prev.map(p => p.id === id ? updated : p));
 
-    const handleUpdatePlace = (id: string, placeIdx: number, field: 'name' | 'mapsUrl' | 'phone', value: string) => {
-        setBrochureItems(prev => ({
-            ...prev,
-            [formLanguage]: prev[formLanguage].map(item => {
-                if (item.id !== id) return item;
-                const places = [...(item.places || [])];
-                places[placeIdx] = { ...places[placeIdx], [field]: value };
-                return { ...item, places };
-            })
-        }));
-    };
-
-    const handleUpdateWorkingHours = (id: string, placeIdx: number, day: string, value: { open: string; close: string } | null) => {
-        setBrochureItems(prev => ({
-            ...prev,
-            [formLanguage]: prev[formLanguage].map(item => {
-                if (item.id !== id) return item;
-                const places = [...(item.places || [])];
-                const wh = { ...(places[placeIdx].workingHours || {}) };
-                if (value === null) { wh[day] = null; } else { wh[day] = value; }
-                places[placeIdx] = { ...places[placeIdx], workingHours: wh };
-                return { ...item, places };
-            })
-        }));
-    };
-
-    const handleDeletePlace = (id: string, placeIdx: number) => {
-        setBrochureItems(prev => ({
-            ...prev,
-            [formLanguage]: prev[formLanguage].map(item => {
-                if (item.id !== id) return item;
-                const places = (item.places || []).filter((_, i) => i !== placeIdx);
-                return { ...item, places };
-            })
-        }));
-    };
-
-    const DAYS = [
-        { key: 'mon', bg: 'Пон', en: 'Mon' },
-        { key: 'tue', bg: 'Вт', en: 'Tue' },
-        { key: 'wed', bg: 'Ср', en: 'Wed' },
-        { key: 'thu', bg: 'Чет', en: 'Thu' },
-        { key: 'fri', bg: 'Пет', en: 'Fri' },
-        { key: 'sat', bg: 'Съб', en: 'Sat' },
-        { key: 'sun', bg: 'Нед', en: 'Sun' },
-    ];
+    const deletePlace = (id: string) =>
+        setBrochureItems(prev => prev.filter(p => p.id !== id));
 
     return (
-        <div className="space-y-4 pb-16">
-            {/* Header */}
-            <div className="flex justify-between items-center mb-6 pb-4 border-b">
-                <h3 className="text-xl font-semibold text-gray-900">{t('guestBrochure')}</h3>
-                <div className="flex items-center gap-2">
-                    <button
-                        type="button"
-                        onClick={handleCopyBrochureLink}
-                        disabled={!slug}
-                        className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-md transition-colors ${
-                            isLinkCopied
-                                ? 'bg-green-50 text-green-700'
-                                : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
-                        } disabled:opacity-50 disabled:cursor-not-allowed`}
-                    >
-                        {isLinkCopied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
-                        {isLinkCopied ? t('linkCopied') : t('shareLink')}
-                    </button>
-                    <button
-                        onClick={() => setFormLanguage('bg')}
-                        className={`px-3 py-1 text-xs rounded-l-md ${formLanguage === 'bg' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-                    >BG</button>
-                    <button
-                        onClick={() => setFormLanguage('en')}
-                        className={`px-3 py-1 text-xs rounded-r-md ${formLanguage === 'en' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-                    >EN</button>
-                </div>
-            </div>
-
-            {/* Upload */}
-            <div className="flex flex-col gap-2">
+        <div className="space-y-6">
+            {/* share link */}
+            <div className="flex items-center justify-between">
+                <h3 className="text-base font-semibold text-gray-800">Места в брошурата</h3>
                 <Button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isProcessing}
-                    className="flex items-center gap-2 w-fit"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopyBrochureLink}
+                    disabled={!slug}
+                    className="flex items-center gap-2"
                 >
-                    {isProcessing ? (
-                        <>
-                            <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
-                            {t('processing')}...
-                        </>
-                    ) : (
-                        t('uploadNewPhotos')
-                    )}
+                    {isLinkCopied ? <Check size={14} className="text-green-500" /> : <Share2 size={14} />}
+                    {isLinkCopied ? 'Копирано!' : 'Сподели линк'}
                 </Button>
-                <div className="text-xs text-gray-500 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {t('heicSupportInfo')}
-                </div>
-                {conversionStatus && (
-                    <div className={`text-sm p-2 rounded ${
-                        conversionStatus.includes('❌')
-                            ? 'bg-red-50 text-red-700 border border-red-200'
-                            : conversionStatus.includes('✅')
-                            ? 'bg-green-50 text-green-700 border border-green-200'
-                            : 'bg-blue-50 text-blue-700 border border-blue-200'
-                    }`}>
-                        {conversionStatus}
-                    </div>
-                )}
             </div>
 
-            <Input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                accept={getSupportedImageTypes()}
-                className="hidden"
-                disabled={isProcessing}
-                onChange={async (e) => {
-                    if (!e.target.files || e.target.files.length === 0) return;
-                    const fileArray = Array.from(e.target.files);
-                    const invalid = fileArray.filter(f => !isSupportedImageFile(f));
-                    if (invalid.length > 0) {
-                        alert(`Unsupported file types: ${invalid.map(f => f.name).join(', ')}`);
-                        return;
-                    }
-                    setIsProcessing(true);
-                    setConversionStatus('');
-                    try {
-                        const heicFiles = fileArray.filter(isHEICFile);
-                        if (heicFiles.length > 0) setConversionStatus(`Converting ${heicFiles.length} HEIC image(s) to JPEG...`);
+            {/* places list */}
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={brochureItems.map(p => p.id)} strategy={verticalListSortingStrategy}>
+                    <div className="space-y-3">
+                        {brochureItems.map(place => (
+                            <PlaceCard
+                                key={place.id}
+                                place={place}
+                                onChange={updated => updatePlace(place.id, updated)}
+                                onDelete={() => deletePlace(place.id)}
+                            />
+                        ))}
+                    </div>
+                </SortableContext>
+            </DndContext>
 
-                        const { successful, failed } = await processImageFiles(fileArray);
-                        if (successful.length > 0) {
-                            const newItems = successful.map(img => ({
-                                id: `new-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                                url: URL.createObjectURL(img.file),
-                                file: img.file
-                            }));
-                            setBrochureItems(prev => ({
-                                ...prev,
-                                [formLanguage]: [...prev[formLanguage], ...newItems]
-                            }));
-                        }
-                        let status = '';
-                        if (successful.length > 0) {
-                            const converted = successful.filter(i => i.wasConverted).length;
-                            if (converted > 0) status += `✅ Converted ${converted} HEIC. `;
-                            if (successful.length > converted) status += `✅ Added ${successful.length - converted} image(s). `;
-                        }
-                        if (failed.length > 0) status += `⚠️ Failed: ${failed.map(f => f.file.name).join(', ')}`;
-                        if (status) {
-                            setConversionStatus(status.trim());
-                            setTimeout(() => setConversionStatus(''), failed.length > 0 ? 8000 : 3000);
-                        }
-                    } catch (err) {
-                        setConversionStatus(`❌ Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
-                        setTimeout(() => setConversionStatus(''), 5000);
-                    } finally {
-                        setIsProcessing(false);
-                        if (fileInputRef.current) fileInputRef.current.value = '';
-                    }
-                }}
-            />
-
-            {/* Grid */}
-            {items.length > 0 ? (
-                <>
-                    <h4 className="text-sm font-semibold text-gray-700 mt-4">
-                        {formLanguage === 'bg' ? 'Изображения (BG)' : 'Images (EN)'} — {items.length}
-                    </h4>
-                    <p className="text-xs text-gray-400">{t('dragAndDropImages')}</p>
-                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                        <SortableContext items={items.map(i => i.id)} strategy={rectSortingStrategy}>
-                            <div className="flex flex-wrap gap-4">
-                                {items.map(item => (
-                                    <SortableBrochurePhoto key={item.id} id={item.id}>
-                                        <div className="w-64 flex flex-col gap-1">
-                                            {/* Image (drag handle area) */}
-                                            <div className={`relative group bg-gray-100 rounded-lg overflow-hidden h-48 ${item.file ? 'border-4 border-dashed border-blue-400' : ''}`}>
-                                                <OptimizedImage
-                                                    src={item.url}
-                                                    className="w-full h-full object-cover"
-                                                    alt="Brochure"
-                                                    placeholder="skeleton"
-                                                    lazy={false}
-                                                    height={192}
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onPointerDown={e => e.stopPropagation()}
-                                                    onClick={() => handleDelete(item.id)}
-                                                    className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                                                >
-                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                </button>
-                                            </div>
-                                            {/* Title input */}
-                                            <input
-                                                type="text"
-                                                value={item.title || ''}
-                                                onPointerDown={e => e.stopPropagation()}
-                                                onChange={e => handleUpdateTitle(item.id, e.target.value)}
-                                                placeholder={formLanguage === 'bg' ? 'Заглавие...' : 'Title...'}
-                                                className="w-full text-xs border border-gray-200 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white"
-                                            />
-                                            {/* Places */}
-                                            <div
-                                                className="flex flex-col gap-1 mt-1"
-                                                onPointerDown={e => e.stopPropagation()}
-                                            >
-                                                {(item.places || []).map((place, pi) => (
-                                                    <div key={pi} className="flex flex-col gap-0.5 bg-gray-50 border border-gray-100 rounded-md p-1.5">
-                                                        <div className="flex items-center gap-1">
-                                                            <MapPin className="w-3 h-3 text-gray-400 flex-shrink-0" />
-                                                            <input
-                                                                type="text"
-                                                                value={place.name}
-                                                                onChange={e => handleUpdatePlace(item.id, pi, 'name', e.target.value)}
-                                                                placeholder={formLanguage === 'bg' ? 'Място...' : 'Place name...'}
-                                                                className="flex-1 text-xs border border-gray-200 rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white"
-                                                            />
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => handleDeletePlace(item.id, pi)}
-                                                                className="text-gray-400 hover:text-red-500 transition-colors"
-                                                            >
-                                                                <X className="w-3 h-3" />
-                                                            </button>
-                                                        </div>
-                                                        <input
-                                                            type="url"
-                                                            value={place.mapsUrl}
-                                                            onChange={e => handleUpdatePlace(item.id, pi, 'mapsUrl', e.target.value)}
-                                                            placeholder="Google Maps URL..."
-                                                            className="w-full text-xs border border-gray-200 rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white font-mono"
-                                                        />
-                                                        <div className="flex items-center gap-1">
-                                                            <Phone className="w-3 h-3 text-gray-400 flex-shrink-0" />
-                                                            <input
-                                                                type="tel"
-                                                                value={place.phone || ''}
-                                                                onChange={e => handleUpdatePlace(item.id, pi, 'phone', e.target.value)}
-                                                                placeholder={formLanguage === 'bg' ? 'Телефон...' : 'Phone...'}
-                                                                className="flex-1 text-xs border border-gray-200 rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white"
-                                                            />
-                                                        </div>
-                                                        {/* Working hours */}
-                                                        <div className="mt-1">
-                                                            <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">
-                                                                {formLanguage === 'bg' ? 'Работно време' : 'Working hours'}
-                                                            </p>
-                                                            <div className="flex flex-col gap-0.5">
-                                                                {DAYS.map(d => {
-                                                                    const slot = place.workingHours?.[d.key];
-                                                                    const isClosed = slot === null || slot === undefined;
-                                                                    return (
-                                                                        <div key={d.key} className="flex items-center gap-1">
-                                                                            <span className="text-[10px] w-7 text-gray-500 font-medium">{formLanguage === 'bg' ? d.bg : d.en}</span>
-                                                                            <input
-                                                                                type="checkbox"
-                                                                                checked={!isClosed}
-                                                                                onChange={e => handleUpdateWorkingHours(item.id, pi, d.key, e.target.checked ? { open: '09:00', close: '18:00' } : null)}
-                                                                                className="w-3 h-3"
-                                                                            />
-                                                                            {!isClosed && (
-                                                                                <>
-                                                                                    <input type="time" value={slot?.open || '09:00'} onChange={e => handleUpdateWorkingHours(item.id, pi, d.key, { open: e.target.value, close: slot?.close || '18:00' })} className="text-[10px] border border-gray-200 rounded px-1 py-0.5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-400 w-16" />
-                                                                                    <span className="text-[10px] text-gray-400">–</span>
-                                                                                    <input type="time" value={slot?.close || '18:00'} onChange={e => handleUpdateWorkingHours(item.id, pi, d.key, { open: slot?.open || '09:00', close: e.target.value })} className="text-[10px] border border-gray-200 rounded px-1 py-0.5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-400 w-16" />
-                                                                                </>
-                                                                            )}
-                                                                            {isClosed && <span className="text-[10px] text-gray-400">{formLanguage === 'bg' ? 'Затворено' : 'Closed'}</span>}
-                                                                        </div>
-                                                                    );
-                                                                })}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleAddPlace(item.id)}
-                                                    className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 mt-0.5 px-1"
-                                                >
-                                                    <Plus className="w-3 h-3" />
-                                                    {formLanguage === 'bg' ? 'Добави място' : 'Add place'}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </SortableBrochurePhoto>
-                                ))}
-                            </div>
-                        </SortableContext>
-                    </DndContext>
-                </>
-            ) : (
-                <div className="mt-6 border-2 border-dashed border-gray-200 rounded-xl p-10 text-center text-gray-400 text-sm">
-                    {formLanguage === 'bg'
-                        ? 'Няма качени изображения за BG версията'
-                        : 'No images uploaded for the EN version'}
+            {brochureItems.length === 0 && (
+                <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 text-sm">
+                    Все още няма добавени места. Кликни „Добави място".
                 </div>
             )}
-        </div>
-    );
-};
 
-const SortableBrochurePhoto: React.FC<{ id: string; children: React.ReactNode }> = ({ id, children }) => {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
-    const style: React.CSSProperties = useMemo(() => ({
-        transform: CSS.Transform.toString(transform),
-        transition,
-        cursor: 'grab',
-        opacity: isDragging ? 0.6 : 1,
-        zIndex: isDragging ? 50 : 'auto'
-    }), [transform, transition, isDragging]);
-
-    return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-            {children}
+            <Button variant="outline" onClick={addPlace} className="w-full flex items-center gap-2">
+                <Plus size={16} /> Добави място
+            </Button>
         </div>
     );
 };

@@ -6,12 +6,15 @@ type GalleryItem = {
     file?: File;
 };
 
-export type BrochureGalleryItem = {
+export type BrochurePlaceItem = {
     id: string;
-    url: string;
-    title?: string;
-    places?: { name: string; mapsUrl: string; phone?: string; workingHours?: { [day: string]: { open: string; close: string } | null } }[];
-    file?: File;
+    image?: string;    // uploaded URL
+    imageFile?: File;  // pending upload
+    name: { bg: string; en: string };
+    description?: { bg: string; en: string };
+    mapsUrl?: string;
+    phone?: string;
+    workingHours?: { [day: string]: { open: string; close: string } | null };
 };
 
 export interface TabProps {
@@ -28,8 +31,8 @@ export interface GalleryTabProps extends TabProps {
 }
 
 export interface BrochureTabProps extends TabProps {
-    brochureItems: { bg: BrochureGalleryItem[]; en: BrochureGalleryItem[] };
-    setBrochureItems: React.Dispatch<React.SetStateAction<{ bg: BrochureGalleryItem[]; en: BrochureGalleryItem[] }>>;
+    brochureItems: BrochurePlaceItem[];
+    setBrochureItems: React.Dispatch<React.SetStateAction<BrochurePlaceItem[]>>;
     slug?: string;
 }
 

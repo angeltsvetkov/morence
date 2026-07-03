@@ -123,8 +123,15 @@ export interface Apartment {
     surveyQuestions?: SurveyQuestion[];
     surveyLanguageMode?: 'multilingual' | 'bulgarian' | 'english';
     guestBrochure?: {
-        bg?: { url: string; title?: string; places?: { name: string; mapsUrl: string; phone?: string; workingHours?: { [day: string]: { open: string; close: string } | null } }[] }[];
-        en?: { url: string; title?: string; places?: { name: string; mapsUrl: string; phone?: string; workingHours?: { [day: string]: { open: string; close: string } | null } }[] }[];
+        places?: {
+            id: string;
+            image?: string;
+            name: { bg: string; en: string };
+            description?: { bg: string; en: string };
+            mapsUrl?: string;
+            phone?: string;
+            workingHours?: { [day: string]: { open: string; close: string } | null };
+        }[];
     };
     socialSharing?: {
         ogImage?: string;

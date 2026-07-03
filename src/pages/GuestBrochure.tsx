@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -8,19 +8,19 @@ import LanguageSwitcher from '../components/LanguageSwitcher';
 import { Apartment } from '../types';
 import { AlertTriangle, ImageOff, MapPin, Phone } from 'lucide-react';
 
-const slugifyTitle = (title: string, idx: number) =>
-    `section-${idx}-${title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')}`;
-
 const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 
 type PlaceStatus = 'open' | 'closing-soon' | 'closed' | 'unknown';
 
-function getPlaceStatus(workingHours?: { [day: string]: { open: string; close: string } | null }): PlaceStatus {
+function getPlaceStatus(
+    workingHours?: { [day: string]: { open: string; close: string } | null }
+): PlaceStatus {
     if (!workingHours) return 'unknown';
     const now = new Date();
     const dayKey = DAY_KEYS[now.getDay()];
     const slot = workingHours[dayKey];
-    if (!slot) return 'closed';
+    if (slot === undefined) return 'unknown';
+    if (slot === null) return 'closed';
     const [oh, om] = slot.open.split(':').map(Number);
     const [ch, cm] = slot.close.split(':').map(Number);
     const nowMins = now.getHours() * 60 + now.getMinutes();
@@ -31,19 +31,109 @@ function getPlaceStatus(workingHours?: { [day: string]: { open: string; close: s
     return 'open';
 }
 
+type Place = NonNullable<NonNullable<Apartment['guestBrochure']>['places']>[number];
+
+const PlaceCard: React.FC<{ place: Place; lang: 'bg' | 'en' }> = ({ place, lang }) => {
+    const status = getPlaceStatus(place.workingHours);
+    const name = place.name?.[lang] || place.name?.en || place.name?.bg || '';
+    const description = place.description?.[lang] || place.description?.en || place.description?.bg || '';
+
+    const bgCls =
+        status === 'open' ? 'bg-green-50 border-green-100' :
+        status === 'closing-soon' ? 'bg-amber-50 border-amber-100' :
+        status === 'closed' ? 'bg-red-50 border-red-100' :
+        'bg-white border-gray-100';
+
+    const statusLabel =
+        status === 'open' ? (lang === 'bg' ? 'отворено' : 'open') :
+        status === 'closing-soon' ? (lang === 'bg' ? 'затваря скоро' : 'closing soon') :
+        status === 'closed' ? (lang === 'bg' ? 'затворено' : 'closed') :
+        null;
+
+    return (
+        <div className={`rounded-2xl border overflow-hidden shadow-sm ${bgCls}`}>
+            {place.image && (
+                <div className="w-full aspect-video overflow-hidden bg-gray-100">
+                    <img
+                        src={place.image}
+                        alt={name}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                    />
+                </div>
+            )}
+            {!place.image && (
+                <div className="w-full h-24 bg-gray-100 flex items-center justify-center">
+                    <MapPin className="w-8 h-8 text-gray-300" />
+                </div>
+            )}
+            <div className="px-4 py-3 flex flex-col gap-1">
+                <div className="flex items-start justify-between gap-2">
+                    <span className="text-sm font-semibold text-gray-900 leading-snug">{name}</span>
+                    {statusLabel && (
+                        <span className="text-[10px] text-gray-500 shrink-0 mt-0.5">{statusLabel}</span>
+                    )}
+                </div>
+                {description && (
+                    <p className="text-xs text-gray-500 leading-relaxed">{description}</p>
+                )}
+                {(place.mapsUrl || place.phone) && (
+                    <div className="flex items-center gap-2 mt-2">
+                        {place.mapsUrl && (
+                            <a
+                                href={place.mapsUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-11 h-11 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:bg-red-50 hover:border-red-300 active:scale-95 transition-all"
+                                aria-label="Open in Google Maps"
+                            >
+                                <MapPin className="w-5 h-5 text-red-500" />
+                            </a>
+                        )}
+                        {place.phone && (
+                            <a
+                                href={`tel:${place.phone}`}
+                                className="w-11 h-11 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:bg-blue-50 hover:border-blue-300 active:scale-95 transition-all"
+                                aria-label={`Call ${place.phone}`}
+                            >
+                                <Phone className="w-5 h-5 text-blue-500" />
+                            </a>
+                        )}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+// ─── header ─────────────────────────────────────────────────────────────────
+const BrochureHeader: React.FC = () => (
+    <header className="bg-white border-b border-gray-100 sticky top-0 z-20">
+        <div className="w-[95%] mx-auto py-3 flex items-center justify-between">
+            <div className="bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600 px-3 py-1.5 rounded-full flex items-center gap-1">
+                <span className="text-white text-xs font-bold tracking-wider uppercase">morence</span>
+                <span className="text-blue-100 text-xs font-light">.top</span>
+            </div>
+            <LanguageSwitcher />
+        </div>
+    </header>
+);
+
+// ─── main ────────────────────────────────────────────────────────────────────
 const GuestBrochure: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const { language } = useLanguage();
     const [apartment, setApartment] = useState<Apartment | null>(null);
     const [loading, setLoading] = useState(true);
     const [notFound, setNotFound] = useState(false);
+    const carouselRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const fetchApartment = async () => {
             if (!slug) return;
             try {
-                const querySnapshot = await getDocs(collection(db, 'apartments'));
-                const found = querySnapshot.docs
+                const snap = await getDocs(collection(db, 'apartments'));
+                const found = snap.docs
                     .map(d => ({ id: d.id, ...d.data() } as Apartment))
                     .find(a => a.slug === slug);
                 if (found) setApartment(found);
@@ -59,24 +149,20 @@ const GuestBrochure: React.FC = () => {
     }, [slug]);
 
     const lang = (language as string) === 'bg' ? 'bg' : 'en';
-    const images: { url: string; title?: string }[] =
-        (apartment?.guestBrochure?.[lang] && apartment.guestBrochure[lang]!.length > 0)
-            ? apartment.guestBrochure[lang]!
-            : (lang === 'bg' ? apartment?.guestBrochure?.en : apartment?.guestBrochure?.bg) || [];
+    const places = apartment?.guestBrochure?.places || [];
 
-    const apartmentName = apartment?.name?.[lang] || apartment?.name?.en || apartment?.name?.bg || '';
-
-    // Only images that have a title are shown in the table of contents
-    const tocItems = images
-        .map((item, idx) => ({ ...item, idx }))
-        .filter(item => !!item.title);
-
-    const scrollTo = (id: string) => {
-        const el = document.getElementById(id);
+    const scrollToPlace = (idx: number) => {
+        const el = document.getElementById(`place-${idx}`);
         if (!el) return;
-        const headerHeight = 80;
-        const top = el.getBoundingClientRect().top + window.scrollY - headerHeight;
+        const top = el.getBoundingClientRect().top + window.scrollY - 110;
         window.scrollTo({ top, behavior: 'smooth' });
+    };
+
+    const scrollCarouselTo = (idx: number) => {
+        if (!carouselRef.current) return;
+        const btns = carouselRef.current.querySelectorAll('[data-carousel-btn]');
+        const btn = btns[idx] as HTMLElement;
+        if (btn) btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     };
 
     if (loading) {
@@ -100,10 +186,10 @@ const GuestBrochure: React.FC = () => {
         );
     }
 
-    if (images.length === 0) {
+    if (places.length === 0) {
         return (
             <div className="min-h-screen flex flex-col bg-white">
-                <BrochureHeader apartmentName={apartmentName} hideName={apartment.hideName} lang={lang} />
+                <BrochureHeader />
                 <div className="flex-grow flex items-center justify-center">
                     <div className="text-center text-gray-400">
                         <ImageOff className="w-12 h-12 mx-auto mb-3" />
@@ -115,132 +201,61 @@ const GuestBrochure: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-white">
-            <BrochureHeader apartmentName={apartmentName} hideName={apartment.hideName} lang={lang} />
+        <div className="min-h-screen bg-gray-50">
+            <BrochureHeader />
 
-            {/* TOC carousel — sticky below header, always visible */}
-            {tocItems.length > 0 && (
-                <div className="sticky top-[56px] z-10 bg-white border-b border-gray-100 py-3">
-                    <div className="flex gap-3 overflow-x-auto scrollbar-hide px-[2.5%] snap-x snap-mandatory">
-                        {tocItems.map(item => (
+            {/* sticky TOC carousel */}
+            <div className="sticky top-[56px] z-10 bg-white border-b border-gray-100 py-3 shadow-sm">
+                <div
+                    ref={carouselRef}
+                    className="flex gap-3 overflow-x-auto scrollbar-hide px-[2.5%] snap-x snap-mandatory"
+                >
+                    {places.map((place, idx) => {
+                        const name = place.name?.[lang] || place.name?.en || place.name?.bg || '';
+                        return (
                             <button
-                                key={item.idx}
+                                key={idx}
+                                data-carousel-btn
                                 type="button"
-                                onClick={() => scrollTo(slugifyTitle(item.title!, item.idx))}
-                                className="group flex-shrink-0 snap-start w-36 rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-200 active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white text-left"
+                                onClick={() => { scrollToPlace(idx); scrollCarouselTo(idx); }}
+                                className="group flex-shrink-0 snap-start w-28 rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-200 active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white text-left"
                             >
                                 <div className="aspect-video w-full overflow-hidden bg-gray-100">
-                                    <img
-                                        src={item.url}
-                                        alt={item.title}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                        loading="lazy"
-                                    />
+                                    {place.image ? (
+                                        <img
+                                            src={place.image}
+                                            alt={name}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                            loading="lazy"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center">
+                                            <MapPin className="w-5 h-5 text-gray-300" />
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="px-2 py-1.5">
-                                    <p className="text-xs font-semibold text-gray-800 leading-snug line-clamp-2">{item.title}</p>
+                                    <p className="text-xs font-semibold text-gray-800 leading-snug line-clamp-2">{name}</p>
                                 </div>
                             </button>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            <main className="w-[95%] mx-auto py-6">
-                <div className="space-y-3">
-                    {images.map((item, idx) => {
-                        const sectionId = item.title ? slugifyTitle(item.title, idx) : undefined;
-                        return (
-                            <div key={idx} id={sectionId} className="flex flex-col scroll-mt-20">
-                                {item.title && (
-                                    <h2 className="text-base font-semibold text-gray-800 px-4 sm:px-0 pt-4 pb-2">
-                                        {item.title}
-                                    </h2>
-                                )}
-                                <img
-                                    src={item.url}
-                                    alt={item.title || `${lang === 'bg' ? 'Брошура' : 'Brochure'} ${idx + 1}`}
-                                    className="w-full block rounded-none sm:rounded-xl shadow-sm"
-                                    loading={idx === 0 ? 'eager' : 'lazy'}
-                                />
-                                {item.places && item.places.length > 0 && (
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 px-1 pt-3 pb-2">
-                                        {item.places.map((place, pi) => {
-                                            const status = getPlaceStatus(place.workingHours);
-                                            const bgCls =
-                                                status === 'open' ? 'bg-green-50 border-green-100' :
-                                                status === 'closing-soon' ? 'bg-amber-50 border-amber-100' :
-                                                status === 'closed' ? 'bg-red-50 border-red-100' :
-                                                'bg-gray-50 border-gray-100';
-                                            const statusLabel =
-                                                status === 'open' ? (lang === 'bg' ? 'отворено' : 'open') :
-                                                status === 'closing-soon' ? (lang === 'bg' ? 'затваря скоро' : 'closing soon') :
-                                                status === 'closed' ? (lang === 'bg' ? 'затворено' : 'closed') :
-                                                null;
-                                            return (
-                                                <div
-                                                    key={pi}
-                                                    className={`flex flex-col items-center justify-center gap-2 px-3 py-4 rounded-2xl border text-center ${bgCls}`}
-                                                >
-                                                    <span className="text-xs font-semibold text-gray-800 leading-snug line-clamp-2">
-                                                        {place.name}
-                                                    </span>
-                                                    {statusLabel && (
-                                                        <span className="text-[10px] text-gray-500 -mt-1">{statusLabel}</span>
-                                                    )}
-                                                    <div className="flex items-center gap-2">
-                                                        {place.mapsUrl && (
-                                                            <a
-                                                                href={place.mapsUrl}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:bg-red-50 hover:border-red-300 active:scale-95 transition-all"
-                                                                aria-label="Open in Google Maps"
-                                                            >
-                                                                <MapPin className="w-6 h-6 text-red-500" />
-                                                            </a>
-                                                        )}
-                                                        {place.phone && (
-                                                            <a
-                                                                href={`tel:${place.phone}`}
-                                                                className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:bg-blue-50 hover:border-blue-300 active:scale-95 transition-all"
-                                                                aria-label={`Call ${place.phone}`}
-                                                            >
-                                                                <Phone className="w-6 h-6 text-blue-500" />
-                                                            </a>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </div>
                         );
                     })}
                 </div>
+            </div>
 
-                <p className="text-center text-xs text-gray-300 pb-8 pt-6">morence.top</p>
+            {/* places */}
+            <main className="w-[95%] mx-auto py-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {places.map((place, idx) => (
+                        <div key={idx} id={`place-${idx}`} className="scroll-mt-28">
+                            <PlaceCard place={place} lang={lang} />
+                        </div>
+                    ))}
+                </div>
+                <p className="text-center text-xs text-gray-300 pb-8 pt-8">morence.top</p>
             </main>
         </div>
     );
 };
 
-const BrochureHeader: React.FC<{ apartmentName: string; hideName?: boolean; lang: 'bg' | 'en' }> = ({
-    apartmentName, hideName, lang
-}) => (
-    <header className="bg-white border-b border-gray-100 sticky top-0 z-10">
-        <div className="w-[95%] mx-auto py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-                <div className="bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600 px-3 py-1.5 rounded-full flex items-center gap-1">
-                    <span className="text-white text-xs font-bold tracking-wider uppercase">morence</span>
-                    <span className="text-blue-100 text-xs font-light">.top</span>
-                </div>
-            </div>
-            <LanguageSwitcher />
-        </div>
-    </header>
-);
-
 export default GuestBrochure;
-
