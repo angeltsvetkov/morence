@@ -59,12 +59,12 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, onChange, onDelete }) => {
             const lines = text.split(/\r?\n/).filter(l => l.trim());
             const imported = lines
                 .map(line => {
-                    // support comma or semicolon separators; handle quoted fields
+                    // format: name_bg, name_en, quantity/duration, price (EUR)
                     const cols = line.split(/,|;/).map(c => c.trim().replace(/^"|"$/g, ''));
-                    if (cols.length < 3) return null;
-                    const [name, unit, price] = cols;
+                    if (cols.length < 4) return null;
+                    const [nameBg, nameEn, unit, price] = cols;
                     return {
-                        name: { bg: name, en: name },
+                        name: { bg: nameBg, en: nameEn },
                         price,
                         ...(unit ? { unit: { bg: unit, en: unit } } : {}),
                     };
@@ -398,7 +398,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, onChange, onDelete }) => {
                                 onClick={() => csvInputRef.current?.click()}
                                 className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
                                 onPointerDown={e => e.stopPropagation()}
-                                title="CSV формат: Продукт, Количество/Времетраене, Цена (EUR)"
+                                title="CSV формат: Продукт (BG), Продукт (EN), Количество/Времетраене, Цена (EUR)"
                             >
                                 <Upload size={13} /> Импорт CSV
                             </button>
