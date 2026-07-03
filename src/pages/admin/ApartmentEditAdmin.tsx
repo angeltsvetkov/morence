@@ -641,8 +641,28 @@ const ApartmentEditAdmin: React.FC = () => {
             return;
         }
 
+        const cleanPlace = (p: typeof brochureItems[number]) => {
+            const obj: Record<string, any> = {
+                id: p.id,
+                name: { bg: p.name.bg || '', en: p.name.en || '' },
+            };
+            if (p.image) obj.image = p.image;
+            if (p.description?.bg || p.description?.en) obj.description = { bg: p.description?.bg || '', en: p.description?.en || '' };
+            if (p.mapsUrl) obj.mapsUrl = p.mapsUrl;
+            if (p.phone) obj.phone = p.phone;
+            if (p.workingHours) {
+                // strip undefined entries
+                const wh: Record<string, { open: string; close: string } | null> = {};
+                Object.entries(p.workingHours).forEach(([day, val]) => {
+                    if (val !== undefined) wh[day] = val;
+                });
+                if (Object.keys(wh).length > 0) obj.workingHours = wh;
+            }
+            return obj;
+        };
+
         apartmentData.guestBrochure = {
-            places: finalBrochurePlaces.map(({ imageFile: _f, ...rest }) => rest)
+            places: finalBrochurePlaces.map(cleanPlace)
         };
 
         delete apartmentData.id;
