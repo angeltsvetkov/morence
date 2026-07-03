@@ -3,7 +3,7 @@ import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { BrochureTabProps, BrochurePlaceItem } from './types';
 import { useAdminLanguage } from '../../../hooks/useAdminLanguage';
-import { Share2, Check, Trash2, Plus, Phone, MapPin, Clock, ChevronDown, ChevronUp, GripVertical, Tag } from 'lucide-react';
+import { Share2, Check, Trash2, Plus, Phone, MapPin, Clock, ChevronDown, ChevronUp, GripVertical, Tag, Upload } from 'lucide-react';
 import {
     DndContext,
     closestCenter,
@@ -50,6 +50,32 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, onChange, onDelete }) => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [conversionStatus, setConversionStatus] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const csvInputRef = useRef<HTMLInputElement>(null);
+
+    const handleCsvImport = (file: File) => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const text = e.target?.result as string;
+            const lines = text.split(/\r?\n/).filter(l => l.trim());
+            const imported = lines
+                .map(line => {
+                    // support comma or semicolon separators; handle quoted fields
+                    const cols = line.split(/,|;/).map(c => c.trim().replace(/^"|"$/g, ''));
+                    if (cols.length < 3) return null;
+                    const [name, unit, price] = cols;
+                    return {
+                        name: { bg: name, en: name },
+                        price,
+                        ...(unit ? { unit: { bg: unit, en: unit } } : {}),
+                    };
+                })
+                .filter(Boolean) as { name: { bg: string; en: string }; price: string; unit?: { bg: string; en: string } }[];
+            if (imported.length > 0) {
+                onChange({ ...place, priceList: [...(place.priceList || []), ...imported] });
+            }
+        };
+        reader.readAsText(file);
+    };
 
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: place.id });
     const style: React.CSSProperties = {
@@ -357,16 +383,37 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, onChange, onDelete }) => {
                                 </div>
                             ))}
                         </div>
-                        <button
-                            onClick={() => {
-                                const list = [...(place.priceList || []), { name: { bg: '', en: '' }, price: '' }];
-                                onChange({ ...place, priceList: list });
-                            }}
-                            className="mt-2 flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700"
-                            onPointerDown={e => e.stopPropagation()}
-                        >
-                            <Plus size={13} /> Добави ред
-                        </button>
+                        <div className="mt-2 flex items-center gap-3">
+                            <button
+                                onClick={() => {
+                                    const list = [...(place.priceList || []), { name: { bg: '', en: '' }, price: '' }];
+                                    onChange({ ...place, priceList: list });
+                                }}
+                                className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700"
+                                onPointerDown={e => e.stopPropagation()}
+                            >
+                                <Plus size={13} /> Добави ред
+                            </button>
+                            <button
+                                onClick={() => csvInputRef.current?.click()}
+                                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
+                                onPointerDown={e => e.stopPropagation()}
+                                title="CSV формат: Продукт, Количество/Времетраене, Цена (EUR)"
+                            >
+                                <Upload size={13} /> Импорт CSV
+                            </button>
+                            <input
+                                ref={csvInputRef}
+                                type="file"
+                                accept=".csv,text/csv"
+                                className="hidden"
+                                onChange={e => {
+                                    const f = e.target.files?.[0];
+                                    if (f) handleCsvImport(f);
+                                    e.target.value = '';
+                                }}
+                            />
+                        </div>
                     </div>
                 </div>
             )}
