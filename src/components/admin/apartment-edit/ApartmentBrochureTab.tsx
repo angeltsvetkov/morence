@@ -335,7 +335,7 @@ const ApartmentBrochureTab: React.FC<BrochureTabProps> = ({
         setBrochureItems(prev => prev.filter(p => p.id !== id));
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 pb-6">
             {/* share link */}
             <div className="flex items-center justify-between">
                 <h3 className="text-base font-semibold text-gray-800">Места в брошурата</h3>
