@@ -254,9 +254,6 @@ const GuestBrochure: React.FC = () => {
 
             {/* ── featured places grid ── */}
             <main className="px-5 pb-10">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">
-                    {lang === 'bg' ? 'Препоръчани места' : 'Featured Places'}
-                </h2>
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3">
                     {places.map((place, idx) => (
                         <div key={idx} id={`place-${idx}`} className="scroll-mt-36">
