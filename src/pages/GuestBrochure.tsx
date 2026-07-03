@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -33,70 +33,82 @@ function getPlaceStatus(
 
 type Place = NonNullable<NonNullable<Apartment['guestBrochure']>['places']>[number];
 
+// ─── featured place card ─────────────────────────────────────────────────────
 const PlaceCard: React.FC<{ place: Place; lang: 'bg' | 'en' }> = ({ place, lang }) => {
     const status = getPlaceStatus(place.workingHours);
     const name = place.name?.[lang] || place.name?.en || place.name?.bg || '';
     const description = place.description?.[lang] || place.description?.en || place.description?.bg || '';
 
-    const bgCls =
-        status === 'open' ? 'bg-green-50 border-green-100' :
-        status === 'closing-soon' ? 'bg-amber-50 border-amber-100' :
-        status === 'closed' ? 'bg-red-50 border-red-100' :
-        'bg-white border-gray-100';
+    const statusColor =
+        status === 'open' ? 'text-green-600' :
+        status === 'closing-soon' ? 'text-amber-500' :
+        status === 'closed' ? 'text-red-500' :
+        'text-gray-400';
 
     const statusLabel =
-        status === 'open' ? (lang === 'bg' ? 'отворено' : 'open') :
-        status === 'closing-soon' ? (lang === 'bg' ? 'затваря скоро' : 'closing soon') :
-        status === 'closed' ? (lang === 'bg' ? 'затворено' : 'closed') :
+        status === 'open' ? (lang === 'bg' ? 'Отворено' : 'Open') :
+        status === 'closing-soon' ? (lang === 'bg' ? 'Затваря скоро' : 'Closing soon') :
+        status === 'closed' ? (lang === 'bg' ? 'Затворено' : 'Closed') :
         null;
 
     return (
-        <div className={`rounded-2xl border overflow-hidden shadow-sm ${bgCls}`}>
-            {place.image && (
-                <div className="w-full aspect-video overflow-hidden bg-gray-100">
+        <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 flex flex-col">
+            {/* image */}
+            <div className="w-full aspect-[4/3] bg-gray-100 overflow-hidden flex-shrink-0">
+                {place.image ? (
                     <img
                         src={place.image}
                         alt={name}
                         className="w-full h-full object-cover"
                         loading="lazy"
                     />
-                </div>
-            )}
-            {!place.image && (
-                <div className="w-full h-24 bg-gray-100 flex items-center justify-center">
-                    <MapPin className="w-8 h-8 text-gray-300" />
-                </div>
-            )}
-            <div className="px-4 py-3 flex flex-col gap-1">
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                        <MapPin className="w-8 h-8 text-gray-300" />
+                    </div>
+                )}
+            </div>
+
+            {/* card body */}
+            <div className="p-4 flex flex-col gap-2 flex-1">
                 <div className="flex items-start justify-between gap-2">
-                    <span className="text-sm font-semibold text-gray-900 leading-snug">{name}</span>
+                    <h3 className="text-sm font-bold text-gray-900 leading-snug">{name}</h3>
                     {statusLabel && (
-                        <span className="text-[10px] text-gray-500 shrink-0 mt-0.5">{statusLabel}</span>
+                        <span className={`text-[11px] font-semibold shrink-0 mt-0.5 ${statusColor}`}>
+                            {statusLabel}
+                        </span>
                     )}
                 </div>
+
                 {description && (
-                    <p className="text-xs text-gray-500 leading-relaxed">{description}</p>
+                    <p className="text-xs text-gray-500 leading-relaxed line-clamp-3">{description}</p>
                 )}
+
                 {(place.mapsUrl || place.phone) && (
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="flex items-center gap-3 mt-auto pt-2">
                         {place.mapsUrl && (
                             <a
                                 href={place.mapsUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="w-11 h-11 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:bg-red-50 hover:border-red-300 active:scale-95 transition-all"
+                                className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-red-500 transition-colors"
                                 aria-label="Open in Google Maps"
                             >
-                                <MapPin className="w-5 h-5 text-red-500" />
+                                <span className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center hover:bg-red-50 hover:border-red-200 transition-colors">
+                                    <MapPin className="w-4 h-4 text-red-400" />
+                                </span>
                             </a>
                         )}
                         {place.phone && (
                             <a
                                 href={`tel:${place.phone}`}
-                                className="w-11 h-11 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm hover:bg-blue-50 hover:border-blue-300 active:scale-95 transition-all"
+                                className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-blue-500 transition-colors"
                                 aria-label={`Call ${place.phone}`}
                             >
-                                <Phone className="w-5 h-5 text-blue-500" />
+                                <span className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center hover:bg-blue-50 hover:border-blue-200 transition-colors">
+                                    <Phone className="w-4 h-4 text-blue-400" />
+                                </span>
+                                <span className="text-xs text-gray-500">{place.phone}</span>
                             </a>
                         )}
                     </div>
@@ -106,10 +118,10 @@ const PlaceCard: React.FC<{ place: Place; lang: 'bg' | 'en' }> = ({ place, lang 
     );
 };
 
-// ─── header ─────────────────────────────────────────────────────────────────
+// ─── header ──────────────────────────────────────────────────────────────────
 const BrochureHeader: React.FC = () => (
-    <header className="bg-white border-b border-gray-100 sticky top-0 z-20">
-        <div className="w-[95%] mx-auto py-3 flex items-center justify-between">
+    <header className="bg-white sticky top-0 z-20 border-b border-gray-100">
+        <div className="px-5 py-4 flex items-center justify-between">
             <div className="bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600 px-3 py-1.5 rounded-full flex items-center gap-1">
                 <span className="text-white text-xs font-bold tracking-wider uppercase">morence</span>
                 <span className="text-blue-100 text-xs font-light">.top</span>
@@ -119,7 +131,7 @@ const BrochureHeader: React.FC = () => (
     </header>
 );
 
-// ─── main ────────────────────────────────────────────────────────────────────
+// ─── main ─────────────────────────────────────────────────────────────────────
 const GuestBrochure: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const { language } = useLanguage();
@@ -138,8 +150,7 @@ const GuestBrochure: React.FC = () => {
                     .find(a => a.slug === slug);
                 if (found) setApartment(found);
                 else setNotFound(true);
-            } catch (e) {
-                console.error('Error fetching apartment for brochure:', e);
+            } catch {
                 setNotFound(true);
             } finally {
                 setLoading(false);
@@ -154,15 +165,9 @@ const GuestBrochure: React.FC = () => {
     const scrollToPlace = (idx: number) => {
         const el = document.getElementById(`place-${idx}`);
         if (!el) return;
-        const top = el.getBoundingClientRect().top + window.scrollY - 110;
+        const headerHeight = 130; // header + carousel
+        const top = el.getBoundingClientRect().top + window.scrollY - headerHeight;
         window.scrollTo({ top, behavior: 'smooth' });
-    };
-
-    const scrollCarouselTo = (idx: number) => {
-        if (!carouselRef.current) return;
-        const btns = carouselRef.current.querySelectorAll('[data-carousel-btn]');
-        const btn = btns[idx] as HTMLElement;
-        if (btn) btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     };
 
     if (loading) {
@@ -201,41 +206,45 @@ const GuestBrochure: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-[#f8f9fb]">
             <BrochureHeader />
 
-            {/* sticky TOC carousel */}
-            <div className="sticky top-[56px] z-10 bg-white border-b border-gray-100 py-3 shadow-sm">
+            {/* ── horizontal "explore" carousel (sticky) ── */}
+            <div className="sticky top-[57px] z-10 bg-[#f8f9fb] pt-5 pb-3">
+                <h2 className="px-5 text-xl font-bold text-gray-900 mb-3">
+                    {lang === 'bg' ? 'Разгледай наблизо' : 'Explore nearby'}
+                </h2>
                 <div
                     ref={carouselRef}
-                    className="flex gap-3 overflow-x-auto scrollbar-hide px-[2.5%] snap-x snap-mandatory"
+                    className="flex gap-3 overflow-x-auto scrollbar-hide px-5 snap-x snap-mandatory"
                 >
                     {places.map((place, idx) => {
                         const name = place.name?.[lang] || place.name?.en || place.name?.bg || '';
                         return (
                             <button
                                 key={idx}
-                                data-carousel-btn
                                 type="button"
-                                onClick={() => { scrollToPlace(idx); scrollCarouselTo(idx); }}
-                                className="group flex-shrink-0 snap-start w-28 rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-200 active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white text-left"
+                                onClick={() => scrollToPlace(idx)}
+                                className="group relative flex-shrink-0 snap-start w-40 h-28 rounded-2xl overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-400 active:scale-95 transition-transform"
                             >
-                                <div className="aspect-video w-full overflow-hidden bg-gray-100">
-                                    {place.image ? (
-                                        <img
-                                            src={place.image}
-                                            alt={name}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                            loading="lazy"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center">
-                                            <MapPin className="w-5 h-5 text-gray-300" />
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="px-2 py-1.5">
-                                    <p className="text-xs font-semibold text-gray-800 leading-snug line-clamp-2">{name}</p>
+                                {/* background image */}
+                                {place.image ? (
+                                    <img
+                                        src={place.image}
+                                        alt={name}
+                                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                        loading="lazy"
+                                    />
+                                ) : (
+                                    <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-500" />
+                                )}
+                                {/* dark gradient overlay */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                                {/* text */}
+                                <div className="absolute bottom-0 left-0 right-0 px-3 pb-3">
+                                    <p className="text-white text-xs font-bold leading-snug line-clamp-2 drop-shadow-sm">
+                                        {name}
+                                    </p>
                                 </div>
                             </button>
                         );
@@ -243,17 +252,21 @@ const GuestBrochure: React.FC = () => {
                 </div>
             </div>
 
-            {/* places */}
-            <main className="w-[95%] mx-auto py-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* ── featured places grid ── */}
+            <main className="px-5 pb-10">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">
+                    {lang === 'bg' ? 'Препоръчани места' : 'Featured Places'}
+                </h2>
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3">
                     {places.map((place, idx) => (
-                        <div key={idx} id={`place-${idx}`} className="scroll-mt-28">
+                        <div key={idx} id={`place-${idx}`} className="scroll-mt-36">
                             <PlaceCard place={place} lang={lang} />
                         </div>
                     ))}
                 </div>
-                <p className="text-center text-xs text-gray-300 pb-8 pt-8">morence.top</p>
             </main>
+
+            <p className="text-center text-xs text-gray-300 pb-8">morence.top</p>
         </div>
     );
 };
