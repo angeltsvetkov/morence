@@ -9,8 +9,7 @@ type GalleryItem = {
 export type BrochureGroup = {
     id: string;
     name: { bg: string; en: string };
-    image?: string;
-    imageFile?: File;
+    icon?: string;
 };
 
 export type BrochurePlaceItem = {

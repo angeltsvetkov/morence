@@ -126,7 +126,7 @@ export interface Apartment {
         groups?: {
             id: string;
             name: { bg: string; en: string };
-            image?: string;
+            icon?: string;
         }[];
         places?: {
             id: string;

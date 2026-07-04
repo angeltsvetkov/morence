@@ -645,26 +645,12 @@ const ApartmentEditAdmin: React.FC = () => {
             return;
         }
 
-        // Upload brochure group images
-        const finalBrochureGroups: typeof brochureGroups = [];
-        try {
-            await Promise.all(brochureGroups.map(async (group, idx) => {
-                let imageUrl = group.image;
-                if (group.imageFile) {
-                    const fileName = `${Date.now()}_${group.imageFile.name}`;
-                    const storageRef = ref(storage, `apartments/${apartment.id}/brochure/groups/${group.id}/${fileName}`);
-                    await uploadBytes(storageRef, group.imageFile);
-                    imageUrl = await getDownloadURL(storageRef);
-                }
-                // only persist blob-preview URLs that came from imageFile; real URLs pass through
-                const finalImage = group.imageFile ? imageUrl : (imageUrl?.startsWith('blob:') ? undefined : imageUrl);
-                finalBrochureGroups[idx] = { id: group.id, name: group.name, ...(finalImage ? { image: finalImage } : {}) };
-            }));
-        } catch (error) {
-            console.error('Error uploading brochure group images:', error);
-            setLoading(false);
-            return;
-        }
+        // Build final brochure groups (icon only, no image upload)
+        const finalBrochureGroups = brochureGroups.map(g => ({
+            id: g.id,
+            name: g.name,
+            ...(g.icon ? { icon: g.icon } : {}),
+        }));
 
         const cleanPlace = (p: typeof brochureItems[number]) => {
             const obj: Record<string, any> = {

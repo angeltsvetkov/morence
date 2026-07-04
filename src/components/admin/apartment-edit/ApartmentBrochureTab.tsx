@@ -3,7 +3,10 @@ import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { BrochureTabProps, BrochurePlaceItem, BrochureGroup } from './types';
 import { useAdminLanguage } from '../../../hooks/useAdminLanguage';
-import { Share2, Check, Trash2, Plus, Phone, MapPin, Clock, ChevronDown, ChevronUp, GripVertical, Tag, Upload, FolderOpen, X, Pencil } from 'lucide-react';
+import { Share2, Check, Trash2, Plus, Phone, MapPin, Clock, ChevronDown, ChevronUp, GripVertical, Tag, Upload, FolderOpen, X, Pencil,
+    Utensils, Coffee, Beer, ShoppingBag, ShoppingCart, Landmark, TreePine, Mountain, Waves, Umbrella, Dumbbell, Bike,
+    Car, Bus, Plane, Music, Star, Heart, Camera, Building2, Sun, Moon, Ticket, BookOpen, Leaf, Fish, Baby, Palette, Flame
+} from 'lucide-react';
 import {
     DndContext,
     closestCenter,
@@ -27,6 +30,49 @@ const DAY_LABELS: Record<string, string> = {
     mon: 'Пон', tue: 'Вт', wed: 'Ср', thu: 'Чет', fri: 'Пет', sat: 'Съб', sun: 'Нед'
 };
 
+// ─── icon registry for groups ─────────────────────────────────────────────────
+type IconEntry = { name: string; label: string; component: React.FC<{ size?: number; className?: string }> };
+const GROUP_ICONS: IconEntry[] = [
+    { name: 'Utensils',   label: 'Ресторант',   component: Utensils },
+    { name: 'Coffee',     label: 'Кафе',         component: Coffee },
+    { name: 'Beer',       label: 'Бар',           component: Beer },
+    { name: 'Fish',       label: 'Морска храна', component: Fish },
+    { name: 'ShoppingBag',label: 'Пазаруване',   component: ShoppingBag },
+    { name: 'ShoppingCart',label:'Супермаркет',  component: ShoppingCart },
+    { name: 'Landmark',   label: 'Забележителности', component: Landmark },
+    { name: 'Building2',  label: 'Градски',       component: Building2 },
+    { name: 'BookOpen',   label: 'Култура',       component: BookOpen },
+    { name: 'Palette',    label: 'Изкуство',      component: Palette },
+    { name: 'TreePine',   label: 'Природа',       component: TreePine },
+    { name: 'Mountain',   label: 'Планини',       component: Mountain },
+    { name: 'Waves',      label: 'Плаж / море',   component: Waves },
+    { name: 'Umbrella',   label: 'Плаж',          component: Umbrella },
+    { name: 'Leaf',       label: 'Еко',           component: Leaf },
+    { name: 'Sun',        label: 'На открито',    component: Sun },
+    { name: 'Dumbbell',   label: 'Спорт',         component: Dumbbell },
+    { name: 'Bike',       label: 'Колоездене',    component: Bike },
+    { name: 'Car',        label: 'Транспорт',     component: Car },
+    { name: 'Bus',        label: 'Автобус',       component: Bus },
+    { name: 'Plane',      label: 'Летище',        component: Plane },
+    { name: 'Music',      label: 'Нощен живот',   component: Music },
+    { name: 'Moon',       label: 'Вечер',         component: Moon },
+    { name: 'Ticket',     label: 'Събития',       component: Ticket },
+    { name: 'Camera',     label: 'Фото точки',    component: Camera },
+    { name: 'Star',       label: 'Препоръчани',   component: Star },
+    { name: 'Heart',      label: 'Любими',        component: Heart },
+    { name: 'Flame',      label: 'Популярни',     component: Flame },
+    { name: 'Baby',       label: 'Деца',          component: Baby },
+    { name: 'MapPin',     label: 'Общо',          component: MapPin },
+];
+
+const ICON_MAP: Record<string, React.FC<{ size?: number; className?: string }>> =
+    Object.fromEntries(GROUP_ICONS.map(i => [i.name, i.component]));
+
+function GroupIcon({ name, size = 20, className }: { name?: string; size?: number; className?: string }) {
+    const Comp = name ? ICON_MAP[name] : null;
+    return Comp ? <Comp size={size} className={className} /> : <MapPin size={size} className={className} />;
+}
+
 // ─── group card ──────────────────────────────────────────────────────────────
 interface GroupCardProps {
     group: BrochureGroup;
@@ -36,49 +82,41 @@ interface GroupCardProps {
 
 const GroupCard: React.FC<GroupCardProps> = ({ group, onChange, onDelete }) => {
     const [editing, setEditing] = useState(false);
-    const [isProcessing, setIsProcessing] = useState(false);
-    const imgInputRef = useRef<HTMLInputElement>(null);
-
-    const handleImageSelect = async (files: FileList | null) => {
-        if (!files || files.length === 0) return;
-        const file = files[0];
-        if (!isSupportedImageFile(file) && !isHEICFile(file)) {
-            alert('Unsupported image format');
-            return;
-        }
-        setIsProcessing(true);
-        try {
-            const [processed] = await processImageFiles([file]);
-            if (processed) {
-                const preview = URL.createObjectURL(processed);
-                onChange({ ...group, image: preview, imageFile: processed });
-            }
-        } finally {
-            setIsProcessing(false);
-        }
-    };
-
-    const previewSrc = group.image || '';
+    const [pickingIcon, setPickingIcon] = useState(false);
 
     return (
-        <div className="relative bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden w-36 flex-shrink-0">
-            {/* image area */}
-            <div className="relative h-20 bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-                {previewSrc ? (
-                    <img src={previewSrc} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                ) : (
-                    <FolderOpen size={24} className="text-blue-300" />
-                )}
-                <button
-                    className="absolute top-1 right-1 bg-white/80 hover:bg-white rounded-full p-0.5 shadow"
-                    onClick={() => imgInputRef.current?.click()}
-                    title="Смени снимка"
-                >
-                    {isProcessing ? <span className="text-xs">…</span> : <Upload size={11} className="text-gray-600" />}
-                </button>
-                <input ref={imgInputRef} type="file" accept={getSupportedImageTypes()} className="hidden"
-                    onChange={e => handleImageSelect(e.target.files)} />
-            </div>
+        <div className="relative bg-white border border-gray-200 rounded-xl shadow-sm w-36 flex-shrink-0">
+            {/* icon area */}
+            <button
+                className="w-full h-20 bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center justify-center gap-1 hover:from-blue-100 hover:to-indigo-200 transition-colors rounded-t-xl"
+                onClick={() => setPickingIcon(v => !v)}
+                title="Избери икона"
+            >
+                <GroupIcon name={group.icon} size={28} className="text-blue-500" />
+                <span className="text-[9px] text-blue-400 font-medium">Смени икона</span>
+            </button>
+
+            {/* icon picker dropdown */}
+            {pickingIcon && (
+                <div className="absolute top-20 left-0 w-64 bg-white border border-gray-200 rounded-xl shadow-xl z-50 p-2">
+                    <div className="grid grid-cols-6 gap-1">
+                        {GROUP_ICONS.map(ic => (
+                            <button
+                                key={ic.name}
+                                title={ic.label}
+                                onClick={() => { onChange({ ...group, icon: ic.name }); setPickingIcon(false); }}
+                                className={`flex items-center justify-center h-8 w-8 rounded-lg transition-colors ${
+                                    group.icon === ic.name
+                                        ? 'bg-blue-100 text-blue-600'
+                                        : 'hover:bg-gray-100 text-gray-500'
+                                }`}
+                            >
+                                <ic.component size={16} />
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* name / edit */}
             <div className="p-2">
