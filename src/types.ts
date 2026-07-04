@@ -82,6 +82,18 @@ export interface Booking {
     surveyCompleted?: boolean; // Whether the survey has been completed (flag for easy filtering)
 }
 
+export type TimetableDay = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
+
+export interface TimetableEntry {
+    id: string;
+    days: TimetableDay[];
+    startTime: string; // "10:00"
+    endTime: string;   // "10:30"
+    title: { bg: string; en: string };
+    location?: { bg: string; en: string };
+    placeIds?: string[];
+}
+
 export interface Apartment {
     id: string;
     name: { [key in 'bg' | 'en']?: string };
@@ -139,6 +151,9 @@ export interface Apartment {
             workingHours?: { [day: string]: { open: string; close: string } | null };
             priceList?: { name: { bg: string; en: string }; price: string; unit?: { bg: string; en: string } }[];
         }[];
+    };
+    timetable?: {
+        entries: TimetableEntry[];
     };
     socialSharing?: {
         ogImage?: string;

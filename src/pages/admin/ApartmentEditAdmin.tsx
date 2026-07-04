@@ -62,6 +62,8 @@ import {
     ApartmentTestimonialsTab,
     ApartmentBrochureTab
 } from '../../components/admin/apartment-edit';
+import ApartmentTimetableTab from '../../components/admin/apartment-edit/ApartmentTimetableTab';
+import { TimetableEntry } from '../../types';
 
 const storage = getStorage();
 
@@ -200,6 +202,7 @@ const ApartmentEditAdmin: React.FC = () => {
     const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
     const [brochureItems, setBrochureItems] = useState<BrochurePlaceItem[]>([]);
     const [brochureGroups, setBrochureGroups] = useState<BrochureGroup[]>([]);
+    const [timetableEntries, setTimetableEntries] = useState<TimetableEntry[]>([]);
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [loading, setLoading] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
@@ -254,7 +257,7 @@ const ApartmentEditAdmin: React.FC = () => {
         });
     };
 
-    const [view, setView] = useState<'details' | 'amenities' | 'calendar' | 'pricing' | 'gallery' | 'feedback' | 'testimonials' | 'brochure'>('details');
+    const [view, setView] = useState<'details' | 'amenities' | 'calendar' | 'pricing' | 'gallery' | 'feedback' | 'testimonials' | 'brochure' | 'timetable'>('details');
     const [formLanguage, setFormLanguage] = useState<'bg' | 'en'>('bg');
     const [isRentalModalOpen, setIsRentalModalOpen] = useState(false);
     const [selectedSlot, setSelectedSlot] = useState<{ start: Date; end: Date } | null>(null);
@@ -446,6 +449,7 @@ const ApartmentEditAdmin: React.FC = () => {
                     }))
                 );
                 setBrochureGroups(aptData.guestBrochure?.groups || []);
+                setTimetableEntries(aptData.timetable?.entries || []);
                 // Try to fetch bookings, but don't fail if it doesn't work
                 try {
                     await fetchBookings(aptDoc.id);
@@ -689,6 +693,22 @@ const ApartmentEditAdmin: React.FC = () => {
             groups: finalBrochureGroups.length > 0 ? finalBrochureGroups : undefined,
             places: finalBrochurePlaces.map(cleanPlace)
         };
+
+        if (timetableEntries.length > 0) {
+            (apartmentData as any).timetable = {
+                entries: timetableEntries.map(e => ({
+                    id: e.id,
+                    days: e.days,
+                    startTime: e.startTime,
+                    endTime: e.endTime,
+                    title: { bg: e.title.bg || '', en: e.title.en || '' },
+                    ...(e.location?.bg || e.location?.en ? { location: { bg: e.location.bg || '', en: e.location.en || '' } } : {}),
+                    ...(e.placeIds?.length ? { placeIds: e.placeIds } : {}),
+                })),
+            };
+        } else {
+            (apartmentData as any).timetable = null;
+        }
 
         delete apartmentData.id;
         delete (apartmentData as any).surveyQuestions; // Remove old array
@@ -1243,6 +1263,7 @@ const ApartmentEditAdmin: React.FC = () => {
                         <button onClick={() => setView('feedback')} className={`px-3 sm:px-4 py-2 text-sm sm:text-base whitespace-nowrap ${view === 'feedback' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}>{t('feedback')}</button>
                         <button onClick={() => setView('testimonials')} className={`px-3 sm:px-4 py-2 text-sm sm:text-base whitespace-nowrap ${view === 'testimonials' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}>{t('testimonials')}</button>
                         <button onClick={() => setView('brochure')} className={`px-3 sm:px-4 py-2 text-sm sm:text-base whitespace-nowrap ${view === 'brochure' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}>{t('guestBrochure')}</button>
+                        <button onClick={() => setView('timetable')} className={`px-3 sm:px-4 py-2 text-sm sm:text-base whitespace-nowrap ${view === 'timetable' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}>Програма</button>
                     </div>
                 </div>
                 {view === 'details' && (
@@ -1349,6 +1370,14 @@ const ApartmentEditAdmin: React.FC = () => {
                         brochureGroups={brochureGroups}
                         setBrochureGroups={setBrochureGroups}
                         slug={slug}
+                    />
+                )}
+
+                {view === 'timetable' && (
+                    <ApartmentTimetableTab
+                        entries={timetableEntries}
+                        setEntries={setTimetableEntries}
+                        places={brochureItems.map(p => ({ id: p.id, name: p.name, mapsUrl: p.mapsUrl }))}
                     />
                 )}
 

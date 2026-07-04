@@ -53,6 +53,9 @@ const GuestBrochurePlaceDetail: React.FC = () => {
         }).catch(() => setLoading(false));
     }, [slug]);
 
+    // Ensure page starts at the top (prevent scroll restoration overlap)
+    useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); }, []);
+
     const lang = (language as string) === 'bg' ? 'bg' : 'en';
     const places = apartment?.guestBrochure?.places || [];
     const place = places.find(p => p.id === placeId) || (placeId ? places[Number(placeId)] : undefined);
