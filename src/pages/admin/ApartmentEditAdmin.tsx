@@ -51,7 +51,7 @@ import {
 import RentalPeriodModal from '../../components/admin/RentalPeriodModal';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { Booking, PricingOffer, Amenity, Apartment } from '../../types';
-import { BrochurePlaceItem } from '../../components/admin/apartment-edit/types';
+import { BrochurePlaceItem, BrochureGroup } from '../../components/admin/apartment-edit/types';
 import {
     ApartmentDetailsTab,
     ApartmentAmenitiesTab,
@@ -199,6 +199,7 @@ const ApartmentEditAdmin: React.FC = () => {
     const [currentApartmentData, setCurrentApartmentData] = useState<Partial<Apartment>>({});
     const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
     const [brochureItems, setBrochureItems] = useState<BrochurePlaceItem[]>([]);
+    const [brochureGroups, setBrochureGroups] = useState<BrochureGroup[]>([]);
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [loading, setLoading] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
@@ -441,8 +442,10 @@ const ApartmentEditAdmin: React.FC = () => {
                         phone: p.phone,
                         workingHours: p.workingHours,
                         priceList: p.priceList,
+                        groupIds: p.groupIds,
                     }))
                 );
+                setBrochureGroups(aptData.guestBrochure?.groups || []);
                 // Try to fetch bookings, but don't fail if it doesn't work
                 try {
                     await fetchBookings(aptDoc.id);
@@ -642,6 +645,27 @@ const ApartmentEditAdmin: React.FC = () => {
             return;
         }
 
+        // Upload brochure group images
+        const finalBrochureGroups: typeof brochureGroups = [];
+        try {
+            await Promise.all(brochureGroups.map(async (group, idx) => {
+                let imageUrl = group.image;
+                if (group.imageFile) {
+                    const fileName = `${Date.now()}_${group.imageFile.name}`;
+                    const storageRef = ref(storage, `apartments/${apartment.id}/brochure/groups/${group.id}/${fileName}`);
+                    await uploadBytes(storageRef, group.imageFile);
+                    imageUrl = await getDownloadURL(storageRef);
+                }
+                // only persist blob-preview URLs that came from imageFile; real URLs pass through
+                const finalImage = group.imageFile ? imageUrl : (imageUrl?.startsWith('blob:') ? undefined : imageUrl);
+                finalBrochureGroups[idx] = { id: group.id, name: group.name, ...(finalImage ? { image: finalImage } : {}) };
+            }));
+        } catch (error) {
+            console.error('Error uploading brochure group images:', error);
+            setLoading(false);
+            return;
+        }
+
         const cleanPlace = (p: typeof brochureItems[number]) => {
             const obj: Record<string, any> = {
                 id: p.id,
@@ -659,6 +683,7 @@ const ApartmentEditAdmin: React.FC = () => {
                 });
                 if (Object.keys(wh).length > 0) obj.workingHours = wh;
             }
+            if (p.groupIds && p.groupIds.length > 0) obj.groupIds = p.groupIds;
             if (p.priceList && p.priceList.length > 0) {
                 obj.priceList = p.priceList
                     .filter(item => item.name.bg || item.name.en || item.price)
@@ -675,6 +700,7 @@ const ApartmentEditAdmin: React.FC = () => {
         };
 
         apartmentData.guestBrochure = {
+            groups: finalBrochureGroups.length > 0 ? finalBrochureGroups : undefined,
             places: finalBrochurePlaces.map(cleanPlace)
         };
 
@@ -698,6 +724,7 @@ const ApartmentEditAdmin: React.FC = () => {
                 url 
             })));
             setBrochureItems(finalBrochurePlaces.map(p => ({ ...p, imageFile: undefined })));
+            setBrochureGroups(brochureGroups);
             setTimeout(() => setSaveSuccess(false), 3000);
         } catch (error) {
             console.error("Error saving apartment: ", error);
@@ -1333,6 +1360,8 @@ const ApartmentEditAdmin: React.FC = () => {
                         setFormLanguage={setFormLanguage as (lang: 'bg' | 'en') => void}
                         brochureItems={brochureItems}
                         setBrochureItems={setBrochureItems}
+                        brochureGroups={brochureGroups}
+                        setBrochureGroups={setBrochureGroups}
                         slug={slug}
                     />
                 )}

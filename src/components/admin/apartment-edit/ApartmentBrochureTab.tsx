@@ -1,9 +1,9 @@
 import React, { useRef, useState } from 'react';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
-import { BrochureTabProps, BrochurePlaceItem } from './types';
+import { BrochureTabProps, BrochurePlaceItem, BrochureGroup } from './types';
 import { useAdminLanguage } from '../../../hooks/useAdminLanguage';
-import { Share2, Check, Trash2, Plus, Phone, MapPin, Clock, ChevronDown, ChevronUp, GripVertical, Tag, Upload } from 'lucide-react';
+import { Share2, Check, Trash2, Plus, Phone, MapPin, Clock, ChevronDown, ChevronUp, GripVertical, Tag, Upload, FolderOpen, X, Pencil } from 'lucide-react';
 import {
     DndContext,
     closestCenter,
@@ -27,6 +27,112 @@ const DAY_LABELS: Record<string, string> = {
     mon: 'Пон', tue: 'Вт', wed: 'Ср', thu: 'Чет', fri: 'Пет', sat: 'Съб', sun: 'Нед'
 };
 
+// ─── group card ──────────────────────────────────────────────────────────────
+interface GroupCardProps {
+    group: BrochureGroup;
+    onChange: (updated: BrochureGroup) => void;
+    onDelete: () => void;
+}
+
+const GroupCard: React.FC<GroupCardProps> = ({ group, onChange, onDelete }) => {
+    const [editing, setEditing] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const imgInputRef = useRef<HTMLInputElement>(null);
+
+    const handleImageSelect = async (files: FileList | null) => {
+        if (!files || files.length === 0) return;
+        const file = files[0];
+        if (!isSupportedImageFile(file) && !isHEICFile(file)) {
+            alert('Unsupported image format');
+            return;
+        }
+        setIsProcessing(true);
+        try {
+            const [processed] = await processImageFiles([file]);
+            if (processed) {
+                const preview = URL.createObjectURL(processed);
+                onChange({ ...group, image: preview, imageFile: processed });
+            }
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    const previewSrc = group.image || '';
+
+    return (
+        <div className="relative bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden w-36 flex-shrink-0">
+            {/* image area */}
+            <div className="relative h-20 bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+                {previewSrc ? (
+                    <img src={previewSrc} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                ) : (
+                    <FolderOpen size={24} className="text-blue-300" />
+                )}
+                <button
+                    className="absolute top-1 right-1 bg-white/80 hover:bg-white rounded-full p-0.5 shadow"
+                    onClick={() => imgInputRef.current?.click()}
+                    title="Смени снимка"
+                >
+                    {isProcessing ? <span className="text-xs">…</span> : <Upload size={11} className="text-gray-600" />}
+                </button>
+                <input ref={imgInputRef} type="file" accept={getSupportedImageTypes()} className="hidden"
+                    onChange={e => handleImageSelect(e.target.files)} />
+            </div>
+
+            {/* name / edit */}
+            <div className="p-2">
+                {editing ? (
+                    <div className="space-y-1">
+                        <Input
+                            value={group.name.bg}
+                            onChange={e => onChange({ ...group, name: { ...group.name, bg: e.target.value } })}
+                            placeholder="БГ"
+                            className="h-6 text-xs px-1.5"
+                            autoFocus
+                        />
+                        <Input
+                            value={group.name.en}
+                            onChange={e => onChange({ ...group, name: { ...group.name, en: e.target.value } })}
+                            placeholder="EN"
+                            className="h-6 text-xs px-1.5"
+                        />
+                        <button
+                            className="text-xs text-blue-500 hover:text-blue-700 w-full text-center pt-0.5"
+                            onClick={() => setEditing(false)}
+                        >
+                            Запази
+                        </button>
+                    </div>
+                ) : (
+                    <div className="flex items-start justify-between gap-1">
+                        <div className="min-w-0">
+                            <p className="text-xs font-medium text-gray-800 truncate leading-tight">
+                                {group.name.bg || group.name.en || <span className="text-gray-400 italic">Без наименование</span>}
+                            </p>
+                            {group.name.en && group.name.en !== group.name.bg && (
+                                <p className="text-[10px] text-gray-400 truncate">{group.name.en}</p>
+                            )}
+                        </div>
+                        <button onClick={() => setEditing(true)} className="text-gray-400 hover:text-blue-500 flex-shrink-0">
+                            <Pencil size={11} />
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            {/* delete */}
+            <button
+                onClick={onDelete}
+                className="absolute top-1 left-1 bg-white/80 hover:bg-red-50 rounded-full p-0.5 shadow text-gray-400 hover:text-red-500"
+                title="Изтрий група"
+            >
+                <X size={11} />
+            </button>
+        </div>
+    );
+};
+
 function newPlace(): BrochurePlaceItem {
     return {
         id: `place-${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -43,12 +149,17 @@ interface PlaceCardProps {
     place: BrochurePlaceItem;
     onChange: (updated: BrochurePlaceItem) => void;
     onDelete: () => void;
+    groups: BrochureGroup[];
+    onGroupsChange: (groups: BrochureGroup[]) => void;
 }
 
-const PlaceCard: React.FC<PlaceCardProps> = ({ place, onChange, onDelete }) => {
+const PlaceCard: React.FC<PlaceCardProps> = ({ place, onChange, onDelete, groups, onGroupsChange }) => {
     const [expanded, setExpanded] = useState(true);
     const [isProcessing, setIsProcessing] = useState(false);
     const [conversionStatus, setConversionStatus] = useState('');
+    const [newGroupBg, setNewGroupBg] = useState('');
+    const [newGroupEn, setNewGroupEn] = useState('');
+    const [showNewGroupForm, setShowNewGroupForm] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const csvInputRef = useRef<HTMLInputElement>(null);
 
@@ -59,14 +170,14 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, onChange, onDelete }) => {
             const lines = text.split(/\r?\n/).filter(l => l.trim());
             const imported = lines
                 .map(line => {
-                    // format: name_bg, name_en, quantity/duration, price (EUR)
+                    // format: name_bg, name_en, quantity/duration_bg, quantity/duration_en, price (EUR)
                     const cols = line.split(/,|;/).map(c => c.trim().replace(/^"|"$/g, ''));
-                    if (cols.length < 4) return null;
-                    const [nameBg, nameEn, unit, price] = cols;
+                    if (cols.length < 5) return null;
+                    const [nameBg, nameEn, unitBg, unitEn, price] = cols;
                     return {
                         name: { bg: nameBg, en: nameEn },
                         price,
-                        ...(unit ? { unit: { bg: unit, en: unit } } : {}),
+                        ...((unitBg || unitEn) ? { unit: { bg: unitBg, en: unitEn } } : {}),
                     };
                 })
                 .filter(Boolean) as { name: { bg: string; en: string }; price: string; unit?: { bg: string; en: string } }[];
@@ -245,6 +356,83 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, onChange, onDelete }) => {
                         </div>
                     </div>
 
+                    {/* group */}
+                    <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1 flex items-center gap-1">
+                            <FolderOpen size={12} /> Групи
+                        </label>
+                        <div className="space-y-1" onPointerDown={e => e.stopPropagation()}>
+                            {groups.map(g => {
+                                const checked = (place.groupIds || []).includes(g.id);
+                                return (
+                                    <label key={g.id} className="flex items-center gap-2 cursor-pointer select-none">
+                                        <input
+                                            type="checkbox"
+                                            checked={checked}
+                                            onChange={() => {
+                                                const current = place.groupIds || [];
+                                                const next = checked
+                                                    ? current.filter(id => id !== g.id)
+                                                    : [...current, g.id];
+                                                onChange({ ...place, groupIds: next.length > 0 ? next : undefined });
+                                            }}
+                                            className="rounded border-gray-300 text-blue-500"
+                                        />
+                                        <span className="text-sm text-gray-700">
+                                            {g.name.bg}{g.name.en && g.name.en !== g.name.bg ? ` / ${g.name.en}` : ''}
+                                        </span>
+                                    </label>
+                                );
+                            })}
+                            <button
+                                className="text-xs text-blue-500 hover:text-blue-700 mt-1"
+                                onClick={() => setShowNewGroupForm(v => !v)}
+                            >
+                                + Нова група…
+                            </button>
+                        </div>
+                        {showNewGroupForm && (
+                            <div className="mt-2 flex items-center gap-2 flex-wrap" onPointerDown={e => e.stopPropagation()}>
+                                <Input
+                                    value={newGroupBg}
+                                    onChange={e => setNewGroupBg(e.target.value)}
+                                    placeholder="Название (БГ)"
+                                    className="flex-1 min-w-0 h-8 text-xs"
+                                />
+                                <Input
+                                    value={newGroupEn}
+                                    onChange={e => setNewGroupEn(e.target.value)}
+                                    placeholder="Name (EN)"
+                                    className="flex-1 min-w-0 h-8 text-xs"
+                                />
+                                <button
+                                    className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+                                    onClick={() => {
+                                        if (!newGroupBg.trim() && !newGroupEn.trim()) return;
+                                        const id = `group-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+                                        const newGroup: BrochureGroup = {
+                                            id,
+                                            name: { bg: newGroupBg.trim(), en: newGroupEn.trim() },
+                                        };
+                                        onGroupsChange([...groups, newGroup]);
+                                        onChange({ ...place, groupIds: [...(place.groupIds || []), id] });
+                                        setNewGroupBg('');
+                                        setNewGroupEn('');
+                                        setShowNewGroupForm(false);
+                                    }}
+                                >
+                                    Създай
+                                </button>
+                                <button
+                                    className="text-xs text-gray-500 hover:text-gray-700"
+                                    onClick={() => setShowNewGroupForm(false)}
+                                >
+                                    Отказ
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
                     {/* location + phone */}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
@@ -398,7 +586,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, onChange, onDelete }) => {
                                 onClick={() => csvInputRef.current?.click()}
                                 className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
                                 onPointerDown={e => e.stopPropagation()}
-                                title="CSV формат: Продукт (BG), Продукт (EN), Количество/Времетраене, Цена (EUR)"
+                                title="CSV формат: Продукт (BG), Продукт (EN), Количество (BG), Количество (EN), Цена (EUR)"
                             >
                                 <Upload size={13} /> Импорт CSV
                             </button>
@@ -425,6 +613,8 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, onChange, onDelete }) => {
 const ApartmentBrochureTab: React.FC<BrochureTabProps> = ({
     brochureItems,
     setBrochureItems,
+    brochureGroups,
+    setBrochureGroups,
     slug
 }) => {
     const [isLinkCopied, setIsLinkCopied] = useState(false);
@@ -476,6 +666,45 @@ const ApartmentBrochureTab: React.FC<BrochureTabProps> = ({
                 </Button>
             </div>
 
+            {/* groups manager */}
+            <div>
+                <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-medium text-gray-600 flex items-center gap-1">
+                        <FolderOpen size={12} /> Групи
+                    </p>
+                    <button
+                        className="text-xs text-blue-500 hover:text-blue-700 flex items-center gap-1"
+                        onClick={() => {
+                            const id = `group-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+                            setBrochureGroups(prev => [...prev, { id, name: { bg: '', en: '' } }]);
+                        }}
+                    >
+                        <Plus size={12} /> Нова група
+                    </button>
+                </div>
+                {brochureGroups.length > 0 ? (
+                    <div className="flex flex-wrap gap-3">
+                        {brochureGroups.map(g => (
+                            <GroupCard
+                                key={g.id}
+                                group={g}
+                                onChange={updated => setBrochureGroups(prev => prev.map(x => x.id === g.id ? updated : x))}
+                                onDelete={() => {
+                                    setBrochureGroups(prev => prev.filter(x => x.id !== g.id));
+                                    setBrochureItems(prev => prev.map(p =>
+                                        p.groupIds?.includes(g.id)
+                                            ? { ...p, groupIds: p.groupIds.filter(id => id !== g.id) }
+                                            : p
+                                    ));
+                                }}
+                            />
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-xs text-gray-400 italic">Все още няма групи.</p>
+                )}
+            </div>
+
             {/* places list */}
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SortableContext items={brochureItems.map(p => p.id)} strategy={verticalListSortingStrategy}>
@@ -486,6 +715,8 @@ const ApartmentBrochureTab: React.FC<BrochureTabProps> = ({
                                 place={place}
                                 onChange={updated => updatePlace(place.id, updated)}
                                 onDelete={() => deletePlace(place.id)}
+                                groups={brochureGroups}
+                                onGroupsChange={setBrochureGroups}
                             />
                         ))}
                     </div>

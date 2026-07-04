@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useLanguage } from '../hooks/useLanguage';
-import LoadingSpinner from '../components/common/LoadingSpinner';
+import BrochureLoader from '../components/common/BrochureLoader';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { Apartment } from '../types';
 import { AlertTriangle, ArrowLeft, MapPin, Phone, Clock, Tag } from 'lucide-react';
@@ -71,7 +71,7 @@ const GuestBrochurePlaceDetail: React.FC = () => {
         status === 'closed' ? 'bg-red-100 text-red-700' : '';
 
     if (loading) {
-        return <div className="min-h-screen flex items-center justify-center"><LoadingSpinner /></div>;
+        return <BrochureLoader />;
     }
 
     if (!place) {
@@ -178,7 +178,7 @@ const GuestBrochurePlaceDetail: React.FC = () => {
                                     <div key={idx} className="flex items-center justify-between py-2.5">
                                         <span className="text-sm text-gray-700">{itemName}</span>
                                         <span className="text-sm font-semibold text-gray-900">
-                                            {item.price}{unit ? <span className="text-xs text-gray-400 font-normal ml-1">/ {unit}</span> : null}
+                                            {item.price} <span className="text-xs text-gray-400 font-normal">EUR</span>{unit ? <span className="text-xs text-gray-400 font-normal ml-1">/ {unit}</span> : null}
                                         </span>
                                     </div>
                                 );

@@ -6,8 +6,16 @@ type GalleryItem = {
     file?: File;
 };
 
+export type BrochureGroup = {
+    id: string;
+    name: { bg: string; en: string };
+    image?: string;
+    imageFile?: File;
+};
+
 export type BrochurePlaceItem = {
     id: string;
+    groupIds?: string[];
     image?: string;    // uploaded URL
     imageFile?: File;  // pending upload
     name: { bg: string; en: string };
@@ -34,6 +42,8 @@ export interface GalleryTabProps extends TabProps {
 export interface BrochureTabProps extends TabProps {
     brochureItems: BrochurePlaceItem[];
     setBrochureItems: React.Dispatch<React.SetStateAction<BrochurePlaceItem[]>>;
+    brochureGroups: BrochureGroup[];
+    setBrochureGroups: React.Dispatch<React.SetStateAction<BrochureGroup[]>>;
     slug?: string;
 }
 

@@ -1,5 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
+// Module-level memory cache: tracks URLs whose Image objects have fully decoded this session.
+// When a src is in this set, we skip the skeleton flash entirely.
+const sessionImageCache = new Set<string>();
+
 interface OptimizedImageProps {
     src: string;
     alt: string;
@@ -36,10 +40,12 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     lazy = true,
     fill = false
 }) => {
-    const [isLoaded, setIsLoaded] = useState(false);
-    const [isInView, setIsInView] = useState(!lazy || priority);
+    const [isLoaded, setIsLoaded] = useState(() => sessionImageCache.has(src));
+    const [isInView, setIsInView] = useState(!lazy || priority || sessionImageCache.has(src));
     const [hasError, setHasError] = useState(false);
-    const [currentSrc, setCurrentSrc] = useState<string>('');
+    const [currentSrc, setCurrentSrc] = useState<string>(() =>
+        sessionImageCache.has(src) ? src : ''
+    );
     const imgRef = useRef<HTMLImageElement>(null);
     const observerRef = useRef<IntersectionObserver | null>(null);
 
@@ -97,9 +103,10 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     }, [priority, src, width, getOptimizedSrc]);
 
     const handleLoad = useCallback(() => {
+        sessionImageCache.add(src);
         setIsLoaded(true);
         onLoad?.();
-    }, [onLoad]);
+    }, [onLoad, src]);
 
     const handleError = useCallback(() => {
         setHasError(true);
