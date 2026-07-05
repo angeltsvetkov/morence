@@ -64,6 +64,11 @@ const GuestBrochurePlaceDetail: React.FC = () => {
     const name = place?.name?.[lang] || place?.name?.en || place?.name?.bg || '';
     const description = place?.description?.[lang] || place?.description?.en || place?.description?.bg || '';
 
+    const metaTitle = name ? `${name} · morence` : 'morence';
+    const metaDesc = description || name;
+    const metaImage = place?.image || '';
+    const metaUrl = `${window.location.origin}/apartments/${slug}/brochure/${placeId}`;
+
     const status = getPlaceStatus(place?.workingHours);
     const statusLabel =
         status === 'open' ? (lang === 'bg' ? 'Отворено' : 'Open') :
@@ -95,23 +100,18 @@ const GuestBrochurePlaceDetail: React.FC = () => {
     return (
         <div className="min-h-screen bg-[#f8f9fb]">
             <Helmet>
-                {(() => {
-                    const url = `${window.location.origin}/apartments/${slug}/brochure/${placeId}`;
-                    return <>
-                        <title>{name} · morence</title>
-                        <meta name="description" content={description || name} />
-                        <meta property="og:type" content="website" />
-                        <meta property="og:title" content={`${name} · morence`} />
-                        <meta property="og:description" content={description || name} />
-                        <meta property="og:url" content={url} />
-                        {place.image && <meta property="og:image" content={place.image} />}
-                        <meta name="twitter:card" content="summary_large_image" />
-                        <meta name="twitter:title" content={`${name} · morence`} />
-                        <meta name="twitter:description" content={description || name} />
-                        {place.image && <meta name="twitter:image" content={place.image} />}
-                        <meta name="robots" content="noindex, nofollow" />
-                    </>;
-                })()}
+                <title>{metaTitle}</title>
+                <meta name="description" content={metaDesc} />
+                <meta property="og:type" content="website" />
+                <meta property="og:title" content={metaTitle} />
+                <meta property="og:description" content={metaDesc} />
+                <meta property="og:url" content={metaUrl} />
+                {metaImage && <meta property="og:image" content={metaImage} />}
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content={metaTitle} />
+                <meta name="twitter:description" content={metaDesc} />
+                {metaImage && <meta name="twitter:image" content={metaImage} />}
+                <meta name="robots" content="noindex, nofollow" />
             </Helmet>
             {/* header */}
             <header className="bg-white sticky top-0 z-20 border-b border-gray-100">

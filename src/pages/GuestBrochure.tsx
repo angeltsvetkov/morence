@@ -229,6 +229,16 @@ const GuestBrochure: React.FC = () => {
     const hasGroups = groups.length > 0;
     const hasUngrouped = ungrouped.length > 0;
 
+    const metaAptName = apartment
+        ? (apartment.name?.[lang] || apartment.name?.en || apartment.name?.bg || 'Brochure')
+        : 'Brochure';
+    const metaTitle = lang === 'bg' ? `Брошура · ${metaAptName}` : `Brochure · ${metaAptName}`;
+    const metaDesc = lang === 'bg'
+        ? `Разгледай наблизо – ${places.length} места около ${metaAptName}`
+        : `Explore nearby – ${places.length} places around ${metaAptName}`;
+    const metaImage = apartment?.heroImage || apartment?.photos?.[0] || '';
+    const metaUrl = `${window.location.origin}/apartments/${slug}/brochure`;
+
     if (loading) return <BrochureLoader />;
 
     if (notFound || !apartment) {
@@ -263,28 +273,18 @@ const GuestBrochure: React.FC = () => {
     return (
         <div className="min-h-screen bg-[#f8f9fb]">
             <Helmet>
-                {(() => {
-                    const aptName = apartment.name?.[lang] || apartment.name?.en || apartment.name?.bg || 'Brochure';
-                    const desc = lang === 'bg'
-                        ? `Разгледай наблизо – ${places.length} места около ${aptName}`
-                        : `Explore nearby – ${places.length} places around ${aptName}`;
-                    const image = apartment.heroImage || apartment.photos?.[0] || '';
-                    const url = `${window.location.origin}/apartments/${slug}/brochure`;
-                    return <>
-                        <title>{lang === 'bg' ? `Брошура · ${aptName}` : `Brochure · ${aptName}`}</title>
-                        <meta name="description" content={desc} />
-                        <meta property="og:type" content="website" />
-                        <meta property="og:title" content={lang === 'bg' ? `Брошура · ${aptName}` : `Brochure · ${aptName}`} />
-                        <meta property="og:description" content={desc} />
-                        <meta property="og:url" content={url} />
-                        {image && <meta property="og:image" content={image} />}
-                        <meta name="twitter:card" content="summary_large_image" />
-                        <meta name="twitter:title" content={lang === 'bg' ? `Брошура · ${aptName}` : `Brochure · ${aptName}`} />
-                        <meta name="twitter:description" content={desc} />
-                        {image && <meta name="twitter:image" content={image} />}
-                        <meta name="robots" content="noindex, nofollow" />
-                    </>;
-                })()}
+                <title>{metaTitle}</title>
+                <meta name="description" content={metaDesc} />
+                <meta property="og:type" content="website" />
+                <meta property="og:title" content={metaTitle} />
+                <meta property="og:description" content={metaDesc} />
+                <meta property="og:url" content={metaUrl} />
+                {metaImage && <meta property="og:image" content={metaImage} />}
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content={metaTitle} />
+                <meta name="twitter:description" content={metaDesc} />
+                {metaImage && <meta name="twitter:image" content={metaImage} />}
+                <meta name="robots" content="noindex, nofollow" />
             </Helmet>
             <StickyHeader
                 lang={lang}

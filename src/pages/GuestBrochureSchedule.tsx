@@ -73,6 +73,14 @@ const GuestBrochureSchedule: React.FC = () => {
         .filter(e => e.days.includes(activeDay))
         .sort((a, b) => a.startTime.localeCompare(b.startTime));
 
+    const metaAptName = apartment?.name?.[lang] || apartment?.name?.en || apartment?.name?.bg || '';
+    const metaTitle = lang === 'bg' ? `Програма · ${metaAptName}` : `Schedule · ${metaAptName}`;
+    const metaDesc = lang === 'bg'
+        ? `Пълна програма на активности за ${metaAptName}`
+        : `Full activity schedule for ${metaAptName}`;
+    const metaImage = apartment?.heroImage || apartment?.photos?.[0] || '';
+    const metaUrl = `${window.location.origin}/apartments/${slug}/brochure/schedule`;
+
     if (loading) return <BrochureLoader />;
 
     if (!apartment || entries.length === 0) {
@@ -92,29 +100,18 @@ const GuestBrochureSchedule: React.FC = () => {
     return (
         <div className="min-h-screen bg-[#f8f9fb]">
             <Helmet>
-                {(() => {
-                    const aptName = apartment.name?.[lang] || apartment.name?.en || apartment.name?.bg || '';
-                    const title = lang === 'bg' ? `Програма · ${aptName}` : `Schedule · ${aptName}`;
-                    const desc = lang === 'bg'
-                        ? `Пълна програма на активности за ${aptName}`
-                        : `Full activity schedule for ${aptName}`;
-                    const url = `${window.location.origin}/apartments/${slug}/brochure/schedule`;
-                    const image = apartment.heroImage || apartment.photos?.[0] || '';
-                    return <>
-                        <title>{title}</title>
-                        <meta name="description" content={desc} />
-                        <meta property="og:type" content="website" />
-                        <meta property="og:title" content={title} />
-                        <meta property="og:description" content={desc} />
-                        <meta property="og:url" content={url} />
-                        {image && <meta property="og:image" content={image} />}
-                        <meta name="twitter:card" content="summary_large_image" />
-                        <meta name="twitter:title" content={title} />
-                        <meta name="twitter:description" content={desc} />
-                        {image && <meta name="twitter:image" content={image} />}
-                        <meta name="robots" content="noindex, nofollow" />
-                    </>;
-                })()}
+                <title>{metaTitle}</title>
+                <meta name="description" content={metaDesc} />
+                <meta property="og:type" content="website" />
+                <meta property="og:title" content={metaTitle} />
+                <meta property="og:description" content={metaDesc} />
+                <meta property="og:url" content={metaUrl} />
+                {metaImage && <meta property="og:image" content={metaImage} />}
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content={metaTitle} />
+                <meta name="twitter:description" content={metaDesc} />
+                {metaImage && <meta name="twitter:image" content={metaImage} />}
+                <meta name="robots" content="noindex, nofollow" />
             </Helmet>
             {/* Header */}
             <header className="bg-white sticky top-0 z-20 border-b border-gray-100">
