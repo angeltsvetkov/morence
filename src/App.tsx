@@ -13,6 +13,7 @@ import ApartmentCalendar from './pages/ApartmentCalendar';
 import GuestBrochure from './pages/GuestBrochure';
 import GuestBrochurePlaceDetail from './pages/GuestBrochurePlaceDetail';
 import GuestBrochureSchedule from './pages/GuestBrochureSchedule';
+import DefaultBrochureRedirect from './pages/DefaultBrochureRedirect';
 import DefaultApartmentRedirect from './pages/DefaultApartmentRedirect';
 import { getSubdomainInfo } from './utils/subdomain';
 
@@ -20,7 +21,7 @@ const AppContent = () => {
   const location = useLocation();
   const isAdminPage = location.pathname.startsWith('/admin');
   const isSurveyPage = location.pathname.startsWith('/survey');
-  const isBrochurePage = /^\/apartments\/[^/]+\/brochure/.test(location.pathname);
+  const isBrochurePage = /^\/apartments\/[^/]+\/brochure|^\/brochure/.test(location.pathname);
   const subdomainInfo = getSubdomainInfo();
 
   return (
@@ -32,6 +33,8 @@ const AppContent = () => {
             subdomainInfo.isSubdomain ? <ApartmentDetail /> : <DefaultApartmentRedirect />
           } />
           <Route path="/apartments/:slug" element={<ApartmentDetail />} />
+          <Route path="/brochure" element={<DefaultBrochureRedirect />} />
+          <Route path="/brochure/:lang" element={<DefaultBrochureRedirect />} />
           <Route path="/apartments/:slug/brochure" element={<GuestBrochure />} />
           <Route path="/apartments/:slug/brochure/schedule" element={<GuestBrochureSchedule />} />
           <Route path="/apartments/:slug/brochure/:placeId" element={<GuestBrochurePlaceDetail />} />
