@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useLanguage } from '../hooks/useLanguage';
 import BrochureLoader from '../components/common/BrochureLoader';
 import LanguageSwitcher from '../components/LanguageSwitcher';
-import { Apartment, TimetableEntry, TimetableDay } from '../types';
-import { AlertTriangle, ImageOff, MapPin, ChevronDown, ChevronUp, Clock,
+import { Apartment, TimetableEntry } from '../types';
+import { AlertTriangle, ImageOff, MapPin,
     Utensils, Coffee, Beer, ShoppingBag, ShoppingCart, Landmark, TreePine, Mountain, Waves, Umbrella, Dumbbell, Bike,
     Car, Bus, Plane, Music, Star, Heart, Camera, Building2, Sun, Moon, Ticket, BookOpen, Leaf, Fish, Baby, Palette, Flame
 } from 'lucide-react';
@@ -22,24 +23,8 @@ function GroupIcon({ name, size = 14, className }: { name?: string; size?: numbe
     return Comp ? <Comp size={size} className={className} /> : <MapPin size={size} className={className} />;
 }
 
-const ALL_DAYS_ORDERED: TimetableDay[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-const DAY_LABEL: Record<TimetableDay, { bg: string; en: string }> = {
-    mon: { bg: 'Понеделник', en: 'Monday' },
-    tue: { bg: 'Вторник',    en: 'Tuesday' },
-    wed: { bg: 'Сряда',      en: 'Wednesday' },
-    thu: { bg: 'Четвъртък',  en: 'Thursday' },
-    fri: { bg: 'Петък',      en: 'Friday' },
-    sat: { bg: 'Събота',     en: 'Saturday' },
-    sun: { bg: 'Неделя',     en: 'Sunday' },
-};
-const DAY_SHORT: Record<TimetableDay, { bg: string; en: string }> = {
-    mon: { bg: 'Пон', en: 'Mon' }, tue: { bg: 'Вт', en: 'Tue' }, wed: { bg: 'Ср', en: 'Wed' },
-    thu: { bg: 'Чет', en: 'Thu' }, fri: { bg: 'Пет', en: 'Fri' }, sat: { bg: 'Съб', en: 'Sat' },
-    sun: { bg: 'Нед', en: 'Sun' },
-};
-
-function todayKey(): TimetableDay {
-    const map: TimetableDay[] = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+function todayKey() {
+    const map = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
     return map[new Date().getDay()];
 }
 
@@ -56,13 +41,11 @@ function currentMinutes() {
 interface TimetableSectionProps {
     entries: TimetableEntry[];
     lang: 'bg' | 'en';
+    slug: string;
     places?: { id: string; name: { bg: string; en: string }; mapsUrl?: string }[];
 }
 
-const TimetableSection: React.FC<TimetableSectionProps> = ({ entries, lang, places = [] }) => {
-    const [expanded, setExpanded] = useState(false);
-    const [activeDay, setActiveDay] = useState<TimetableDay>(todayKey);
-
+const TimetableSection: React.FC<TimetableSectionProps> = ({ entries, lang, slug, places = [] }) => {
     const today = todayKey();
     const now = currentMinutes();
 
@@ -75,195 +58,78 @@ const TimetableSection: React.FC<TimetableSectionProps> = ({ entries, lang, plac
     );
     const nextEntry = todayEntries.find(e => timeToMinutes(e.startTime) > now);
 
-    const daysWithEntries = ALL_DAYS_ORDERED.filter(d => entries.some(e => e.days.includes(d)));
-    const selectedDayEntries = entries
-        .filter(e => e.days.includes(activeDay))
-        .sort((a, b) => a.startTime.localeCompare(b.startTime));
-
     if (entries.length === 0) return null;
 
-    return (
-        <section className="px-4 pb-4">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                {/* Header */}
-                <div className="px-4 pt-4 pb-3 border-b border-gray-50 flex items-center gap-2">
-                    <Clock size={16} className="text-blue-500" />
-                    <h2 className="text-sm font-bold text-gray-800">
-                        {lang === 'bg' ? 'Програма' : 'Program'}
-                    </h2>
-                </div>
+    if (!activeEntry && !nextEntry) return null;
 
-                <div className="p-4 space-y-3">
-                    {/* NOW */}
-                    {activeEntry && (
-                        <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl px-4 py-3 text-white">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-green-100 mb-0.5">
-                                {lang === 'bg' ? '● Сега' : '● Now'}
+    const nowPlace = activeEntry?.placeIds?.length
+        ? places.find(pl => pl.id === activeEntry.placeIds![0])
+        : undefined;
+    const nextPlace = nextEntry?.placeIds?.length
+        ? places.find(pl => pl.id === nextEntry.placeIds![0])
+        : undefined;
+
+    return (
+        <section className="px-4 pt-4 pb-2">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                {/* NOW row */}
+                {activeEntry && (
+                    <div className="flex items-center gap-3 px-4 py-3">
+                        {/* pulse dot */}
+                        <span className="relative flex-shrink-0">
+                            <span className="absolute inline-flex w-2.5 h-2.5 rounded-full bg-green-400 opacity-75 animate-ping" />
+                            <span className="relative inline-flex w-2.5 h-2.5 rounded-full bg-green-500" />
+                        </span>
+
+                        {/* info */}
+                        <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-green-600 uppercase tracking-wider leading-none mb-0.5">
+                                {lang === 'bg' ? 'Сега' : 'Now'} · <span className="font-mono font-normal normal-case tracking-normal">{activeEntry.startTime}–{activeEntry.endTime}</span>
                             </p>
-                            <p className="text-base font-bold leading-tight">
+                            <p className="text-sm font-semibold text-gray-900 leading-tight truncate">
                                 {activeEntry.title[lang] || activeEntry.title.bg || activeEntry.title.en}
                             </p>
-                            {(activeEntry.location?.bg || activeEntry.location?.en) && (
-                                <p className="text-xs text-green-100 mt-0.5">
-                                    {activeEntry.location[lang] || activeEntry.location.bg || activeEntry.location.en}
-                                </p>
-                            )}
-                            <p className="text-xs text-green-100 mt-1 font-mono">
-                                {activeEntry.startTime} – {activeEntry.endTime}
-                            </p>
-                            {activeEntry.placeIds && activeEntry.placeIds.length > 0 && (
-                                <div className="flex flex-wrap gap-1 mt-1.5">
-                                    {activeEntry.placeIds.map(pid => {
-                                        const p = places.find(pl => pl.id === pid);
-                                        if (!p) return null;
-                                        return p.mapsUrl ? (
-                                            <a key={pid} href={p.mapsUrl} target="_blank" rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-0.5 text-xs bg-green-900/40 text-green-100 px-2 py-0.5 rounded-full hover:bg-green-900/60">
-                                                📍 {p.name[lang] || p.name.bg || p.name.en}
-                                            </a>
-                                        ) : (
-                                            <span key={pid} className="inline-flex items-center gap-0.5 text-xs bg-green-900/40 text-green-100 px-2 py-0.5 rounded-full">
-                                                📍 {p.name[lang] || p.name.bg || p.name.en}
-                                            </span>
-                                        );
-                                    })}
-                                </div>
-                            )}
                         </div>
-                    )}
 
-                    {/* NEXT */}
-                    {nextEntry && (
-                        <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-blue-400 mb-0.5">
-                                {lang === 'bg' ? 'Следващо' : 'Next'}
+                        {/* navigate button */}
+                        {nowPlace?.mapsUrl && (
+                            <a
+                                href={nowPlace.mapsUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-shrink-0 flex items-center gap-1.5 bg-green-500 hover:bg-green-600 active:scale-95 text-white text-xs font-semibold px-3 py-1.5 rounded-full transition-all shadow-sm shadow-green-200"
+                            >
+                                <MapPin size={12} />
+                                {lang === 'bg' ? 'Заведи ме' : 'Go there'}
+                            </a>
+                        )}
+                    </div>
+                )}
+
+                {/* divider + NEXT row */}
+                {nextEntry && (
+                    <div className={`flex items-center gap-3 px-4 py-2.5 ${activeEntry ? 'border-t border-gray-50' : ''}`}>
+                        <span className="flex-shrink-0 w-2.5 h-2.5 flex items-center justify-center">
+                            <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
+                        </span>
+
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider leading-none mb-0.5">
+                                {lang === 'bg' ? 'Следващо' : 'Next'} · <span className="font-mono font-normal normal-case tracking-normal">{nextEntry.startTime}</span>
                             </p>
-                            <p className="text-sm font-semibold text-gray-800 leading-tight">
+                            <p className="text-xs text-gray-600 font-medium leading-tight truncate">
                                 {nextEntry.title[lang] || nextEntry.title.bg || nextEntry.title.en}
                             </p>
-                            {(nextEntry.location?.bg || nextEntry.location?.en) && (
-                                <p className="text-xs text-gray-400 mt-0.5">
-                                    {nextEntry.location[lang] || nextEntry.location.bg || nextEntry.location.en}
-                                </p>
-                            )}
-                            <p className="text-xs text-blue-500 mt-1 font-mono font-semibold">
-                                {nextEntry.startTime} – {nextEntry.endTime}
-                            </p>
-                            {nextEntry.placeIds && nextEntry.placeIds.length > 0 && (
-                                <div className="flex flex-wrap gap-1 mt-1.5">
-                                    {nextEntry.placeIds.map(pid => {
-                                        const p = places.find(pl => pl.id === pid);
-                                        if (!p) return null;
-                                        return p.mapsUrl ? (
-                                            <a key={pid} href={p.mapsUrl} target="_blank" rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-0.5 text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full hover:bg-blue-200">
-                                                📍 {p.name[lang] || p.name.bg || p.name.en}
-                                            </a>
-                                        ) : (
-                                            <span key={pid} className="inline-flex items-center gap-0.5 text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">
-                                                📍 {p.name[lang] || p.name.bg || p.name.en}
-                                            </span>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {!activeEntry && !nextEntry && (
-                        <p className="text-sm text-gray-400 text-center py-2">
-                            {lang === 'bg' ? 'Няма активности за днес' : 'No activities scheduled for today'}
-                        </p>
-                    )}
-
-                    {/* Full program toggle */}
-                    <button
-                        onClick={() => setExpanded(v => !v)}
-                        className="w-full flex items-center justify-center gap-1.5 text-xs text-blue-500 font-semibold py-1.5 hover:text-blue-700"
-                    >
-                        {expanded
-                            ? (lang === 'bg' ? 'Скрий програмата' : 'Hide program')
-                            : (lang === 'bg' ? 'Виж цялата програма' : 'View full program')
-                        }
-                        {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                    </button>
-                </div>
-
-                {/* Full program */}
-                {expanded && (
-                    <div className="border-t border-gray-100">
-                        {/* Day tabs */}
-                        <div className="flex overflow-x-auto scrollbar-hide px-4 pt-3 pb-1 gap-1.5">
-                            {daysWithEntries.map(day => (
-                                <button
-                                    key={day}
-                                    onClick={() => setActiveDay(day)}
-                                    className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                                        activeDay === day
-                                            ? 'bg-blue-600 text-white'
-                                            : day === today
-                                                ? 'bg-blue-50 text-blue-600 border border-blue-200'
-                                                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                                    }`}
-                                >
-                                    {DAY_SHORT[day][lang]}
-                                    {day === today && activeDay !== day && (
-                                        <span className="ml-1 inline-block w-1 h-1 rounded-full bg-blue-400" />
-                                    )}
-                                </button>
-                            ))}
                         </div>
 
-                        <div className="px-4 pb-4 pt-2 space-y-1.5">
-                            {selectedDayEntries.map(entry => {
-                                const isActive = entry.days.includes(today)
-                                    && timeToMinutes(entry.startTime) <= now
-                                    && now < timeToMinutes(entry.endTime);
-                                return (
-                                    <div
-                                        key={entry.id}
-                                        className={`flex gap-3 items-start rounded-xl px-3 py-2.5 ${
-                                            isActive
-                                                ? 'bg-green-50 border border-green-200'
-                                                : 'bg-gray-50'
-                                        }`}
-                                    >
-                                        <span className={`text-xs font-mono flex-shrink-0 pt-0.5 ${isActive ? 'text-green-600 font-bold' : 'text-gray-400'}`}>
-                                            {entry.startTime}<br />{entry.endTime}
-                                        </span>
-                                        <div>
-                                            <p className={`text-sm font-semibold leading-tight ${isActive ? 'text-green-800' : 'text-gray-800'}`}>
-                                                {entry.title[lang] || entry.title.bg || entry.title.en}
-                                                {isActive && <span className="ml-2 text-[10px] text-green-500 font-bold">● СЕГА</span>}
-                                            </p>
-                                            {(entry.location?.bg || entry.location?.en) && (
-                                                <p className="text-xs text-gray-400 mt-0.5">
-                                                    {entry.location[lang] || entry.location.bg || entry.location.en}
-                                                </p>
-                                            )}
-                                            {entry.placeIds && entry.placeIds.length > 0 && (
-                                                <div className="flex flex-wrap gap-1 mt-0.5">
-                                                    {entry.placeIds.map(pid => {
-                                                        const p = places.find(pl => pl.id === pid);
-                                                        if (!p) return null;
-                                                        return p.mapsUrl ? (
-                                                            <a key={pid} href={p.mapsUrl} target="_blank" rel="noopener noreferrer"
-                                                                className="inline-flex items-center gap-0.5 text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full hover:bg-gray-200">
-                                                                📍 {p.name[lang] || p.name.bg || p.name.en}
-                                                            </a>
-                                                        ) : (
-                                                            <span key={pid} className="inline-flex items-center gap-0.5 text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">
-                                                                📍 {p.name[lang] || p.name.bg || p.name.en}
-                                                            </span>
-                                                        );
-                                                    })}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
+                        <a
+                            href={`/apartments/${slug}/brochure/schedule`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-shrink-0 text-[10px] font-semibold text-blue-500 hover:text-blue-700 transition-colors"
+                        >
+                            {lang === 'bg' ? 'Цялата програма →' : 'Full schedule →'}
+                        </a>
                     </div>
                 )}
             </div>
@@ -396,6 +262,30 @@ const GuestBrochure: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-[#f8f9fb]">
+            <Helmet>
+                {(() => {
+                    const aptName = apartment.name?.[lang] || apartment.name?.en || apartment.name?.bg || 'Brochure';
+                    const desc = lang === 'bg'
+                        ? `Разгледай наблизо – ${places.length} места около ${aptName}`
+                        : `Explore nearby – ${places.length} places around ${aptName}`;
+                    const image = apartment.heroImage || apartment.photos?.[0] || '';
+                    const url = `${window.location.origin}/apartments/${slug}/brochure`;
+                    return <>
+                        <title>{lang === 'bg' ? `Брошура · ${aptName}` : `Brochure · ${aptName}`}</title>
+                        <meta name="description" content={desc} />
+                        <meta property="og:type" content="website" />
+                        <meta property="og:title" content={lang === 'bg' ? `Брошура · ${aptName}` : `Brochure · ${aptName}`} />
+                        <meta property="og:description" content={desc} />
+                        <meta property="og:url" content={url} />
+                        {image && <meta property="og:image" content={image} />}
+                        <meta name="twitter:card" content="summary_large_image" />
+                        <meta name="twitter:title" content={lang === 'bg' ? `Брошура · ${aptName}` : `Brochure · ${aptName}`} />
+                        <meta name="twitter:description" content={desc} />
+                        {image && <meta name="twitter:image" content={image} />}
+                        <meta name="robots" content="noindex, nofollow" />
+                    </>;
+                })()}
+            </Helmet>
             <StickyHeader
                 lang={lang}
                 groups={allSections.filter(s => s.groupId !== null)}
@@ -408,6 +298,10 @@ const GuestBrochure: React.FC = () => {
                 onGroupSelect={setActiveGroup}
                 carouselRef={carouselRef}
             />
+
+            {apartment.timetable?.entries && apartment.timetable.entries.length > 0 && (
+                <TimetableSection entries={apartment.timetable.entries} lang={lang} slug={slug!} places={places.map(p => ({ id: p.id, name: p.name, mapsUrl: p.mapsUrl }))} />
+            )}
 
             <main className="px-4 pt-4 pb-10 space-y-7">
                 {sections.map((section, si) => (
@@ -464,10 +358,6 @@ const GuestBrochure: React.FC = () => {
                     </div>
                 ))}
             </main>
-
-            {apartment.timetable?.entries && apartment.timetable.entries.length > 0 && (
-                <TimetableSection entries={apartment.timetable.entries} lang={lang} places={places.map(p => ({ id: p.id, name: p.name, mapsUrl: p.mapsUrl }))} />
-            )}
 
             <p className="text-center text-xs text-gray-300 pb-8">morence.top</p>
         </div>

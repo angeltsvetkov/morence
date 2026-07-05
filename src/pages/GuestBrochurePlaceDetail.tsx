@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useLanguage } from '../hooks/useLanguage';
@@ -93,6 +94,25 @@ const GuestBrochurePlaceDetail: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-[#f8f9fb]">
+            <Helmet>
+                {(() => {
+                    const url = `${window.location.origin}/apartments/${slug}/brochure/${placeId}`;
+                    return <>
+                        <title>{name} · morence</title>
+                        <meta name="description" content={description || name} />
+                        <meta property="og:type" content="website" />
+                        <meta property="og:title" content={`${name} · morence`} />
+                        <meta property="og:description" content={description || name} />
+                        <meta property="og:url" content={url} />
+                        {place.image && <meta property="og:image" content={place.image} />}
+                        <meta name="twitter:card" content="summary_large_image" />
+                        <meta name="twitter:title" content={`${name} · morence`} />
+                        <meta name="twitter:description" content={description || name} />
+                        {place.image && <meta name="twitter:image" content={place.image} />}
+                        <meta name="robots" content="noindex, nofollow" />
+                    </>;
+                })()}
+            </Helmet>
             {/* header */}
             <header className="bg-white sticky top-0 z-20 border-b border-gray-100">
                 <div className="px-4 py-3 flex items-center justify-between">
@@ -122,6 +142,32 @@ const GuestBrochurePlaceDetail: React.FC = () => {
                 </div>
             )}
 
+            {/* action buttons */}
+            {(place.mapsUrl || place.phone) && (
+                <div className="flex gap-3 px-5 pt-5">
+                    {place.mapsUrl && (
+                        <a
+                            href={place.mapsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-200 rounded-xl py-3 text-sm font-medium text-gray-700 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors shadow-sm"
+                        >
+                            <MapPin className="w-4 h-4 text-red-400" />
+                            {lang === 'bg' ? 'Заведи ме' : 'Go there'}
+                        </a>
+                    )}
+                    {place.phone && (
+                        <a
+                            href={`tel:${place.phone}`}
+                            className="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-200 rounded-xl py-3 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-colors shadow-sm"
+                        >
+                            <Phone className="w-4 h-4 text-blue-400" />
+                            {place.phone}
+                        </a>
+                    )}
+                </div>
+            )}
+
             <div className="px-5 py-5 space-y-5">
                 {/* name + status */}
                 <div className="flex items-start justify-between gap-3">
@@ -136,32 +182,6 @@ const GuestBrochurePlaceDetail: React.FC = () => {
                 {/* description */}
                 {description && (
                     <p className="text-sm text-gray-600 leading-relaxed">{description}</p>
-                )}
-
-                {/* action buttons */}
-                {(place.mapsUrl || place.phone) && (
-                    <div className="flex gap-3">
-                        {place.mapsUrl && (
-                            <a
-                                href={place.mapsUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-200 rounded-xl py-3 text-sm font-medium text-gray-700 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors shadow-sm"
-                            >
-                                <MapPin className="w-4 h-4 text-red-400" />
-                                {lang === 'bg' ? 'Навигирай' : 'Navigate'}
-                            </a>
-                        )}
-                        {place.phone && (
-                            <a
-                                href={`tel:${place.phone}`}
-                                className="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-200 rounded-xl py-3 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-colors shadow-sm"
-                            >
-                                <Phone className="w-4 h-4 text-blue-400" />
-                                {place.phone}
-                            </a>
-                        )}
-                    </div>
                 )}
 
                 {/* pricelist */}

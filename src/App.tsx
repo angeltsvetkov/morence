@@ -12,6 +12,7 @@ import ApartmentDetail from './pages/ApartmentDetail';
 import ApartmentCalendar from './pages/ApartmentCalendar';
 import GuestBrochure from './pages/GuestBrochure';
 import GuestBrochurePlaceDetail from './pages/GuestBrochurePlaceDetail';
+import GuestBrochureSchedule from './pages/GuestBrochureSchedule';
 import DefaultApartmentRedirect from './pages/DefaultApartmentRedirect';
 import { getSubdomainInfo } from './utils/subdomain';
 
@@ -32,6 +33,7 @@ const AppContent = () => {
           } />
           <Route path="/apartments/:slug" element={<ApartmentDetail />} />
           <Route path="/apartments/:slug/brochure" element={<GuestBrochure />} />
+          <Route path="/apartments/:slug/brochure/schedule" element={<GuestBrochureSchedule />} />
           <Route path="/apartments/:slug/brochure/:placeId" element={<GuestBrochurePlaceDetail />} />
           <Route path="/apartments/:apartmentId/calendar" element={<ApartmentCalendar />} />
           <Route path="/places" element={<Places />} />
