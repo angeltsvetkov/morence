@@ -71,67 +71,73 @@ const TimetableSection: React.FC<TimetableSectionProps> = ({ entries, lang, slug
 
     return (
         <section className="px-4 pt-4 pb-2">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                {/* NOW row */}
-                {activeEntry && (
-                    <div className="flex items-center gap-3 px-4 py-3">
-                        {/* pulse dot */}
-                        <span className="relative flex-shrink-0">
-                            <span className="absolute inline-flex w-2.5 h-2.5 rounded-full bg-green-400 opacity-75 animate-ping" />
-                            <span className="relative inline-flex w-2.5 h-2.5 rounded-full bg-green-500" />
-                        </span>
+            <div className="relative rounded-2xl overflow-hidden shadow-sm border border-sky-100/80">
+                {/* decorative background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-sky-50 via-cyan-50 to-blue-50" />
 
-                        {/* info */}
-                        <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold text-green-600 uppercase tracking-wider leading-none mb-0.5">
-                                {lang === 'bg' ? 'Сега' : 'Now'} · <span className="font-mono font-normal normal-case tracking-normal">{activeEntry.startTime}–{activeEntry.endTime}</span>
-                            </p>
-                            <p className="text-sm font-semibold text-gray-900 leading-tight truncate">
-                                {activeEntry.title[lang] || activeEntry.title.bg || activeEntry.title.en}
-                            </p>
+                {/* content */}
+                <div className="relative">
+                    {/* NOW row */}
+                    {activeEntry && (
+                        <div className="flex items-center gap-3 px-4 py-3.5">
+                            {/* pulse dot */}
+                            <span className="relative flex-shrink-0">
+                                <span className="absolute inline-flex w-2.5 h-2.5 rounded-full bg-green-400 opacity-75 animate-ping" />
+                                <span className="relative inline-flex w-2.5 h-2.5 rounded-full bg-green-500" />
+                            </span>
+
+                            {/* info */}
+                            <div className="flex-1 min-w-0">
+                                <p className="text-xs font-bold text-green-600 uppercase tracking-wider leading-none mb-0.5">
+                                    {lang === 'bg' ? 'Сега' : 'Now'} · <span className="font-mono font-normal normal-case tracking-normal">{activeEntry.startTime}–{activeEntry.endTime}</span>
+                                </p>
+                                <p className="text-sm font-semibold text-gray-900 leading-tight truncate">
+                                    {activeEntry.title[lang] || activeEntry.title.bg || activeEntry.title.en}
+                                </p>
+                            </div>
+
+                            {/* navigate button */}
+                            {nowPlace?.mapsUrl && (
+                                <a
+                                    href={nowPlace.mapsUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex-shrink-0 flex items-center gap-1.5 bg-green-500 hover:bg-green-600 active:scale-95 text-white text-xs font-semibold px-3 py-1.5 rounded-full transition-all shadow-sm shadow-green-200"
+                                >
+                                    <MapPin size={12} />
+                                    {lang === 'bg' ? 'Заведи ме' : 'Go there'}
+                                </a>
+                            )}
                         </div>
+                    )}
 
-                        {/* navigate button */}
-                        {nowPlace?.mapsUrl && (
+                    {/* divider + NEXT row */}
+                    {nextEntry && (
+                        <div className={`flex items-center gap-3 px-4 py-2.5 ${activeEntry ? 'border-t border-sky-100/80' : ''}`}>
+                            <span className="flex-shrink-0 w-2.5 h-2.5 flex items-center justify-center">
+                                <span className="w-1.5 h-1.5 rounded-full bg-sky-200" />
+                            </span>
+
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[10px] font-bold text-sky-400 uppercase tracking-wider leading-none mb-0.5">
+                                    {lang === 'bg' ? 'Следващо' : 'Next'} · <span className="font-mono font-normal normal-case tracking-normal">{nextEntry.startTime}</span>
+                                </p>
+                                <p className="text-xs text-gray-600 font-medium leading-tight truncate">
+                                    {nextEntry.title[lang] || nextEntry.title.bg || nextEntry.title.en}
+                                </p>
+                            </div>
+
                             <a
-                                href={nowPlace.mapsUrl}
+                                href={`/apartments/${slug}/brochure/schedule`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex-shrink-0 flex items-center gap-1.5 bg-green-500 hover:bg-green-600 active:scale-95 text-white text-xs font-semibold px-3 py-1.5 rounded-full transition-all shadow-sm shadow-green-200"
+                                className="flex-shrink-0 text-[10px] font-semibold text-sky-500 hover:text-sky-700 transition-colors"
                             >
-                                <MapPin size={12} />
-                                {lang === 'bg' ? 'Заведи ме' : 'Go there'}
+                                {lang === 'bg' ? 'Цялата програма →' : 'Full schedule →'}
                             </a>
-                        )}
-                    </div>
-                )}
-
-                {/* divider + NEXT row */}
-                {nextEntry && (
-                    <div className={`flex items-center gap-3 px-4 py-2.5 ${activeEntry ? 'border-t border-gray-50' : ''}`}>
-                        <span className="flex-shrink-0 w-2.5 h-2.5 flex items-center justify-center">
-                            <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
-                        </span>
-
-                        <div className="flex-1 min-w-0">
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider leading-none mb-0.5">
-                                {lang === 'bg' ? 'Следващо' : 'Next'} · <span className="font-mono font-normal normal-case tracking-normal">{nextEntry.startTime}</span>
-                            </p>
-                            <p className="text-xs text-gray-600 font-medium leading-tight truncate">
-                                {nextEntry.title[lang] || nextEntry.title.bg || nextEntry.title.en}
-                            </p>
                         </div>
-
-                        <a
-                            href={`/apartments/${slug}/brochure/schedule`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex-shrink-0 text-[10px] font-semibold text-blue-500 hover:text-blue-700 transition-colors"
-                        >
-                            {lang === 'bg' ? 'Цялата програма →' : 'Full schedule →'}
-                        </a>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </section>
     );
