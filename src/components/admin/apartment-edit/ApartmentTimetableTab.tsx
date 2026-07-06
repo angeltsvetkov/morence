@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { TimetableEntry, TimetableDay } from '../../../types';
-import { Plus, Trash2, Pencil, Check, X, Clock, Upload, Download, AlertCircle, MapPin } from 'lucide-react';
+import { Plus, Trash2, Pencil, Check, X, Clock, Upload, Download, AlertCircle, MapPin, Image as ImageIcon, Loader } from 'lucide-react';
+import { uploadActivityThumbnail, deleteActivityThumbnail } from '../../../utils/storageUtils';
 
 const ALL_DAYS: TimetableDay[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 const DAY_LABEL_BG: Record<TimetableDay, string> = { mon: 'Пон', tue: 'Вт', wed: 'Ср', thu: 'Чет', fri: 'Пет', sat: 'Съб', sun: 'Нед' };
@@ -13,6 +14,7 @@ const EMPTY_ENTRY = (): Omit<TimetableEntry, 'id'> => ({
     title: { bg: '', en: '' },
     location: { bg: '', en: '' },
     placeIds: [],
+    thumbnail: '',
 });
 
 export interface PlaceOption {
@@ -25,6 +27,7 @@ interface Props {
     entries: TimetableEntry[];
     setEntries: (entries: TimetableEntry[]) => void;
     places?: PlaceOption[];
+    apartmentId?: string;
 }
 
 interface EntryFormProps {
@@ -33,16 +36,50 @@ interface EntryFormProps {
     onCancel: () => void;
     saveLabel?: string;
     places?: PlaceOption[];
+    apartmentId?: string;
 }
 
-const EntryForm: React.FC<EntryFormProps> = ({ initial, onSave, onCancel, saveLabel = 'Запази', places = [] }) => {
+const EntryForm: React.FC<EntryFormProps> = ({ initial, onSave, onCancel, saveLabel = 'Запази', places = [], apartmentId }) => {
     const [form, setForm] = useState(initial);
+    const [uploading, setUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const toggleDay = (day: TimetableDay) => {
         setForm(f => ({
             ...f,
             days: f.days.includes(day) ? f.days.filter(d => d !== day) : [...f.days, day],
         }));
+    };
+
+    const handleThumbnailUpload = async (file: File) => {
+        if (!apartmentId) {
+            alert('Apartment ID is required for image upload');
+            return;
+        }
+
+        try {
+            setUploading(true);
+            const url = await uploadActivityThumbnail(file, apartmentId);
+            setForm(f => ({ ...f, thumbnail: url }));
+        } catch (error) {
+            console.error('Error uploading thumbnail:', error);
+            alert('Failed to upload image');
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const handleRemoveThumbnail = async () => {
+        if (form.thumbnail) {
+            try {
+                await deleteActivityThumbnail(form.thumbnail);
+                setForm(f => ({ ...f, thumbnail: '' }));
+            } catch (error) {
+                console.error('Error deleting thumbnail:', error);
+                // Still remove from form even if delete fails
+                setForm(f => ({ ...f, thumbnail: '' }));
+            }
+        }
     };
 
     const isValid = form.days.length > 0 && form.startTime && form.endTime && (form.title.bg || form.title.en);
@@ -191,6 +228,62 @@ const EntryForm: React.FC<EntryFormProps> = ({ initial, onSave, onCancel, saveLa
                 </div>
             )}
 
+            {/* Thumbnail */}
+            <div>
+                <p className="text-xs font-medium text-gray-600 mb-1.5">Снимка (незадължително)</p>
+                <div className="flex gap-3 items-start">
+                    <div className="flex-1">
+                        {form.thumbnail ? (
+                            <div className="relative">
+                                <img
+                                    src={form.thumbnail}
+                                    alt="Activity thumbnail"
+                                    className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleRemoveThumbnail}
+                                    className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded hover:bg-red-600"
+                                >
+                                    <X size={14} />
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={uploading || !apartmentId}
+                                className="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center gap-2 text-gray-500 hover:border-blue-400 hover:text-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                {uploading ? (
+                                    <>
+                                        <Loader size={16} className="animate-spin" />
+                                        <span className="text-xs">Качване...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <ImageIcon size={20} />
+                                        <span className="text-xs">Кликни за качване на снимка</span>
+                                    </>
+                                )}
+                            </button>
+                        )}
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={e => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                    handleThumbnailUpload(file);
+                                }
+                            }}
+                            className="hidden"
+                        />
+                    </div>
+                </div>
+            </div>
+
             <div className="flex gap-2 pt-1">
                 <button
                     type="button"
@@ -212,7 +305,7 @@ const EntryForm: React.FC<EntryFormProps> = ({ initial, onSave, onCancel, saveLa
     );
 };
 
-const ApartmentTimetableTab: React.FC<Props> = ({ entries, setEntries, places = [] }) => {
+const ApartmentTimetableTab: React.FC<Props> = ({ entries, setEntries, places = [], apartmentId }) => {
     const [adding, setAdding] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [csvError, setCsvError] = useState<string | null>(null);
@@ -344,6 +437,7 @@ const ApartmentTimetableTab: React.FC<Props> = ({ entries, setEntries, places = 
                     onCancel={() => setAdding(false)}
                     saveLabel="Добави"
                     places={places}
+                    apartmentId={apartmentId}
                 />
             )}
 
@@ -361,10 +455,11 @@ const ApartmentTimetableTab: React.FC<Props> = ({ entries, setEntries, places = 
                         editingId === entry.id ? (
                             <EntryForm
                                 key={entry.id}
-                                initial={{ days: entry.days, startTime: entry.startTime, endTime: entry.endTime, title: entry.title, location: entry.location, placeIds: entry.placeIds ?? [] }}
+                                initial={{ days: entry.days, startTime: entry.startTime, endTime: entry.endTime, title: entry.title, location: entry.location, placeIds: entry.placeIds ?? [], thumbnail: entry.thumbnail }}
                                 onSave={data => updateEntry(entry.id, data)}
                                 onCancel={() => setEditingId(null)}
                                 places={places}
+                                apartmentId={apartmentId}
                             />
                         ) : (
                             <div key={entry.id} className="flex items-start gap-3 bg-white border border-gray-100 rounded-xl px-4 py-3 hover:border-gray-200 transition-colors">

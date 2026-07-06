@@ -1395,6 +1395,7 @@ const ApartmentEditAdmin: React.FC = () => {
                         entries={timetableEntries}
                         setEntries={setTimetableEntries}
                         places={brochureItems.map(p => ({ id: p.id, name: p.name, mapsUrl: p.mapsUrl }))}
+                        apartmentId={apartment?.id}
                     />
                 )}
 

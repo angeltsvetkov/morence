@@ -224,45 +224,59 @@ const GuestBrochureSchedule: React.FC = () => {
                                 <span className={`w-px flex-1 ${isNow ? 'bg-green-200' : 'bg-gray-100'}`} />
                             </div>
 
-                            {/* Content */}
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-start gap-2">
-                                    <p className={`text-sm font-semibold leading-tight flex-1 ${isNow ? 'text-green-800' : 'text-gray-800'}`}>
-                                        {entry.title[lang] || entry.title.bg || entry.title.en}
-                                    </p>
-                                    {isNow && (
-                                        <span className="flex-shrink-0 flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                                            {lang === 'bg' ? 'Сега' : 'Now'}
-                                        </span>
+                            {/* Content with optional thumbnail */}
+                            <div className="flex-1 min-w-0 flex gap-3">
+                                {/* Text content */}
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-start gap-2">
+                                        <p className={`text-sm font-semibold leading-tight flex-1 ${isNow ? 'text-green-800' : 'text-gray-800'}`}>
+                                            {entry.title[lang] || entry.title.bg || entry.title.en}
+                                        </p>
+                                        {isNow && (
+                                            <span className="flex-shrink-0 flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                                {lang === 'bg' ? 'Сега' : 'Now'}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {(entry.location?.bg || entry.location?.en) && (
+                                        <p className="text-xs text-gray-400 mt-0.5">
+                                            {entry.location[lang] || entry.location.bg || entry.location.en}
+                                        </p>
+                                    )}
+
+                                    {entry.placeIds && entry.placeIds.length > 0 && (
+                                        <div className="flex flex-wrap gap-1 mt-1.5">
+                                            {entry.placeIds.map(pid => {
+                                                const p = places.find(pl => pl.id === pid);
+                                                if (!p) return null;
+                                                const pName = p.name[lang] || p.name.bg || p.name.en;
+                                                return p.mapsUrl ? (
+                                                    <a key={pid} href={p.mapsUrl} target="_blank" rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-1 text-[11px] bg-gray-100 text-gray-500 hover:bg-blue-50 hover:text-blue-600 px-2 py-0.5 rounded-full transition-colors">
+                                                        <MapPin size={10} />
+                                                        {pName}
+                                                    </a>
+                                                ) : (
+                                                    <span key={pid} className="inline-flex items-center gap-1 text-[11px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
+                                                        <MapPin size={10} />
+                                                        {pName}
+                                                    </span>
+                                                );
+                                            })}
+                                        </div>
                                     )}
                                 </div>
 
-                                {(entry.location?.bg || entry.location?.en) && (
-                                    <p className="text-xs text-gray-400 mt-0.5">
-                                        {entry.location[lang] || entry.location.bg || entry.location.en}
-                                    </p>
-                                )}
-
-                                {entry.placeIds && entry.placeIds.length > 0 && (
-                                    <div className="flex flex-wrap gap-1 mt-1.5">
-                                        {entry.placeIds.map(pid => {
-                                            const p = places.find(pl => pl.id === pid);
-                                            if (!p) return null;
-                                            const pName = p.name[lang] || p.name.bg || p.name.en;
-                                            return p.mapsUrl ? (
-                                                <a key={pid} href={p.mapsUrl} target="_blank" rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-1 text-[11px] bg-gray-100 text-gray-500 hover:bg-blue-50 hover:text-blue-600 px-2 py-0.5 rounded-full transition-colors">
-                                                    <MapPin size={10} />
-                                                    {pName}
-                                                </a>
-                                            ) : (
-                                                <span key={pid} className="inline-flex items-center gap-1 text-[11px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
-                                                    <MapPin size={10} />
-                                                    {pName}
-                                                </span>
-                                            );
-                                        })}
+                                {/* Thumbnail */}
+                                {entry.thumbnail && (
+                                    <div className="flex-shrink-0">
+                                        <img
+                                            src={entry.thumbnail}
+                                            alt={entry.title[lang] || entry.title.bg || entry.title.en}
+                                            className="w-20 h-20 rounded-lg object-cover"
+                                        />
                                     </div>
                                 )}
                             </div>

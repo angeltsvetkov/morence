@@ -92,6 +92,7 @@ export interface TimetableEntry {
     title: { bg: string; en: string };
     location?: { bg: string; en: string };
     placeIds?: string[];
+    thumbnail?: string; // URL to the activity thumbnail image
 }
 
 export interface BusStop {

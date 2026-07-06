@@ -3,8 +3,52 @@ import { getStorage, ref, deleteObject, getDownloadURL, uploadBytes } from 'fire
 const storage = getStorage();
 
 /**
- * Generate a storage path for apartment photos
+ * Generate a storage path for activity thumbnails
  */
+export const getActivityThumbnailPath = (apartmentId: string, fileName: string): string => {
+    const timestamp = Date.now();
+    const timestampedFileName = `${timestamp}_${fileName}`;
+    return `apartments/${apartmentId}/activities/${timestampedFileName}`;
+};
+
+/**
+ * Generate a temporary storage path for activity thumbnails
+ */
+export const getTempActivityThumbnailPath = (tempSlug: string, fileName: string): string => {
+    const timestamp = Date.now();
+    const timestampedFileName = `${timestamp}_${fileName}`;
+    return `apartments/temp/${tempSlug}/activities/${timestampedFileName}`;
+};
+
+/**
+ * Upload activity thumbnail to storage
+ */
+export const uploadActivityThumbnail = async (
+    file: File,
+    apartmentId: string
+): Promise<string> => {
+    const path = getActivityThumbnailPath(apartmentId, file.name);
+    const fileRef = ref(storage, path);
+    await uploadBytes(fileRef, file);
+    return getDownloadURL(fileRef);
+};
+
+/**
+ * Delete activity thumbnail from storage
+ */
+export const deleteActivityThumbnail = async (thumbnailUrl: string): Promise<void> => {
+    try {
+        const urlParts = thumbnailUrl.split('/o/')[1]?.split('?')[0];
+        if (urlParts) {
+            const filePath = decodeURIComponent(urlParts);
+            const fileRef = ref(storage, filePath);
+            await deleteObject(fileRef);
+        }
+    } catch (error) {
+        console.error('Error deleting activity thumbnail:', error);
+    }
+};
+
 export const getApartmentPhotoPath = (apartmentId: string, fileName: string): string => {
     const timestamp = Date.now();
     const timestampedFileName = `${timestamp}_${fileName}`;
