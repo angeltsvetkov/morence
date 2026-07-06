@@ -24,6 +24,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import OptimizedImage from '../../ui/optimized-image';
 import { processImageFiles, getSupportedImageTypes, isSupportedImageFile, isHEICFile } from '../../../utils/imageUtils';
+import NavigationIconsSection from './NavigationIconsSection';
 
 const DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
 const DAY_LABELS: Record<string, string> = {
@@ -770,6 +771,14 @@ const ApartmentBrochureTab: React.FC<BrochureTabProps> = ({
             <Button variant="outline" onClick={addPlace} className="w-full flex items-center gap-2">
                 <Plus size={16} /> Добави място
             </Button>
+
+            {/* navigation icons section */}
+            <div className="border-t pt-6">
+                <NavigationIconsSection
+                    navigationIcons={currentApartmentData.navigationIcons}
+                    onChange={(icons) => setCurrentApartmentData(prev => ({ ...prev, navigationIcons: icons }))}
+                />
+            </div>
         </div>
     );
 };

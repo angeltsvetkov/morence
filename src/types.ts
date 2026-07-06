@@ -183,4 +183,9 @@ export interface Apartment {
         ogDescription?: { bg?: string; en?: string };
     };
     busTracker?: BusTrackerData;
+    navigationIcons?: {
+        homeIcon?: string;
+        activitiesIcon?: string;
+        busScheduleIcon?: string;
+    };
 }
