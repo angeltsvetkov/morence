@@ -707,6 +707,7 @@ const ApartmentEditAdmin: React.FC = () => {
                     title: { bg: e.title.bg || '', en: e.title.en || '' },
                     ...(e.location?.bg || e.location?.en ? { location: { bg: e.location.bg || '', en: e.location.en || '' } } : {}),
                     ...(e.placeIds?.length ? { placeIds: e.placeIds } : {}),
+                    ...(e.thumbnail ? { thumbnail: e.thumbnail } : {}),
                 })),
             };
         } else {
