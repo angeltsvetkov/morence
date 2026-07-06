@@ -654,7 +654,9 @@ const ApartmentBrochureTab: React.FC<BrochureTabProps> = ({
     setBrochureItems,
     brochureGroups,
     setBrochureGroups,
-    slug
+    slug,
+    currentApartmentData,
+    setCurrentApartmentData
 }) => {
     const [isLinkCopied, setIsLinkCopied] = useState(false);
 
