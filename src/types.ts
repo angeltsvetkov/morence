@@ -94,6 +94,28 @@ export interface TimetableEntry {
     placeIds?: string[];
 }
 
+export interface BusStop {
+    id: string;
+    name: { bg: string; en: string };
+}
+
+export interface BusTrip {
+    id: string;
+    days: TimetableDay[];
+    /** Times indexed by stop position in BusTrackerData.stops; null/'' means bus skips that stop */
+    times: (string | null)[];
+}
+
+export interface BusTrackerData {
+    enabled: boolean;
+    /** Index into stops[] that is the apartment's stop */
+    myStopIndex: number;
+    stops: BusStop[];
+    trips: BusTrip[];
+    /** Travel time in minutes between consecutive stops; length = stops.length - 1 */
+    travelTimes?: number[];
+}
+
 export interface Apartment {
     id: string;
     name: { [key in 'bg' | 'en']?: string };
@@ -160,4 +182,5 @@ export interface Apartment {
         ogTitle?: { bg?: string; en?: string };
         ogDescription?: { bg?: string; en?: string };
     };
+    busTracker?: BusTrackerData;
 }

@@ -5,6 +5,7 @@ import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useLanguage } from '../hooks/useLanguage';
 import BrochureLoader from '../components/common/BrochureLoader';
+import BusTrackerCard from '../components/brochure/BusTrackerCard';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { Apartment, TimetableEntry } from '../types';
 import { AlertTriangle, ImageOff, MapPin,
@@ -307,6 +308,10 @@ const GuestBrochure: React.FC = () => {
 
             {apartment.timetable?.entries && apartment.timetable.entries.length > 0 && (
                 <TimetableSection entries={apartment.timetable.entries} lang={lang} slug={slug!} places={places.map(p => ({ id: p.id, name: p.name, mapsUrl: p.mapsUrl }))} />
+            )}
+
+            {apartment.busTracker?.enabled && apartment.busTracker.stops.length > 0 && (
+                <BusTrackerCard busTracker={apartment.busTracker} lang={lang} />
             )}
 
             <main className="px-4 pt-4 pb-10 space-y-7">
