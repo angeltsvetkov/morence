@@ -7,7 +7,7 @@ import { useLanguage } from '../hooks/useLanguage';
 import BrochureLoader from '../components/common/BrochureLoader';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { Apartment, TimetableDay } from '../types';
-import { AlertTriangle, ArrowLeft, MapPin, Clock } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, MapPin, Clock, Activity } from 'lucide-react';
 
 const ALL_DAYS: TimetableDay[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 const DAY_LABEL: Record<TimetableDay, { bg: string; en: string }> = {
@@ -209,16 +209,32 @@ const GuestBrochureSchedule: React.FC = () => {
                             }`}
                         >
                             <div className="flex gap-3 p-4">
-                                {/* Thumbnail on the left */}
-                                {entry.thumbnail && (
-                                    <div className="flex-shrink-0">
+                                {/* Thumbnail or placeholder on the left */}
+                                <div className="flex-shrink-0">
+                                    {entry.thumbnail ? (
                                         <img
                                             src={entry.thumbnail}
                                             alt={entry.title[lang] || entry.title.bg || entry.title.en}
                                             className="w-24 h-24 rounded-xl object-cover"
                                         />
-                                    </div>
-                                )}
+                                    ) : (
+                                        <div className={`w-24 h-24 rounded-xl flex items-center justify-center ${
+                                            isNow
+                                                ? 'bg-green-100'
+                                                : isPast
+                                                    ? 'bg-gray-50'
+                                                    : 'bg-gradient-to-br from-blue-50 to-blue-100'
+                                        }`}>
+                                            <Activity size={40} className={`${
+                                                isNow
+                                                    ? 'text-green-400'
+                                                    : isPast
+                                                        ? 'text-gray-300'
+                                                        : 'text-blue-300'
+                                            }`} />
+                                        </div>
+                                    )}
+                                </div>
 
                                 {/* Time and content */}
                                 <div className="flex-1 min-w-0 flex gap-3">
