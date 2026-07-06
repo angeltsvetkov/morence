@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
+import BottomNavigation from './components/layout/BottomNavigation';
 import GuestInstructions from './pages/GuestInstructions';
 import Places from './pages/Places';
 import Admin from './pages/Admin';
@@ -13,6 +14,7 @@ import ApartmentCalendar from './pages/ApartmentCalendar';
 import GuestBrochure from './pages/GuestBrochure';
 import GuestBrochurePlaceDetail from './pages/GuestBrochurePlaceDetail';
 import GuestBrochureSchedule from './pages/GuestBrochureSchedule';
+import GuestBrochureBusSchedule from './pages/GuestBrochureBusSchedule';
 import DefaultBrochureRedirect from './pages/DefaultBrochureRedirect';
 import DefaultApartmentRedirect from './pages/DefaultApartmentRedirect';
 import { getSubdomainInfo } from './utils/subdomain';
@@ -27,7 +29,7 @@ const AppContent = () => {
   return (
     <div className="flex flex-col min-h-screen">
       {!isAdminPage && !isSurveyPage && !isBrochurePage && <Header />}
-      <main className="flex-grow">
+      <main className="flex-grow pb-20">
         <Routes>
           <Route path="/" element={
             subdomainInfo.isSubdomain ? <ApartmentDetail /> : <DefaultApartmentRedirect />
@@ -37,6 +39,7 @@ const AppContent = () => {
           <Route path="/brochure/:lang" element={<DefaultBrochureRedirect />} />
           <Route path="/apartments/:slug/brochure" element={<GuestBrochure />} />
           <Route path="/apartments/:slug/brochure/schedule" element={<GuestBrochureSchedule />} />
+          <Route path="/apartments/:slug/brochure/bus-schedule" element={<GuestBrochureBusSchedule />} />
           <Route path="/apartments/:slug/brochure/:placeId" element={<GuestBrochurePlaceDetail />} />
           <Route path="/apartments/:apartmentId/calendar" element={<ApartmentCalendar />} />
           <Route path="/places" element={<Places />} />
@@ -45,6 +48,7 @@ const AppContent = () => {
         </Routes>
       </main>
       {!isAdminPage && !isSurveyPage && !isBrochurePage && <Footer />}
+      <BottomNavigation />
     </div>
   );
 };
