@@ -200,7 +200,7 @@ const GuestBrochureSchedule: React.FC = () => {
                     return (
                         <div
                             key={entry.id}
-                            className={`flex gap-4 rounded-2xl px-4 py-3 ${
+                            className={`rounded-2xl overflow-hidden ${
                                 isNow
                                     ? 'bg-green-50 border border-green-200 shadow-sm'
                                     : isPast
@@ -208,77 +208,79 @@ const GuestBrochureSchedule: React.FC = () => {
                                         : 'bg-white border border-gray-100'
                             }`}
                         >
-                            {/* Time column */}
-                            <div className="flex-shrink-0 w-14 text-right pt-0.5">
-                                <p className={`text-xs font-mono font-semibold ${isNow ? 'text-green-600' : 'text-gray-400'}`}>
-                                    {entry.startTime}
-                                </p>
-                                <p className={`text-xs font-mono ${isNow ? 'text-green-400' : 'text-gray-300'}`}>
-                                    {entry.endTime}
-                                </p>
-                            </div>
-
-                            {/* Divider line */}
-                            <div className="flex flex-col items-center gap-0.5 flex-shrink-0">
-                                <span className={`w-2 h-2 rounded-full mt-1 ${isNow ? 'bg-green-500' : 'bg-gray-200'}`} />
-                                <span className={`w-px flex-1 ${isNow ? 'bg-green-200' : 'bg-gray-100'}`} />
-                            </div>
-
-                            {/* Content with optional thumbnail */}
-                            <div className="flex-1 min-w-0 flex gap-3">
-                                {/* Text content */}
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-start gap-2">
-                                        <p className={`text-sm font-semibold leading-tight flex-1 ${isNow ? 'text-green-800' : 'text-gray-800'}`}>
-                                            {entry.title[lang] || entry.title.bg || entry.title.en}
-                                        </p>
-                                        {isNow && (
-                                            <span className="flex-shrink-0 flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                                                {lang === 'bg' ? 'Сега' : 'Now'}
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    {(entry.location?.bg || entry.location?.en) && (
-                                        <p className="text-xs text-gray-400 mt-0.5">
-                                            {entry.location[lang] || entry.location.bg || entry.location.en}
-                                        </p>
-                                    )}
-
-                                    {entry.placeIds && entry.placeIds.length > 0 && (
-                                        <div className="flex flex-wrap gap-1 mt-1.5">
-                                            {entry.placeIds.map(pid => {
-                                                const p = places.find(pl => pl.id === pid);
-                                                if (!p) return null;
-                                                const pName = p.name[lang] || p.name.bg || p.name.en;
-                                                return p.mapsUrl ? (
-                                                    <a key={pid} href={p.mapsUrl} target="_blank" rel="noopener noreferrer"
-                                                        className="inline-flex items-center gap-1 text-[11px] bg-gray-100 text-gray-500 hover:bg-blue-50 hover:text-blue-600 px-2 py-0.5 rounded-full transition-colors">
-                                                        <MapPin size={10} />
-                                                        {pName}
-                                                    </a>
-                                                ) : (
-                                                    <span key={pid} className="inline-flex items-center gap-1 text-[11px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
-                                                        <MapPin size={10} />
-                                                        {pName}
-                                                    </span>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Thumbnail */}
+                            <div className="flex gap-3 p-4">
+                                {/* Thumbnail on the left */}
                                 {entry.thumbnail && (
                                     <div className="flex-shrink-0">
                                         <img
                                             src={entry.thumbnail}
                                             alt={entry.title[lang] || entry.title.bg || entry.title.en}
-                                            className="w-20 h-20 rounded-lg object-cover"
+                                            className="w-24 h-24 rounded-xl object-cover"
                                         />
                                     </div>
                                 )}
+
+                                {/* Time and content */}
+                                <div className="flex-1 min-w-0 flex gap-3">
+                                    {/* Time column */}
+                                    <div className="flex-shrink-0 w-14 text-right pt-0.5">
+                                        <p className={`text-xs font-mono font-semibold ${isNow ? 'text-green-600' : 'text-gray-400'}`}>
+                                            {entry.startTime}
+                                        </p>
+                                        <p className={`text-xs font-mono ${isNow ? 'text-green-400' : 'text-gray-300'}`}>
+                                            {entry.endTime}
+                                        </p>
+                                    </div>
+
+                                    {/* Divider line */}
+                                    <div className="flex flex-col items-center gap-0.5 flex-shrink-0">
+                                        <span className={`w-2 h-2 rounded-full mt-1 ${isNow ? 'bg-green-500' : 'bg-gray-200'}`} />
+                                        <span className={`w-px flex-1 ${isNow ? 'bg-green-200' : 'bg-gray-100'}`} />
+                                    </div>
+
+                                    {/* Text content */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-start gap-2">
+                                            <p className={`text-sm font-semibold leading-tight flex-1 ${isNow ? 'text-green-800' : 'text-gray-800'}`}>
+                                                {entry.title[lang] || entry.title.bg || entry.title.en}
+                                            </p>
+                                            {isNow && (
+                                                <span className="flex-shrink-0 flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                                    {lang === 'bg' ? 'Сега' : 'Now'}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {(entry.location?.bg || entry.location?.en) && (
+                                            <p className="text-xs text-gray-400 mt-0.5">
+                                                {entry.location[lang] || entry.location.bg || entry.location.en}
+                                            </p>
+                                        )}
+
+                                        {entry.placeIds && entry.placeIds.length > 0 && (
+                                            <div className="flex flex-wrap gap-1 mt-1.5">
+                                                {entry.placeIds.map(pid => {
+                                                    const p = places.find(pl => pl.id === pid);
+                                                    if (!p) return null;
+                                                    const pName = p.name[lang] || p.name.bg || p.name.en;
+                                                    return p.mapsUrl ? (
+                                                        <a key={pid} href={p.mapsUrl} target="_blank" rel="noopener noreferrer"
+                                                            className="inline-flex items-center gap-1 text-[11px] bg-gray-100 text-gray-500 hover:bg-blue-50 hover:text-blue-600 px-2 py-0.5 rounded-full transition-colors">
+                                                            <MapPin size={10} />
+                                                            {pName}
+                                                        </a>
+                                                    ) : (
+                                                        <span key={pid} className="inline-flex items-center gap-1 text-[11px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
+                                                            <MapPin size={10} />
+                                                            {pName}
+                                                        </span>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     );
