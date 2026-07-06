@@ -168,9 +168,29 @@ const GuestBrochureSchedule: React.FC = () => {
             {/* Entries */}
             <div className="px-4 pt-2 pb-10 space-y-2">
                 {dayEntries.length === 0 && (
-                    <p className="text-sm text-gray-400 text-center py-8">
-                        {lang === 'bg' ? 'Няма дейности за този ден.' : 'No activities for this day.'}
-                    </p>
+                    <div className="flex flex-col items-center justify-center py-16 px-6">
+                        <div className="mb-4">
+                            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
+                                <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <h3 className="text-base font-semibold text-gray-700 mb-1">
+                            {lang === 'bg' ? 'Няма планирани дейности' : 'No scheduled activities'}
+                        </h3>
+                        <p className="text-sm text-gray-400 text-center max-w-xs mb-4">
+                            {lang === 'bg' 
+                                ? 'За този ден няма насрочени дейности. Наслаждайте се свободно време!'
+                                : 'There are no scheduled activities for this day. Enjoy your free time!'}
+                        </p>
+                        <button
+                            onClick={() => setActiveDay(daysWithEntries.find(d => d !== activeDay) || activeDay)}
+                            className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                        >
+                            {lang === 'bg' ? 'Преглед на други дни' : 'Check other days'}
+                        </button>
+                    </div>
                 )}
                 {dayEntries.map(entry => {
                     const isNow = activeDay === today
