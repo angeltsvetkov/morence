@@ -29,7 +29,7 @@ const AppContent = () => {
   return (
     <div className="flex flex-col min-h-screen">
       {!isAdminPage && !isSurveyPage && !isBrochurePage && <Header />}
-      <main className="flex-grow pb-20">
+      <main className={`flex-grow ${isBrochurePage ? 'pb-20' : ''}`}>
         <Routes>
           <Route path="/" element={
             subdomainInfo.isSubdomain ? <ApartmentDetail /> : <DefaultApartmentRedirect />
@@ -48,7 +48,7 @@ const AppContent = () => {
         </Routes>
       </main>
       {!isAdminPage && !isSurveyPage && !isBrochurePage && <Footer />}
-      <BottomNavigation />
+      {isBrochurePage && <BottomNavigation />}
     </div>
   );
 };
