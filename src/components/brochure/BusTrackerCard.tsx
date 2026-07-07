@@ -1,10 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { Bus } from 'lucide-react';
-import { BusTrackerData, TimetableDay } from '../../types';
+import { Bus, MapPin } from 'lucide-react';
+import { BusLine, BusTrackerData, TimetableDay } from '../../types';
 
 interface Props {
     busTracker: BusTrackerData;
     lang: 'bg' | 'en';
+    slug?: string;
+}
+
+/** Resolve lines from data — handles both new multi-line and legacy flat structure */
+function resolveLines(data: BusTrackerData): BusLine[] {
+    if (data.lines && data.lines.length > 0) return data.lines;
+    if (data.stops && data.stops.length > 0) {
+        return [{
+            id: 'legacy',
+            myStopIndex: data.myStopIndex ?? 0,
+            stops: data.stops,
+            trips: data.trips ?? [],
+            travelTimes: data.travelTimes ?? [],
+        }];
+    }
+    return [];
 }
 
 function timeToMins(t: string): number {
@@ -24,17 +40,14 @@ function todayKey(): TimetableDay {
 interface BusState {
     myStopTime: string;
     minutesUntil: number;
-    prevStop: { bg: string; en: string } | null;
-    prevTime: string | null;
-    nextStop: { bg: string; en: string } | null;
-    nextTime: string | null;
-    busFrom: { bg: string; en: string } | null;
-    busTo: { bg: string; en: string } | null;
+    tripTimes: (string | null)[];
+    fromStopIdx: number | null;
+    toStopIdx: number | null;
+    segmentProgress: number | null;
 }
 
-function computeState(tracker: BusTrackerData, now: number, today: TimetableDay): BusState | null {
-    if (!tracker.enabled) return null;
-    const { stops, trips, myStopIndex } = tracker;
+function computeState(line: BusLine, now: number, today: TimetableDay): BusState | null {
+    const { stops, trips, myStopIndex } = line;
     if (!stops.length || myStopIndex < 0 || myStopIndex >= stops.length) return null;
 
     const todayTrips = trips.filter(t =>
@@ -45,49 +58,252 @@ function computeState(tracker: BusTrackerData, now: number, today: TimetableDay)
     );
     if (!todayTrips.length) return null;
 
-    // Next trip arriving at myStop
+    // A trip is "running" if the current time is within its first–last served stop window
+    const validTimes = (times: (string | null)[]) =>
+        times.filter((t): t is string => Boolean(t)).map(timeToMins);
+
+    const running = todayTrips
+        .filter(t => {
+            const mv = validTimes(t.times);
+            return mv.length > 0 && mv[0] <= now && now <= mv[mv.length - 1];
+        })
+        .sort((a, b) => timeToMins(a.times[myStopIndex]!) - timeToMins(b.times[myStopIndex]!))[0];
+
     const next = todayTrips
         .filter(t => timeToMins(t.times[myStopIndex]!) > now)
         .sort((a, b) => timeToMins(a.times[myStopIndex]!) - timeToMins(b.times[myStopIndex]!))[0];
-    if (!next) return null;
 
-    const myStopTime = next.times[myStopIndex]!;
+    const trip = running ?? next;
+    if (!trip) return null;
+
+    const myStopTime = trip.times[myStopIndex]!;
     const minutesUntil = timeToMins(myStopTime) - now;
 
-    // Adjacent stops in this trip
-    let prevIdx = -1;
-    for (let i = myStopIndex - 1; i >= 0; i--) {
-        if (next.times[i]) { prevIdx = i; break; }
+    // Bus position: last stop whose time has passed vs next upcoming
+    let fromStopIdx: number | null = null;
+    let toStopIdx: number | null = null;
+    for (let i = stops.length - 1; i >= 0; i--) {
+        if (trip.times[i] && timeToMins(trip.times[i]!) <= now) { fromStopIdx = i; break; }
     }
-    let nextIdx = -1;
-    for (let i = myStopIndex + 1; i < stops.length; i++) {
-        if (next.times[i]) { nextIdx = i; break; }
+    for (let i = 0; i < stops.length; i++) {
+        if (trip.times[i] && timeToMins(trip.times[i]!) > now) { toStopIdx = i; break; }
     }
 
-    // Current bus position in this trip
-    const passed = stops
-        .map((s, i) => ({ name: s.name, t: next.times[i] }))
-        .filter(x => x.t && timeToMins(x.t) <= now);
-    const upcoming = stops
-        .map((s, i) => ({ name: s.name, t: next.times[i] }))
-        .filter(x => x.t && timeToMins(x.t) > now);
+    let segmentProgress: number | null = null;
+    if (fromStopIdx !== null && toStopIdx !== null) {
+        const a = timeToMins(trip.times[fromStopIdx]!);
+        const b = timeToMins(trip.times[toStopIdx]!);
+        if (b > a) segmentProgress = Math.min(100, Math.max(0, Math.round(((now - a) / (b - a)) * 100)));
+    }
 
-    return {
-        myStopTime,
-        minutesUntil,
-        prevStop: prevIdx >= 0 ? stops[prevIdx].name : null,
-        prevTime: prevIdx >= 0 ? next.times[prevIdx] : null,
-        nextStop: nextIdx >= 0 ? stops[nextIdx].name : null,
-        nextTime: nextIdx >= 0 ? next.times[nextIdx] : null,
-        busFrom: passed.length > 0 ? passed[passed.length - 1].name : null,
-        busTo: upcoming.length > 0 ? upcoming[0].name : null,
-    };
+    return { myStopTime, minutesUntil, tripTimes: trip.times, fromStopIdx, toStopIdx, segmentProgress };
 }
 
 const n = (name: { bg: string; en: string } | null | undefined, lang: 'bg' | 'en') =>
     name ? (name[lang] || name.bg || name.en || '') : '';
 
-const BusTrackerCard: React.FC<Props> = ({ busTracker, lang }) => {
+// ─────────────────────────────────────────────────────────────────────────────
+// BusLineCard: renders a single bus line
+// ─────────────────────────────────────────────────────────────────────────────
+interface LineCardProps {
+    line: BusLine;
+    now: number;
+    today: TimetableDay;
+    lang: 'bg' | 'en';
+    slug?: string;
+}
+
+const BusLineCard: React.FC<LineCardProps> = ({ line, now, today, lang, slug }) => {
+    const state = computeState(line, now, today);
+    if (!state) return null;
+
+    const { myStopTime, minutesUntil, tripTimes, fromStopIdx, toStopIdx, segmentProgress } = state;
+    const { stops, myStopIndex } = line;
+    const myStop = stops[myStopIndex];
+    const isArriving = minutesUntil <= 2 && minutesUntil >= 0;
+    const isRunning = fromStopIdx !== null && toStopIdx !== null;
+
+    const minutesLabel = isArriving
+        ? (lang === 'bg' ? 'Пристига' : 'Arriving')
+        : minutesUntil < 0
+            ? (lang === 'bg' ? `преди ${Math.abs(minutesUntil)} мин` : `${Math.abs(minutesUntil)} min ago`)
+            : minutesUntil <= 60
+                ? (lang === 'bg' ? `след ${minutesUntil} мин` : `in ${minutesUntil} min`)
+                : myStopTime;
+
+    // Only stops served by this trip
+    const visibleStops = stops
+        .map((stop, idx) => ({ stop, idx, time: tripTimes[idx] ?? null }))
+        .filter(x => Boolean(x.time));
+
+    return (
+        <section className="px-4 pt-2 pb-2">
+            <div className="relative rounded-2xl overflow-hidden shadow-sm border border-amber-100/80">
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50" />
+
+                <div className="relative px-4 py-3.5">
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                            {isRunning ? (
+                                <span className="relative flex-shrink-0">
+                                    <span className="absolute inline-flex w-2 h-2 rounded-full bg-amber-400 opacity-75 animate-ping" />
+                                    <span className="relative inline-flex w-2 h-2 rounded-full bg-amber-500" />
+                                </span>
+                            ) : (
+                                <span className="w-2 h-2 rounded-full bg-amber-300 flex-shrink-0" />
+                            )}
+                            <div>
+                                <p className="text-xs font-bold text-amber-600 uppercase tracking-wider leading-none">
+                                    {isRunning
+                                        ? (lang === 'bg' ? 'В движение' : 'En route')
+                                        : (lang === 'bg' ? 'Следващ автобус' : 'Next bus')
+                                    }
+                                    {line.name && (
+                                        <span className="ml-1.5 font-normal normal-case text-amber-500/80">
+                                            · {n(line.name, lang)}
+                                        </span>
+                                    )}
+                                </p>
+                                <p className="text-[11px] text-amber-800/70 font-medium mt-0.5">
+                                    {n(myStop?.name, lang)} · {minutesLabel}
+                                </p>
+                            </div>
+                        </div>
+
+                        {myStop?.mapsUrl ? (
+                            <a
+                                href={myStop.mapsUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-shrink-0 flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-xs font-semibold px-3 py-1.5 rounded-full transition-all shadow-sm shadow-amber-200"
+                            >
+                                <MapPin size={12} />
+                                {lang === 'bg' ? 'Към спирката' : 'To the stop'}
+                            </a>
+                        ) : null}
+                    </div>
+
+                    {/* Horizontal metro route */}
+                    <div className="overflow-x-auto -mx-1 px-1 pb-0.5">
+                        <div style={{ minWidth: `${visibleStops.length * 64}px` }}>
+
+                            {/* ── Row 1: dots + track ── */}
+                            <div className="flex items-center" style={{ height: '20px' }}>
+                                {visibleStops.map(({ stop, idx, time }, lineIdx) => {
+                                    const isLast = lineIdx === visibleStops.length - 1;
+                                    const nextEntry = !isLast ? visibleStops[lineIdx + 1] : null;
+                                    const isPassed = !!time && timeToMins(time) <= now;
+                                    const isMyStop = idx === myStopIndex;
+                                    const isActiveSeg = !isLast && idx === fromStopIdx;
+                                    const isPassedSeg = !isLast && !!nextEntry?.time && timeToMins(nextEntry.time) <= now;
+
+                                    const dotCls = isMyStop
+                                        ? isArriving
+                                            ? 'w-4 h-4 rounded-full bg-green-400 ring-2 ring-white shadow animate-pulse'
+                                            : 'w-4 h-4 rounded-full bg-amber-500 ring-2 ring-white shadow'
+                                        : isPassed
+                                            ? 'w-3 h-3 rounded-full bg-amber-400'
+                                            : idx === toStopIdx
+                                                ? 'w-3 h-3 rounded-full border-2 border-amber-400 bg-amber-50'
+                                                : 'w-3 h-3 rounded-full border-2 border-amber-200 bg-white';
+
+                                    return (
+                                        <React.Fragment key={stop.id}>
+                                            {/* Dot */}
+                                            <div className="flex-shrink-0 w-14 flex justify-center items-center">
+                                                <div className={dotCls} />
+                                            </div>
+
+                                            {/* Track segment */}
+                                            {!isLast && (
+                                                <div className="relative flex-1 min-w-3" style={{ height: '20px' }}>
+                                                    {/* Base track */}
+                                                    <div className={`absolute top-[9px] left-0 right-0 h-0.5 rounded-full ${isPassedSeg ? 'bg-amber-300' : 'bg-amber-100'}`} />
+                                                    {/* Progress fill */}
+                                                    {isActiveSeg && segmentProgress !== null && (
+                                                        <div
+                                                            className="absolute top-[9px] left-0 h-0.5 rounded-full bg-amber-400"
+                                                            style={{ width: `${segmentProgress}%` }}
+                                                        />
+                                                    )}
+                                                    {/* Bus icon */}
+                                                    {isActiveSeg && segmentProgress !== null && (
+                                                        <div
+                                                            className="absolute top-0 z-10"
+                                                            style={{
+                                                                left: `${segmentProgress}%`,
+                                                                transform: 'translateX(-50%)',
+                                                            }}
+                                                        >
+                                                            <div className="bg-amber-500 text-white rounded-full p-[3px] shadow-md ring-2 ring-white">
+                                                                <Bus size={10} />
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </React.Fragment>
+                                    );
+                                })}
+                            </div>
+
+                            {/* ── Row 2: labels ── */}
+                            <div className="flex mt-2">
+                                {visibleStops.map(({ stop, idx, time }, lineIdx) => {
+                                    const isLast = lineIdx === visibleStops.length - 1;
+                                    const isPassed = !!time && timeToMins(time) <= now;
+                                    const isMyStop = idx === myStopIndex;
+
+                                    const nameCls = isMyStop
+                                        ? 'font-bold text-amber-900'
+                                        : isPassed ? 'text-gray-400' : 'text-gray-700';
+                                    const timeCls = isMyStop
+                                        ? 'font-bold text-amber-700'
+                                        : isPassed ? 'text-gray-300' : 'text-gray-500';
+
+                                    return (
+                                        <React.Fragment key={stop.id}>
+                                            <div className="flex-shrink-0 w-14 flex flex-col items-center">
+                                                {stop.mapsUrl ? (
+                                                    <a
+                                                        href={stop.mapsUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className={`text-[10px] text-center leading-tight line-clamp-2 underline underline-offset-1 decoration-amber-300 ${nameCls}`}
+                                                    >
+                                                        {n(stop.name, lang)}
+                                                    </a>
+                                                ) : (
+                                                    <p className={`text-[10px] text-center leading-tight line-clamp-2 ${nameCls}`}>
+                                                        {n(stop.name, lang)}
+                                                    </p>
+                                                )}
+                                                {isMyStop && (
+                                                    <span className="mt-0.5 text-[8px] font-bold text-white bg-amber-500 px-1.5 py-0.5 rounded-full leading-none">
+                                                        {lang === 'bg' ? 'Вие' : 'You'}
+                                                    </span>
+                                                )}
+                                                <p className={`text-[9px] font-mono mt-0.5 ${timeCls}`}>{time}</p>
+                                            </div>
+                                            {!isLast && <div className="flex-1 min-w-3" />}
+                                        </React.Fragment>
+                                    );
+                                })}
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BusTrackerCard: multi-line wrapper — shows only the active/next line
+// ─────────────────────────────────────────────────────────────────────────────
+const BusTrackerCard: React.FC<Props> = ({ busTracker, lang, slug }) => {
     const [now, setNow] = useState(nowMins);
     const [today, setToday] = useState(todayKey);
 
@@ -96,78 +312,24 @@ const BusTrackerCard: React.FC<Props> = ({ busTracker, lang }) => {
         return () => clearInterval(id);
     }, []);
 
-    const state = computeState(busTracker, now, today);
-    if (!state) return null;
+    if (!busTracker.enabled) return null;
 
-    const { myStopTime, minutesUntil, prevStop, prevTime, nextStop, nextTime, busFrom, busTo } = state;
-    const myStop = busTracker.stops[busTracker.myStopIndex];
-    const isArriving = minutesUntil <= 2;
-    const isEnRoute = busFrom !== null && busTo !== null;
+    const lines = resolveLines(busTracker);
+    if (!lines.length) return null;
 
-    const arrivalBadge = isArriving
-        ? (lang === 'bg' ? 'Пристига' : 'Arriving')
-        : minutesUntil <= 60
-            ? (lang === 'bg' ? `след ${minutesUntil} мин` : `in ${minutesUntil} min`)
-            : myStopTime;
+    // Compute state for every line, pair with line
+    const withState = lines
+        .map(line => ({ line, state: computeState(line, now, today) }))
+        .filter(x => x.state !== null) as { line: BusLine; state: NonNullable<ReturnType<typeof computeState>> }[];
 
-    return (
-        <section className="px-4 pt-2 pb-1">
-            <div className="rounded-2xl overflow-hidden shadow-sm border border-amber-100/80">
-                {/* Header */}
-                <div className="bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 px-4 py-2.5 flex items-center gap-2 border-b border-amber-100/60">
-                    <Bus size={15} className="text-amber-600 flex-shrink-0" />
-                    <span className="text-xs font-semibold text-amber-800 flex-1 truncate">
-                        {lang === 'bg' ? 'Автобус' : 'Bus'} · {n(myStop?.name, lang)}
-                    </span>
-                    <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full flex-shrink-0 transition-all ${
-                        isArriving ? 'bg-green-100 text-green-700 animate-pulse' : 'bg-amber-100 text-amber-700'
-                    }`}>
-                        {arrivalBadge}
-                    </span>
-                </div>
+    if (!withState.length) return null;
 
-                {/* Route strip */}
-                <div className="bg-white px-4 py-3 space-y-2.5">
-                    {/* Previous stop */}
-                    {prevStop && (
-                        <div className="flex items-center gap-3">
-                            <div className="w-2 h-2 rounded-full bg-gray-300 flex-shrink-0" />
-                            <span className="flex-1 text-xs text-gray-500 truncate">{n(prevStop, lang)}</span>
-                            {prevTime && <span className="text-[10px] text-gray-400 font-mono">{prevTime}</span>}
-                        </div>
-                    )}
+    // Prefer a line where the bus is currently en route (fromStopIdx set)
+    const running = withState.find(x => x.state.fromStopIdx !== null && x.state.toStopIdx !== null);
+    // Otherwise pick the line with the soonest upcoming arrival at "my stop"
+    const best = running ?? withState.sort((a, b) => a.state.minutesUntil - b.state.minutesUntil)[0];
 
-                    {/* Bus en-route indicator */}
-                    {isEnRoute && (
-                        <div className="flex items-center gap-3 pl-[7px]">
-                            <Bus size={13} className="text-amber-500 flex-shrink-0 animate-bounce" style={{ animationDuration: '2s' }} />
-                            <span className="text-xs text-amber-600">
-                                {n(busFrom, lang)} → {n(busTo, lang)}
-                            </span>
-                        </div>
-                    )}
-
-                    {/* My stop (highlighted) */}
-                    <div className="flex items-center gap-3">
-                        <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ring-2 ring-offset-1 shadow-sm ${
-                            isArriving ? 'bg-green-400 ring-green-300 animate-pulse' : 'bg-amber-400 ring-amber-300'
-                        }`} />
-                        <span className="flex-1 text-sm font-semibold text-gray-900 truncate">{n(myStop?.name, lang)}</span>
-                        <span className="text-xs font-mono font-bold text-amber-700 flex-shrink-0">{myStopTime}</span>
-                    </div>
-
-                    {/* Next stop */}
-                    {nextStop && (
-                        <div className="flex items-center gap-3">
-                            <div className="w-2 h-2 rounded-full bg-gray-300 flex-shrink-0" />
-                            <span className="flex-1 text-xs text-gray-500 truncate">{n(nextStop, lang)}</span>
-                            {nextTime && <span className="text-[10px] text-gray-400 font-mono">{nextTime}</span>}
-                        </div>
-                    )}
-                </div>
-            </div>
-        </section>
-    );
+    return <BusLineCard line={best.line} now={now} today={today} lang={lang} slug={slug} />;
 };
 
 export default BusTrackerCard;

@@ -204,7 +204,7 @@ const ApartmentEditAdmin: React.FC = () => {
     const [brochureItems, setBrochureItems] = useState<BrochurePlaceItem[]>([]);
     const [brochureGroups, setBrochureGroups] = useState<BrochureGroup[]>([]);
     const [timetableEntries, setTimetableEntries] = useState<TimetableEntry[]>([]);
-    const [busTrackerData, setBusTrackerData] = useState<BusTrackerData>({ enabled: false, myStopIndex: 0, stops: [], trips: [] });
+    const [busTrackerData, setBusTrackerData] = useState<BusTrackerData>({ enabled: false, lines: [] });
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [loading, setLoading] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
@@ -452,7 +452,7 @@ const ApartmentEditAdmin: React.FC = () => {
                 );
                 setBrochureGroups(aptData.guestBrochure?.groups || []);
                 setTimetableEntries(aptData.timetable?.entries || []);
-                setBusTrackerData(aptData.busTracker ?? { enabled: false, myStopIndex: 0, stops: [], trips: [] });
+                setBusTrackerData(aptData.busTracker ?? { enabled: false, lines: [] });
                 // Try to fetch bookings, but don't fail if it doesn't work
                 try {
                     await fetchBookings(aptDoc.id);
@@ -715,13 +715,22 @@ const ApartmentEditAdmin: React.FC = () => {
         }
 
         // Bus tracker
-        if (busTrackerData.stops.length > 0 || busTrackerData.enabled) {
+        const busLines = busTrackerData.lines ?? [];
+        if (busLines.length > 0 || busTrackerData.enabled) {
             (apartmentData as any).busTracker = {
                 enabled: busTrackerData.enabled,
-                myStopIndex: busTrackerData.myStopIndex,
-                stops: busTrackerData.stops,
-                trips: busTrackerData.trips,
-                travelTimes: busTrackerData.travelTimes ?? [],
+                lines: busLines.map(line => ({
+                    id: line.id,
+                    ...(line.name ? { name: { bg: line.name.bg || '', en: line.name.en || '' } } : {}),
+                    myStopIndex: line.myStopIndex,
+                    stops: line.stops.map(s => ({
+                        id: s.id,
+                        name: { bg: s.name.bg || '', en: s.name.en || '' },
+                        ...(s.mapsUrl ? { mapsUrl: s.mapsUrl } : {}),
+                    })),
+                    trips: line.trips,
+                    travelTimes: line.travelTimes ?? [],
+                })),
             };
         } else {
             (apartmentData as any).busTracker = null;

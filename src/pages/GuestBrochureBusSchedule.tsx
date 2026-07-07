@@ -6,7 +6,7 @@ import { db } from '../firebase';
 import { useLanguage } from '../hooks/useLanguage';
 import BrochureLoader from '../components/common/BrochureLoader';
 import LanguageSwitcher from '../components/LanguageSwitcher';
-import { Apartment, TimetableDay } from '../types';
+import { Apartment, BusLine, BusTrip, TimetableDay } from '../types';
 import { AlertTriangle, ArrowLeft, Clock, MapPin, Bus } from 'lucide-react';
 
 const ALL_DAYS: TimetableDay[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
@@ -40,6 +40,47 @@ function currentMinutes() {
     return n.getHours() * 60 + n.getMinutes();
 }
 
+function getActiveTripSegment(trip: BusTrip, now: number): { fromIdx: number; toIdx: number } | null {
+    const validStops = trip.times
+        .map((time, idx) => ({ idx, time }))
+        .filter((x): x is { idx: number; time: string } => Boolean(x.time));
+
+    if (validStops.length < 2) return null;
+    const first = timeToMinutes(validStops[0].time);
+    const last = timeToMinutes(validStops[validStops.length - 1].time);
+    if (now < first || now > last) return null;
+
+    for (let i = 0; i < validStops.length - 1; i++) {
+        const from = validStops[i];
+        const to = validStops[i + 1];
+        const fromMins = timeToMinutes(from.time);
+        const toMins = timeToMinutes(to.time);
+        if (fromMins <= now && now < toMins) {
+            return { fromIdx: from.idx, toIdx: to.idx };
+        }
+    }
+
+    return null;
+}
+
+/** Resolve lines from apartment busTracker — handles legacy and new format */
+function resolveLines(apartment: Apartment | null): BusLine[] {
+    const bt = apartment?.busTracker;
+    if (!bt?.enabled) return [];
+    if (bt.lines && bt.lines.length > 0) return bt.lines;
+    // Legacy flat format
+    if (bt.stops && bt.stops.length > 0) {
+        return [{
+            id: 'legacy',
+            myStopIndex: bt.myStopIndex ?? 0,
+            stops: bt.stops,
+            trips: bt.trips ?? [],
+            travelTimes: bt.travelTimes ?? [],
+        }];
+    }
+    return [];
+}
+
 const GuestBrochureBusSchedule: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
@@ -47,8 +88,18 @@ const GuestBrochureBusSchedule: React.FC = () => {
     const [apartment, setApartment] = useState<Apartment | null>(null);
     const [loading, setLoading] = useState(true);
     const [activeDay, setActiveDay] = useState<TimetableDay>(todayKey());
+    const [now, setNow] = useState(currentMinutes());
+    const [today, setToday] = useState<TimetableDay>(todayKey());
+    const [activeLineIdx, setActiveLineIdx] = useState(0);
 
     useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); }, []);
+    useEffect(() => {
+        const id = window.setInterval(() => {
+            setNow(currentMinutes());
+            setToday(todayKey());
+        }, 30_000);
+        return () => window.clearInterval(id);
+    }, []);
 
     useEffect(() => {
         if (!slug) return;
@@ -60,17 +111,14 @@ const GuestBrochureBusSchedule: React.FC = () => {
             setLoading(false);
         }).catch(() => setLoading(false));
     }, [slug]);
-
     const lang = (language as string) === 'bg' ? 'bg' : 'en';
-    const busTracker = apartment?.busTracker;
-    const stops = busTracker?.stops || [];
-    const trips = busTracker?.trips || [];
-    const myStopIndex = busTracker?.myStopIndex ?? -1;
+    const lines = resolveLines(apartment);
+    const activeLine = lines[activeLineIdx] ?? null;
+    const stops = activeLine?.stops || [];
+    const trips = activeLine?.trips || [];
+    const myStopIndex = activeLine?.myStopIndex ?? -1;
 
     const daysWithTrips = ALL_DAYS.filter(d => trips.some(t => t.days.includes(d)));
-    const today = todayKey();
-    const now = currentMinutes();
-
     const dayTrips = trips
         .filter(t => t.days.includes(activeDay))
         .sort((a, b) => timeToMinutes(a.times[myStopIndex] || '23:59') - timeToMinutes(b.times[myStopIndex] || '23:59'));
@@ -85,7 +133,7 @@ const GuestBrochureBusSchedule: React.FC = () => {
 
     if (loading) return <BrochureLoader />;
 
-    if (!busTracker?.enabled || trips.length === 0 || myStopIndex < 0) {
+    if (!apartment?.busTracker?.enabled || lines.length === 0) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
@@ -134,6 +182,26 @@ const GuestBrochureBusSchedule: React.FC = () => {
                     <LanguageSwitcher />
                 </div>
 
+                {/* Line selector (only if multiple lines) */}
+                {lines.length > 1 && (
+                    <div className="flex overflow-x-auto scrollbar-hide px-4 pb-2 gap-1.5">
+                        {lines.map((line, idx) => (
+                            <button
+                                key={line.id}
+                                onClick={() => { setActiveLineIdx(idx); setActiveDay(todayKey()); }}
+                                className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                                    activeLineIdx === idx
+                                        ? 'bg-amber-500 text-white shadow-sm'
+                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                }`}
+                            >
+                                <Bus size={11} />
+                                {line.name?.[lang] || line.name?.bg || `${lang === 'bg' ? 'Линия' : 'Line'} ${idx + 1}`}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
                 {/* Day tabs */}
                 <div className="flex overflow-x-auto scrollbar-hide px-4 pb-3 gap-1.5">
                     {daysWithTrips.map(day => (
@@ -178,6 +246,8 @@ const GuestBrochureBusSchedule: React.FC = () => {
                     const myStopTime = trip.times[myStopIndex];
                     if (!myStopTime) return null;
 
+                    const activeSegment = activeDay === today ? getActiveTripSegment(trip, now) : null;
+                    const isLive = Boolean(activeSegment);
                     const isNow = activeDay === today
                         && timeToMinutes(myStopTime) <= now
                         && now < timeToMinutes(myStopTime) + 15;
@@ -199,7 +269,9 @@ const GuestBrochureBusSchedule: React.FC = () => {
                         <div
                             key={`${trip.days.join('-')}-${idx}`}
                             className={`flex gap-4 rounded-2xl px-4 py-3 ${
-                                isNow
+                                isLive
+                                    ? 'bg-green-50 border border-green-200 shadow-sm'
+                                    : isNow
                                     ? 'bg-green-50 border border-green-200 shadow-sm'
                                     : isPast
                                         ? 'bg-white border border-gray-100 opacity-50'
@@ -226,6 +298,14 @@ const GuestBrochureBusSchedule: React.FC = () => {
                                         <p className={`text-sm font-semibold leading-tight ${isNow ? 'text-green-800' : 'text-gray-800'}`}>
                                             {lang === 'bg' ? 'Автобус' : 'Bus'}
                                         </p>
+                                        {isLive && activeSegment && (
+                                            <p className="text-xs text-green-700 mt-1 font-medium">
+                                                {lang === 'bg' ? 'В момента:' : 'Right now:'}{' '}
+                                                {(stops[activeSegment.fromIdx]?.name?.[lang] || stops[activeSegment.fromIdx]?.name?.en || stops[activeSegment.fromIdx]?.name?.bg)}
+                                                {' → '}
+                                                {(stops[activeSegment.toIdx]?.name?.[lang] || stops[activeSegment.toIdx]?.name?.en || stops[activeSegment.toIdx]?.name?.bg)}
+                                            </p>
+                                        )}
                                         {prevStopIdx >= 0 && (
                                             <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
                                                 <span>{lang === 'bg' ? 'От' : 'From'}</span>
@@ -241,10 +321,10 @@ const GuestBrochureBusSchedule: React.FC = () => {
                                             </p>
                                         )}
                                     </div>
-                                    {isNow && (
+                                    {(isNow || isLive) && (
                                         <span className="flex-shrink-0 flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">
                                             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                                            {lang === 'bg' ? 'Сега' : 'Now'}
+                                            {lang === 'bg' ? 'В движение' : 'Live'}
                                         </span>
                                     )}
                                 </div>

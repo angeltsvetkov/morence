@@ -97,16 +97,14 @@ const TimetableSection: React.FC<TimetableSectionProps> = ({ entries, lang, slug
                                 </p>
                             </div>
 
-                            {/* navigate button */}
-                            {nowPlace?.mapsUrl && (
+                            {/* go-to activity/place button */}
+                            {nowPlace && (
                                 <a
-                                    href={nowPlace.mapsUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
+                                    href={`/apartments/${slug}/brochure/${nowPlace.id}`}
                                     className="flex-shrink-0 flex items-center gap-1.5 bg-green-500 hover:bg-green-600 active:scale-95 text-white text-xs font-semibold px-3 py-1.5 rounded-full transition-all shadow-sm shadow-green-200"
                                 >
                                     <MapPin size={12} />
-                                    {lang === 'bg' ? 'Заведи ме' : 'Go there'}
+                                    {lang === 'bg' ? 'Към мястото' : 'Go to'}
                                 </a>
                             )}
                         </div>
@@ -128,14 +126,22 @@ const TimetableSection: React.FC<TimetableSectionProps> = ({ entries, lang, slug
                                 </p>
                             </div>
 
-                            <a
-                                href={`/apartments/${slug}/brochure/schedule`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex-shrink-0 text-[10px] font-semibold text-sky-500 hover:text-sky-700 transition-colors"
-                            >
-                                {lang === 'bg' ? 'Цялата програма →' : 'Full schedule →'}
-                            </a>
+                            {nextPlace ? (
+                                <a
+                                    href={`/apartments/${slug}/brochure/${nextPlace.id}`}
+                                    className="flex-shrink-0 flex items-center gap-1.5 bg-sky-500 hover:bg-sky-600 active:scale-95 text-white text-xs font-semibold px-3 py-1.5 rounded-full transition-all shadow-sm shadow-sky-200"
+                                >
+                                    <MapPin size={12} />
+                                    {lang === 'bg' ? 'Към мястото' : 'Go to'}
+                                </a>
+                            ) : (
+                                <a
+                                    href={`/apartments/${slug}/brochure/schedule`}
+                                    className="flex-shrink-0 text-[10px] font-semibold text-sky-500 hover:text-sky-700 transition-colors"
+                                >
+                                    {lang === 'bg' ? 'Цялата програма →' : 'Full schedule →'}
+                                </a>
+                            )}
                         </div>
                     )}
                 </div>
@@ -310,8 +316,10 @@ const GuestBrochure: React.FC = () => {
                 <TimetableSection entries={apartment.timetable.entries} lang={lang} slug={slug!} places={places.map(p => ({ id: p.id, name: p.name, mapsUrl: p.mapsUrl }))} />
             )}
 
-            {apartment.busTracker?.enabled && apartment.busTracker.stops.length > 0 && (
-                <BusTrackerCard busTracker={apartment.busTracker} lang={lang} />
+            {apartment.busTracker?.enabled && (
+                (apartment.busTracker.lines?.length ?? apartment.busTracker.stops?.length ?? 0) > 0
+            ) && (
+                <BusTrackerCard busTracker={apartment.busTracker} lang={lang} slug={slug} />
             )}
 
             <main className="px-4 pt-4 pb-10 space-y-7">

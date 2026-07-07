@@ -98,6 +98,8 @@ export interface TimetableEntry {
 export interface BusStop {
     id: string;
     name: { bg: string; en: string };
+    /** Optional Google Maps URL for this stop */
+    mapsUrl?: string;
 }
 
 export interface BusTrip {
@@ -107,13 +109,30 @@ export interface BusTrip {
     times: (string | null)[];
 }
 
-export interface BusTrackerData {
-    enabled: boolean;
+export interface BusLine {
+    id: string;
+    /** Display name for this line (e.g. "Автобус 9" / "Bus 9") */
+    name?: { bg: string; en: string };
     /** Index into stops[] that is the apartment's stop */
     myStopIndex: number;
     stops: BusStop[];
     trips: BusTrip[];
     /** Travel time in minutes between consecutive stops; length = stops.length - 1 */
+    travelTimes?: number[];
+}
+
+export interface BusTrackerData {
+    enabled: boolean;
+    /** Multi-line support. When present, overrides legacy top-level fields. */
+    lines?: BusLine[];
+    // ── Legacy single-line fields (kept for backward compatibility) ──────────
+    /** @deprecated use lines instead */
+    myStopIndex?: number;
+    /** @deprecated use lines instead */
+    stops?: BusStop[];
+    /** @deprecated use lines instead */
+    trips?: BusTrip[];
+    /** @deprecated use lines instead */
     travelTimes?: number[];
 }
 
