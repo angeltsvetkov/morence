@@ -10,8 +10,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
-import { collection, query, orderBy, getDocs, DocumentData } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, DocumentData, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
+import { generateSurveyToken, generateSurveyUrl } from '../../lib/surveyUtils';
 import { Booking, PricingOffer, SurveyResponse, SurveyQuestion } from '../../types';
 import { useAdminLanguage } from '../../hooks/useAdminLanguage';
 import { useLanguage } from '../../hooks/useLanguage';
@@ -96,6 +97,8 @@ const RentalPeriodModal: React.FC<RentalPeriodModalProps> = ({
     const [surveyResponses, setSurveyResponses] = useState<SurveyResponse[]>([]);
     const [loadingSurveyResponses, setLoadingSurveyResponses] = useState(false);
     const [surveyQuestions, setSurveyQuestions] = useState<SurveyQuestion[]>([]);
+    const [generatedSurveyUrl, setGeneratedSurveyUrl] = useState<string | null>(null);
+    const [generatingLink, setGeneratingLink] = useState(false);
 
     // Exchange rate (used for legacy stored values)
     const EUR_TO_BGN_RATE = 1.95583;
@@ -155,6 +158,7 @@ const RentalPeriodModal: React.FC<RentalPeriodModalProps> = ({
 
     // Load survey responses when editing a booking with completed survey
     useEffect(() => {
+        setGeneratedSurveyUrl(null);
         if (isEditMode && editingBooking?.surveyCompleted && editingBooking.apartmentId) {
             loadSurveyResponses(editingBooking.apartmentId, editingBooking.id);
         } else {
@@ -322,6 +326,30 @@ const RentalPeriodModal: React.FC<RentalPeriodModalProps> = ({
         setDeposit('');
         setStatus('booked');
         setGuestEmail('');
+    };
+
+    const handleGenerateSurveyLink = async () => {
+        if (!editingBooking?.id || !editingBooking?.apartmentId) return;
+        setGeneratingLink(true);
+        try {
+            // Reuse existing token to avoid Firestore immutability rule; only create a new one if absent
+            const token = editingBooking.surveyToken || generateSurveyToken();
+            const url = generateSurveyUrl(editingBooking.id, token, undefined, surveyLanguage);
+            const update: Record<string, string> = { surveyUrl: url };
+            if (!editingBooking.surveyToken) {
+                update.surveyToken = token;
+            }
+            await updateDoc(
+                doc(db, `apartments/${editingBooking.apartmentId}/bookings`, editingBooking.id),
+                update
+            );
+            setGeneratedSurveyUrl(url);
+        } catch (error) {
+            console.error('Error generating survey link:', error);
+            alert('Failed to generate survey link. Please try again.');
+        } finally {
+            setGeneratingLink(false);
+        }
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -711,33 +739,48 @@ const RentalPeriodModal: React.FC<RentalPeriodModalProps> = ({
                     )}
 
                     {/* Survey Link Section - Bottom of Modal */}
-                    {isEditMode && type === 'booked' && editingBooking?.surveyUrl && (
+                    {isEditMode && type === 'booked' && (
                         <div className="border-t pt-6">
-                            <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-                                <Label className="text-purple-800 font-medium">{t('personalizedSurveyLink')}</Label>
-                                <div className="mt-2 flex items-center gap-2">
-                                    <input
-                                        type="text"
-                                        value={editingBooking.surveyUrl}
-                                        readOnly
-                                        className="flex-1 px-3 py-2 text-sm bg-white border border-purple-200 rounded-md font-mono text-purple-700"
-                                        onClick={(e) => (e.target as HTMLInputElement).select()}
-                                    />
+                            {(editingBooking?.surveyUrl || generatedSurveyUrl) ? (
+                                <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                                    <Label className="text-purple-800 font-medium">{t('personalizedSurveyLink')}</Label>
+                                    <div className="mt-2 flex items-center gap-2">
+                                        <input
+                                            type="text"
+                                            value={generatedSurveyUrl || editingBooking!.surveyUrl!}
+                                            readOnly
+                                            className="flex-1 px-3 py-2 text-sm bg-white border border-purple-200 rounded-md font-mono text-purple-700"
+                                            onClick={(e) => (e.target as HTMLInputElement).select()}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(generatedSurveyUrl || editingBooking!.surveyUrl!);
+                                                alert(t('linkCopied'));
+                                            }}
+                                            className="px-3 py-2 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 transition-colors"
+                                        >
+                                            {t('copyLink')}
+                                        </button>
+                                    </div>
+                                    <p className="text-xs text-purple-600 mt-1">
+                                        {t('shareSurveyLinkDescription')}
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                                    <Label className="text-gray-700 font-medium">{t('surveyLink')}</Label>
+                                    <p className="text-xs text-gray-500 mt-1 mb-3">{t('noSurveyLink')}</p>
                                     <button
                                         type="button"
-                                        onClick={() => {
-                                            navigator.clipboard.writeText(editingBooking.surveyUrl!);
-                                            alert(t('linkCopied'));
-                                        }}
-                                        className="px-3 py-2 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 transition-colors"
+                                        onClick={handleGenerateSurveyLink}
+                                        disabled={generatingLink}
+                                        className="px-4 py-2 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        {t('copyLink')}
+                                        {generatingLink ? '...' : t('generateSurveyLink')}
                                     </button>
                                 </div>
-                                <p className="text-xs text-purple-600 mt-1">
-                                    {t('shareSurveyLinkDescription')}
-                                </p>
-                            </div>
+                            )}
                         </div>
                     )}
 

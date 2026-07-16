@@ -400,7 +400,13 @@ const ApartmentEditAdmin: React.FC = () => {
                     deposit: data.deposit,
                     depositCurrency: data.depositCurrency,
                     status: data.status,
-                    guestEmail: data.guestEmail
+                    guestEmail: data.guestEmail,
+                    guestPhone: data.guestPhone,
+                    surveyToken: data.surveyToken,
+                    surveyUrl: data.surveyUrl,
+                    surveyCompleted: data.surveyCompleted || false,
+                    surveyLanguage: data.surveyLanguage,
+                    notes: data.notes
                 };
             });
             setBookings(bookingsData);
