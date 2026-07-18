@@ -15,7 +15,7 @@ import "react-image-gallery/styles/css/image-gallery.css";
 import { Language } from '../contexts/LanguageContext';
 import { getCurrentSubdomain } from '../utils/subdomain';
 import {
-    Link as LinkIcon, MapPin, Milestone, CreditCard, Star, ChevronDown,
+    MapPin, CreditCard, Star, ChevronDown,
     Wifi, Snowflake, Thermometer, ChefHat, RefrigeratorIcon, Zap,
     FlameKindling, Car, Tv, WashingMachine, Wind, Utensils,
     Trees, Flame, Waves, Mountain, Heart, Ban, Baby,
@@ -230,23 +230,35 @@ interface Apartment {
     hideNameOnPublicPage?: boolean; // Whether to hide the apartment name on the public page
     smokingAllowed?: boolean; // Whether smoking is allowed in this apartment
     maxGuests?: number; // Maximum number of guests allowed
+    guestBrochure?: {
+        groups?: {
+            id: string;
+            name: { bg: string; en: string };
+            icon?: string;
+        }[];
+        places?: {
+            id: string;
+            groupIds?: string[];
+            image?: string;
+            name: { bg: string; en: string };
+            description?: { bg: string; en: string };
+            mapsUrl?: string;
+            phone?: string;
+            workingHours?: { [day: string]: { open: string; close: string } | null };
+            priceList?: { name: { bg: string; en: string }; price: string; unit?: { bg: string; en: string } }[];
+        }[];
+    };
 }
 
-interface Place {
-    id: string;
-    title: { [key in Language]?: string };
-    description: { [key in Language]?: string };
-    imageUrl: string;
-    url?: string;
-    distance?: number;
-    location?: string;
-}
+const todayDayKey = () => {
+    const map = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
+    return map[new Date().getDay()];
+};
 
 const ApartmentDetail: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const { language, t } = useLanguage();
     const [apartment, setApartment] = useState<Apartment | null>(null);
-    const [places, setPlaces] = useState<Place[]>([]);
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [loading, setLoading] = useState(true);
     const [dataLoaded, setDataLoaded] = useState(false);
@@ -565,6 +577,31 @@ const ApartmentDetail: React.FC = () => {
         return Array.from(images);
     }, [apartment]);
 
+    const brochureSections = useMemo(() => {
+        const places = apartment?.guestBrochure?.places || [];
+        const groups = apartment?.guestBrochure?.groups || [];
+        const lang = language === 'bg' ? 'bg' : 'en';
+
+        type Section = { groupId: string | null; groupName: string | null; places: typeof places };
+        const sections: Section[] = [];
+        const appearedInGroup = new Set<string>();
+
+        groups.forEach(g => {
+            const groupPlaces = places.filter(p => (p.groupIds || []).includes(g.id));
+            if (groupPlaces.length > 0) {
+                sections.push({ groupId: g.id, groupName: g.name[lang] || g.name.bg || g.name.en || '', places: groupPlaces });
+                groupPlaces.forEach(p => appearedInGroup.add(p.id));
+            }
+        });
+
+        const ungrouped = places.filter(p => !appearedInGroup.has(p.id));
+        if (ungrouped.length > 0) {
+            sections.push({ groupId: null, groupName: null, places: ungrouped });
+        }
+
+        return sections;
+    }, [apartment, language]);
+
     useEffect(() => {
         const fetchApartmentAndBookings = async () => {
             setLoading(true);
@@ -645,15 +682,7 @@ const ApartmentDetail: React.FC = () => {
             }
         };
 
-        const fetchPlaces = async () => {
-            const placesCollection = collection(db, 'places');
-            const placesSnapshot = await getDocs(placesCollection);
-            const placesList = placesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Place));
-            setPlaces(placesList);
-        };
-
         fetchApartmentAndBookings();
-        fetchPlaces();
         fetchAvailableAmenities();
     }, [slug]); // Note: getCurrentSubdomain() is called inside the effect, so no need to add it as dependency
 
@@ -2205,79 +2234,94 @@ const ApartmentDetail: React.FC = () => {
                 </div>
             )}
 
-            {/* Interesting Places */}
-            {places.length > 0 && (
+            {/* Guest Brochure - Nearby Places & Recommendations */}
+            {brochureSections.length > 0 && (
                 <div id="places-section" className="bg-gray-100 py-16 sm:py-24">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        {/* Places Header */}
+                        {/* Section Header */}
                         <div className="mb-12">
                             <div className="flex items-center justify-center gap-4 mb-6">
                                 <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-cyan-600 rounded-xl flex items-center justify-center">
                                     <MapPin className="w-6 h-6 text-white" />
                                 </div>
                                 <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-gray-900 via-indigo-700 to-cyan-800 bg-clip-text text-transparent">
-                                    {t('interestingPlaces')}
-                    </h2>
+                                    {t('nearbyPlaces')}
+                                </h2>
                             </div>
                             <p className="text-xl text-gray-600 text-center max-w-3xl mx-auto">
                                 {language === 'bg' ?
-                                    'Открийте най-интересните места в близост до апартамента' :
-                                    'Discover the most interesting places near the apartment'
+                                    'Полезна информация и препоръки от домакина за наблизо' :
+                                    'Useful information and recommendations from your host'
                                 }
                             </p>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {places.map(place => {
-                                return (
-                                    <div key={place.id} className="bg-white rounded-xl shadow-lg overflow-hidden group transition-transform duration-300 hover:scale-105 flex flex-col">
-                                        <div className="relative">
-                                            <img src={place.imageUrl} alt={place.title[language] || ''} className="w-full h-56 object-cover" />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                                            <div className="absolute bottom-0 left-0 p-6">
-                                                <h3 className="text-2xl font-bold text-white drop-shadow-lg">{place.title[language] || place.title['bg']}</h3>
-                                            </div>
-                                        </div>
-                                        <div className="p-6 flex flex-col flex-grow">
-                                            <p className="text-gray-600 mb-4 h-24 overflow-y-auto flex-grow">{place.description[language] || place.description['bg']}</p>
-                                            <div className="space-y-3 text-sm mb-6">
-                                                {place.distance != null && (
-                                                    <div className="flex items-center text-gray-700">
-                                                        <Milestone className="h-5 w-5 mr-3 text-gray-400 flex-shrink-0" />
-                                                        <span>{place.distance} {t('kmAway')}</span>
+
+                        {brochureSections.map((section, si) => (
+                            <div key={section.groupId ?? `ungrouped-${si}`} className="mb-14 last:mb-0">
+                                {section.groupName && (
+                                    <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                                        <span className="w-1.5 h-6 rounded-full bg-gradient-to-b from-indigo-500 to-cyan-600 inline-block" />
+                                        {section.groupName}
+                                    </h3>
+                                )}
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                    {section.places.map(place => {
+                                        const name = place.name?.[language as 'bg' | 'en'] || place.name?.bg || place.name?.en || '';
+                                        const description = place.description?.[language as 'bg' | 'en'] || place.description?.bg || place.description?.en || '';
+                                        const todayHours = place.workingHours?.[todayDayKey()];
+                                        return (
+                                            <div key={place.id} className="bg-white rounded-xl shadow-lg overflow-hidden group transition-transform duration-300 hover:scale-105 flex flex-col">
+                                                <div className="relative">
+                                                    {place.image ? (
+                                                        <img src={place.image} alt={name} className="w-full h-56 object-cover" />
+                                                    ) : (
+                                                        <div className="w-full h-56 bg-gradient-to-br from-indigo-400 to-cyan-500 flex items-center justify-center">
+                                                            <MapPin className="w-10 h-10 text-white/70" />
+                                                        </div>
+                                                    )}
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                                                    <div className="absolute bottom-0 left-0 p-6">
+                                                        <h3 className="text-2xl font-bold text-white drop-shadow-lg">{name}</h3>
                                                     </div>
-                                                )}
-                                                {place.location && (
-                                                    <div className="flex items-center text-gray-700">
-                                                        <MapPin className="h-5 w-5 mr-3 text-gray-400 flex-shrink-0" />
-                                                        <a
-                                                            href={place.location}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="hover:underline"
-                                                        >
-                                                            {t('viewOnMap')}
-                                                        </a>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            {place.url && (
-                                                <div className="mt-auto pt-4 border-t border-gray-200">
-                                                    <a
-                                                        href={place.url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="w-full flex items-center justify-center px-4 py-2.5 border border-transparent text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
-                                                    >
-                                                        <LinkIcon className="h-5 w-5 mr-2" />
-                                                        {t('learnMore')}
-                                                    </a>
                                                 </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
+                                                <div className="p-6 flex flex-col flex-grow">
+                                                    {description && (
+                                                        <p className="text-gray-600 mb-4 flex-grow">{description}</p>
+                                                    )}
+                                                    <div className="space-y-3 text-sm mb-6">
+                                                        {place.phone && (
+                                                            <div className="flex items-center text-gray-700">
+                                                                <Phone className="h-5 w-5 mr-3 text-gray-400 flex-shrink-0" />
+                                                                <a href={`tel:${place.phone}`} className="hover:underline">{place.phone}</a>
+                                                            </div>
+                                                        )}
+                                                        {todayHours && (
+                                                            <div className="flex items-center text-gray-700">
+                                                                <Clock className="h-5 w-5 mr-3 text-gray-400 flex-shrink-0" />
+                                                                <span>{todayHours.open} - {todayHours.close}</span>
+                                                            </div>
+                                                        )}
+                                                        {place.mapsUrl && (
+                                                            <div className="flex items-center text-gray-700">
+                                                                <MapPin className="h-5 w-5 mr-3 text-gray-400 flex-shrink-0" />
+                                                                <a
+                                                                    href={place.mapsUrl}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="hover:underline"
+                                                                >
+                                                                    {t('viewOnMap')}
+                                                                </a>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             )}
