@@ -2267,7 +2267,6 @@ const ApartmentDetail: React.FC = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                     {section.places.map(place => {
                                         const name = place.name?.[language as 'bg' | 'en'] || place.name?.bg || place.name?.en || '';
-                                        const description = place.description?.[language as 'bg' | 'en'] || place.description?.bg || place.description?.en || '';
                                         const todayHours = place.workingHours?.[todayDayKey()];
                                         return (
                                             <div key={place.id} className="bg-white rounded-xl shadow-lg overflow-hidden group transition-transform duration-300 hover:scale-105 flex flex-col">
@@ -2285,9 +2284,6 @@ const ApartmentDetail: React.FC = () => {
                                                     </div>
                                                 </div>
                                                 <div className="p-6 flex flex-col flex-grow">
-                                                    {description && (
-                                                        <p className="text-gray-600 mb-4 flex-grow">{description}</p>
-                                                    )}
                                                     <div className="space-y-3 text-sm mb-6">
                                                         {place.phone && (
                                                             <div className="flex items-center text-gray-700">
