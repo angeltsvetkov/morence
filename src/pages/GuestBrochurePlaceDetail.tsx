@@ -136,11 +136,18 @@ const GuestBrochurePlaceDetail: React.FC = () => {
 
             {/* hero image */}
             {place.image && (
-                <div className="w-full aspect-[16/9] overflow-hidden bg-gray-200">
+                <div className="relative w-full aspect-[16/9] overflow-hidden bg-gray-200">
+                    {/* blurred backdrop fills the frame without cropping the real image */}
+                    <img
+                        src={place.image}
+                        alt=""
+                        aria-hidden="true"
+                        className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-50"
+                    />
                     <img
                         src={place.image}
                         alt={name}
-                        className="w-full h-full object-cover"
+                        className="relative w-full h-full object-contain"
                     />
                 </div>
             )}
