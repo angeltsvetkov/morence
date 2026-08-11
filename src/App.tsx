@@ -15,7 +15,6 @@ import GuestBrochure from './pages/GuestBrochure';
 import GuestBrochurePlaceDetail from './pages/GuestBrochurePlaceDetail';
 import GuestBrochureSchedule from './pages/GuestBrochureSchedule';
 import GuestBrochureBusSchedule from './pages/GuestBrochureBusSchedule';
-import DefaultBrochureRedirect from './pages/DefaultBrochureRedirect';
 import DefaultApartmentRedirect from './pages/DefaultApartmentRedirect';
 import { getSubdomainInfo } from './utils/subdomain';
 
@@ -35,8 +34,11 @@ const AppContent = () => {
             subdomainInfo.isSubdomain ? <ApartmentDetail /> : <DefaultApartmentRedirect />
           } />
           <Route path="/apartments/:slug" element={<ApartmentDetail />} />
-          <Route path="/brochure" element={<DefaultBrochureRedirect />} />
-          <Route path="/brochure/:lang" element={<DefaultBrochureRedirect />} />
+          {/* Default apartment's brochure, served without exposing an apartment ID in the URL */}
+          <Route path="/brochure" element={<GuestBrochure />} />
+          <Route path="/brochure/schedule" element={<GuestBrochureSchedule />} />
+          <Route path="/brochure/bus-schedule" element={<GuestBrochureBusSchedule />} />
+          <Route path="/brochure/:placeId" element={<GuestBrochurePlaceDetail />} />
           <Route path="/apartments/:slug/brochure" element={<GuestBrochure />} />
           <Route path="/apartments/:slug/brochure/schedule" element={<GuestBrochureSchedule />} />
           <Route path="/apartments/:slug/brochure/bus-schedule" element={<GuestBrochureBusSchedule />} />

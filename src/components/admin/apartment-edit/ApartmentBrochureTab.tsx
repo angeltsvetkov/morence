@@ -666,7 +666,9 @@ const ApartmentBrochureTab: React.FC<BrochureTabProps> = ({
 
     const handleCopyBrochureLink = () => {
         if (!slug) return;
-        const url = `${window.location.origin}/apartments/${slug}/brochure`;
+        const url = currentApartmentData.isDefault
+            ? `${window.location.origin}/brochure`
+            : `${window.location.origin}/apartments/${slug}/brochure`;
         navigator.clipboard.writeText(url).then(() => {
             setIsLinkCopied(true);
             window.setTimeout(() => setIsLinkCopied(false), 2000);

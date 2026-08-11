@@ -1,17 +1,18 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../firebase';
 import { useLanguage } from '../hooks/useLanguage';
 import BrochureLoader from '../components/common/BrochureLoader';
 import BusTrackerCard from '../components/brochure/BusTrackerCard';
 import LanguageSwitcher from '../components/LanguageSwitcher';
-import { Apartment, TimetableEntry } from '../types';
+import { TimetableEntry } from '../types';
 import { AlertTriangle, ImageOff, MapPin,
     Utensils, Coffee, Beer, ShoppingBag, ShoppingCart, Landmark, TreePine, Mountain, Waves, Umbrella, Dumbbell, Bike,
     Car, Bus, Plane, Music, Star, Heart, Camera, Building2, Sun, Moon, Ticket, BookOpen, Leaf, Fish, Baby, Palette, Flame
 } from 'lucide-react';
+import { useBrochureApartment } from '../hooks/useBrochureApartment';
+import { brochureBasePath } from '../utils/brochureUrl';
+import { getPlaceSlugMap } from '../utils/placeSlug';
 
 const GROUP_ICON_MAP: Record<string, React.FC<{ size?: number; className?: string }>> = {
     Utensils, Coffee, Beer, Fish, ShoppingBag, ShoppingCart, Landmark, Building2, BookOpen, Palette,
@@ -42,13 +43,14 @@ function currentMinutes() {
 interface TimetableSectionProps {
     entries: TimetableEntry[];
     lang: 'bg' | 'en';
-    slug: string;
+    basePath: string;
     places?: { id: string; name: { bg: string; en: string }; mapsUrl?: string }[];
 }
 
-const TimetableSection: React.FC<TimetableSectionProps> = ({ entries, lang, slug, places = [] }) => {
+const TimetableSection: React.FC<TimetableSectionProps> = ({ entries, lang, basePath, places = [] }) => {
     const today = todayKey();
     const now = currentMinutes();
+    const placeSlugMap = getPlaceSlugMap(places, lang);
 
     const todayEntries = entries
         .filter(e => e.days.includes(today))
@@ -100,7 +102,7 @@ const TimetableSection: React.FC<TimetableSectionProps> = ({ entries, lang, slug
                             {/* go-to activity/place button */}
                             {nowPlace && (
                                 <a
-                                    href={`/apartments/${slug}/brochure/${nowPlace.id}`}
+                                    href={`${basePath}/${placeSlugMap.get(nowPlace.id) || nowPlace.id}`}
                                     className="flex-shrink-0 flex items-center gap-1.5 bg-green-500 hover:bg-green-600 active:scale-95 text-white text-xs font-semibold px-3 py-1.5 rounded-full transition-all shadow-sm shadow-green-200"
                                 >
                                     <MapPin size={12} />
@@ -128,7 +130,7 @@ const TimetableSection: React.FC<TimetableSectionProps> = ({ entries, lang, slug
 
                             {nextPlace ? (
                                 <a
-                                    href={`/apartments/${slug}/brochure/${nextPlace.id}`}
+                                    href={`${basePath}/${placeSlugMap.get(nextPlace.id) || nextPlace.id}`}
                                     className="flex-shrink-0 flex items-center gap-1.5 bg-sky-500 hover:bg-sky-600 active:scale-95 text-white text-xs font-semibold px-3 py-1.5 rounded-full transition-all shadow-sm shadow-sky-200"
                                 >
                                     <MapPin size={12} />
@@ -136,7 +138,7 @@ const TimetableSection: React.FC<TimetableSectionProps> = ({ entries, lang, slug
                                 </a>
                             ) : (
                                 <a
-                                    href={`/apartments/${slug}/brochure/schedule`}
+                                    href={`${basePath}/schedule`}
                                     className="flex-shrink-0 text-[10px] font-semibold text-sky-500 hover:text-sky-700 transition-colors"
                                 >
                                     {lang === 'bg' ? 'Цялата програма →' : 'Full schedule →'}
@@ -151,12 +153,11 @@ const TimetableSection: React.FC<TimetableSectionProps> = ({ entries, lang, slug
 };
 
 const GuestBrochure: React.FC = () => {
-    const { slug } = useParams<{ slug: string }>();
+    const { slug } = useParams<{ slug?: string }>();
     const navigate = useNavigate();
     const { language } = useLanguage();
-    const [apartment, setApartment] = useState<Apartment | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [notFound, setNotFound] = useState(false);
+    const { apartment, loading, notFound } = useBrochureApartment(slug);
+    const basePath = brochureBasePath(slug);
     const [activeGroup, setActiveGroup] = useState<string | null>(null); // null = All
     const [scrollSpyGroup, setScrollSpyGroup] = useState<string | null>(null);
     const carouselRef = useRef<HTMLDivElement>(null);
@@ -200,21 +201,10 @@ const GuestBrochure: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeGroup, apartment?.guestBrochure?.groups?.length, apartment?.guestBrochure?.places?.length]);
 
-    useEffect(() => {
-        if (!slug) return;
-        getDocs(collection(db, 'apartments')).then(snap => {
-            const found = snap.docs
-                .map(d => ({ id: d.id, ...d.data() } as Apartment))
-                .find(a => a.slug === slug);
-            if (found) setApartment(found);
-            else setNotFound(true);
-            setLoading(false);
-        }).catch(() => { setNotFound(true); setLoading(false); });
-    }, [slug]);
-
     const lang = (language as string) === 'bg' ? 'bg' : 'en';
     const places = apartment?.guestBrochure?.places || [];
     const groups = apartment?.guestBrochure?.groups || [];
+    const placeSlugMap = getPlaceSlugMap(places, lang);
 
     // Build ordered sections: grouped places under a header, then ungrouped places
     type Section = { groupId: string | null; groupName: string | null; groupIcon?: string; places: typeof places };
@@ -250,7 +240,7 @@ const GuestBrochure: React.FC = () => {
         ? `Разгледай наблизо – ${places.length} места около ${metaAptName}`
         : `Explore nearby – ${places.length} places around ${metaAptName}`;
     const metaImage = apartment?.heroImage || apartment?.photos?.[0] || '';
-    const metaUrl = `${window.location.origin}/apartments/${slug}/brochure`;
+    const metaUrl = `${window.location.origin}${basePath}`;
 
     if (loading) return <BrochureLoader />;
 
@@ -313,7 +303,7 @@ const GuestBrochure: React.FC = () => {
             />
 
             {apartment.timetable?.entries && apartment.timetable.entries.length > 0 && (
-                <TimetableSection entries={apartment.timetable.entries} lang={lang} slug={slug!} places={places.map(p => ({ id: p.id, name: p.name, mapsUrl: p.mapsUrl }))} />
+                <TimetableSection entries={apartment.timetable.entries} lang={lang} basePath={basePath} places={places.map(p => ({ id: p.id, name: p.name, mapsUrl: p.mapsUrl }))} />
             )}
 
             {apartment.busTracker?.enabled && (
@@ -349,7 +339,7 @@ const GuestBrochure: React.FC = () => {
                                     <button
                                         key={place.id || idx}
                                         type="button"
-                                        onClick={() => navigate(`/apartments/${slug}/brochure/${place.id || idx}`)}
+                                        onClick={() => navigate(`${basePath}/${placeSlugMap.get(place.id) || place.id || idx}`)}
                                         className="group relative w-full aspect-[4/3] rounded-2xl overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-400 active:scale-95 transition-transform shadow-sm"
                                     >
                                         {place.image ? (

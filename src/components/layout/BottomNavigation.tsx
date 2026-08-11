@@ -38,15 +38,19 @@ const BottomNavigation = () => {
   // Extract apartment slug from URL to support context-aware navigation
   const apartmentSlugMatch = location.pathname.match(/\/apartments\/([^\/]+)/);
   const apartmentSlug = apartmentSlugMatch ? apartmentSlugMatch[1] : null;
+  // The default apartment's brochure is served at the bare /brochure URL (no slug)
+  const isDefaultBrochureRoute = !apartmentSlug && /^\/brochure(\/|$)/.test(location.pathname);
 
   // Load custom icons from apartment data
   useEffect(() => {
-    if (!apartmentSlug) return;
+    if (!apartmentSlug && !isDefaultBrochureRoute) return;
 
     const loadIcons = async () => {
       try {
         const apartmentsRef = collection(db, 'apartments');
-        const q = query(apartmentsRef, where('slug', '==', apartmentSlug));
+        const q = apartmentSlug
+          ? query(apartmentsRef, where('slug', '==', apartmentSlug))
+          : query(apartmentsRef, where('isDefault', '==', true));
         const querySnapshot = await getDocs(q);
         
         if (!querySnapshot.empty) {
@@ -62,12 +66,13 @@ const BottomNavigation = () => {
     };
 
     loadIcons();
-  }, [apartmentSlug]);
+  }, [apartmentSlug, isDefaultBrochureRoute]);
 
   // Determine navigation paths based on context
-  const homePath = apartmentSlug ? `/apartments/${apartmentSlug}/brochure` : '/';
-  const activitiesPath = apartmentSlug ? `/apartments/${apartmentSlug}/brochure/schedule` : '/places';
-  const busSchedulePath = apartmentSlug ? `/apartments/${apartmentSlug}/brochure/bus-schedule` : '#';
+  const brochureBase = apartmentSlug ? `/apartments/${apartmentSlug}/brochure` : isDefaultBrochureRoute ? '/brochure' : null;
+  const homePath = brochureBase || '/';
+  const activitiesPath = brochureBase ? `${brochureBase}/schedule` : '/places';
+  const busSchedulePath = brochureBase ? `${brochureBase}/bus-schedule` : '#';
 
   const navItems = [
     { label: 'home', icon: customIcons.homeIcon || 'Home', path: homePath, id: 'home' },

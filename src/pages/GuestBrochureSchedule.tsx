@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../firebase';
 import { useLanguage } from '../hooks/useLanguage';
 import BrochureLoader from '../components/common/BrochureLoader';
 import LanguageSwitcher from '../components/LanguageSwitcher';
-import { Apartment, TimetableDay } from '../types';
+import { TimetableDay } from '../types';
 import { AlertTriangle, ArrowLeft, MapPin, Clock, Activity } from 'lucide-react';
+import { useBrochureApartment } from '../hooks/useBrochureApartment';
+import { brochureBasePath } from '../utils/brochureUrl';
 
 const ALL_DAYS: TimetableDay[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 const DAY_LABEL: Record<TimetableDay, { bg: string; en: string }> = {
@@ -41,25 +41,14 @@ function currentMinutes() {
 }
 
 const GuestBrochureSchedule: React.FC = () => {
-    const { slug } = useParams<{ slug: string }>();
+    const { slug } = useParams<{ slug?: string }>();
     const navigate = useNavigate();
     const { language } = useLanguage();
-    const [apartment, setApartment] = useState<Apartment | null>(null);
-    const [loading, setLoading] = useState(true);
+    const { apartment, loading } = useBrochureApartment(slug);
+    const basePath = brochureBasePath(slug);
     const [activeDay, setActiveDay] = useState<TimetableDay>(todayKey());
 
     useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); }, []);
-
-    useEffect(() => {
-        if (!slug) return;
-        getDocs(collection(db, 'apartments')).then(snap => {
-            const found = snap.docs
-                .map(d => ({ id: d.id, ...d.data() } as Apartment))
-                .find(a => a.slug === slug);
-            setApartment(found || null);
-            setLoading(false);
-        }).catch(() => setLoading(false));
-    }, [slug]);
 
     const lang = (language as string) === 'bg' ? 'bg' : 'en';
     const entries = apartment?.timetable?.entries || [];
@@ -79,7 +68,7 @@ const GuestBrochureSchedule: React.FC = () => {
         ? `Пълна програма на активности за ${metaAptName}`
         : `Full activity schedule for ${metaAptName}`;
     const metaImage = apartment?.heroImage || apartment?.photos?.[0] || '';
-    const metaUrl = `${window.location.origin}/apartments/${slug}/brochure/schedule`;
+    const metaUrl = `${window.location.origin}${basePath}/schedule`;
 
     if (loading) return <BrochureLoader />;
 
@@ -117,7 +106,7 @@ const GuestBrochureSchedule: React.FC = () => {
             <header className="bg-white sticky top-0 z-20 border-b border-gray-100">
                 <div className="px-4 py-3 flex items-center justify-between">
                     <button
-                        onClick={() => navigate(`/apartments/${slug}/brochure`)}
+                        onClick={() => navigate(basePath)}
                         className="flex items-center gap-1.5 text-gray-600 hover:text-gray-900 transition-colors"
                     >
                         <ArrowLeft className="w-5 h-5" />

@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../firebase';
 import { useLanguage } from '../hooks/useLanguage';
 import BrochureLoader from '../components/common/BrochureLoader';
 import LanguageSwitcher from '../components/LanguageSwitcher';
-import { Apartment } from '../types';
 import { AlertTriangle, ArrowLeft, MapPin, Phone, Clock, Tag } from 'lucide-react';
 import FormattedText from '../components/common/FormattedText';
+import { useBrochureApartment } from '../hooks/useBrochureApartment';
+import { brochureBasePath } from '../utils/brochureUrl';
+import { Language } from '../contexts/LanguageContext';
+import { resolvePlaceByUrlSegment } from '../utils/placeSlug';
 
 const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 
@@ -38,29 +39,30 @@ const DAY_LABELS_EN: Record<string, string> = { mon: 'Monday', tue: 'Tuesday', w
 const ORDERED_DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
 const GuestBrochurePlaceDetail: React.FC = () => {
-    const { slug, placeId } = useParams<{ slug: string; placeId: string }>();
+    const { slug, placeId } = useParams<{ slug?: string; placeId: string }>();
     const navigate = useNavigate();
-    const { language } = useLanguage();
-    const [apartment, setApartment] = useState<Apartment | null>(null);
-    const [loading, setLoading] = useState(true);
+    const { language, setLanguage } = useLanguage();
+    const basePath = brochureBasePath(slug);
+
+    // The bare `/brochure/:lang` URL doubles as a language-setting shortcut
+    // for the default apartment's brochure (e.g. /brochure/bg, /brochure/en).
+    const isLangShortcut = !slug && (placeId === 'en' || placeId === 'bg');
 
     useEffect(() => {
-        if (!slug) return;
-        getDocs(collection(db, 'apartments')).then(snap => {
-            const found = snap.docs
-                .map(d => ({ id: d.id, ...d.data() } as Apartment))
-                .find(a => a.slug === slug);
-            setApartment(found || null);
-            setLoading(false);
-        }).catch(() => setLoading(false));
-    }, [slug]);
+        if (isLangShortcut) {
+            setLanguage(placeId as Language);
+            navigate('/brochure', { replace: true });
+        }
+    }, [isLangShortcut, placeId, navigate, setLanguage]);
+
+    const { apartment, loading } = useBrochureApartment(slug);
 
     // Ensure page starts at the top (prevent scroll restoration overlap)
     useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); }, []);
 
     const lang = (language as string) === 'bg' ? 'bg' : 'en';
     const places = apartment?.guestBrochure?.places || [];
-    const place = places.find(p => p.id === placeId) || (placeId ? places[Number(placeId)] : undefined);
+    const place = resolvePlaceByUrlSegment(places, placeId);
 
     const name = place?.name?.[lang] || place?.name?.en || place?.name?.bg || '';
     const description = place?.description?.[lang] || place?.description?.en || place?.description?.bg || '';
@@ -68,7 +70,7 @@ const GuestBrochurePlaceDetail: React.FC = () => {
     const metaTitle = name ? `${name} · morence` : 'morence';
     const metaDesc = description || name;
     const metaImage = place?.image || '';
-    const metaUrl = `${window.location.origin}/apartments/${slug}/brochure/${placeId}`;
+    const metaUrl = `${window.location.origin}${basePath}/${placeId}`;
 
     const status = getPlaceStatus(place?.workingHours);
     const statusLabel =
@@ -80,7 +82,7 @@ const GuestBrochurePlaceDetail: React.FC = () => {
         status === 'closing-soon' ? 'bg-amber-100 text-amber-700' :
         status === 'closed' ? 'bg-red-100 text-red-700' : '';
 
-    if (loading) {
+    if (loading || isLangShortcut) {
         return <BrochureLoader />;
     }
 
@@ -118,7 +120,7 @@ const GuestBrochurePlaceDetail: React.FC = () => {
             <header className="bg-white sticky top-0 z-20 border-b border-gray-100">
                 <div className="px-4 py-3 flex items-center justify-between">
                     <button
-                        onClick={() => navigate(`/apartments/${slug}/brochure`)}
+                        onClick={() => navigate(basePath)}
                         className="flex items-center gap-1.5 text-gray-600 hover:text-gray-900 transition-colors"
                     >
                         <ArrowLeft className="w-5 h-5" />
