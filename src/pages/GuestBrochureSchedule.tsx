@@ -201,11 +201,19 @@ const GuestBrochureSchedule: React.FC = () => {
                                 {/* Thumbnail or placeholder on the left */}
                                 <div className="flex-shrink-0">
                                     {entry.thumbnail ? (
-                                        <img
-                                            src={entry.thumbnail}
-                                            alt={entry.title[lang] || entry.title.bg || entry.title.en}
-                                            className="w-24 h-24 rounded-xl object-cover"
-                                        />
+                                        <div className={`w-24 h-24 rounded-xl overflow-hidden flex items-center justify-center ${
+                                            isNow
+                                                ? 'bg-green-100'
+                                                : isPast
+                                                    ? 'bg-gray-50'
+                                                    : 'bg-gradient-to-br from-blue-50 to-blue-100'
+                                        }`}>
+                                            <img
+                                                src={entry.thumbnail}
+                                                alt={entry.title[lang] || entry.title.bg || entry.title.en}
+                                                className="w-full h-full object-contain"
+                                            />
+                                        </div>
                                     ) : (
                                         <div className={`w-24 h-24 rounded-xl flex items-center justify-center ${
                                             isNow
