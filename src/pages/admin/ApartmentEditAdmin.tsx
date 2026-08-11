@@ -454,6 +454,7 @@ const ApartmentEditAdmin: React.FC = () => {
                         workingHours: p.workingHours,
                         priceList: p.priceList,
                         groupIds: p.groupIds,
+                        lunchMenu: p.lunchMenu,
                     }))
                 );
                 setBrochureGroups(aptData.guestBrochure?.groups || []);
@@ -683,6 +684,14 @@ const ApartmentEditAdmin: React.FC = () => {
                 if (Object.keys(wh).length > 0) obj.workingHours = wh;
             }
             if (p.groupIds && p.groupIds.length > 0) obj.groupIds = p.groupIds;
+            if (p.lunchMenu) {
+                // strip undefined entries
+                const lm: Record<string, { bg: string; en: string } | null> = {};
+                Object.entries(p.lunchMenu).forEach(([day, val]) => {
+                    if (val !== undefined) lm[day] = val;
+                });
+                if (Object.keys(lm).length > 0) obj.lunchMenu = lm;
+            }
             if (p.priceList && p.priceList.length > 0) {
                 obj.priceList = p.priceList
                     .filter(item => item.name.bg || item.name.en || item.price)
