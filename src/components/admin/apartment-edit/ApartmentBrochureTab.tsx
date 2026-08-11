@@ -6,7 +6,7 @@ import { useAdminLanguage } from '../../../hooks/useAdminLanguage';
 import { Share2, Check, Trash2, Plus, Phone, MapPin, Clock, ChevronDown, ChevronUp, GripVertical, Tag, Upload, FolderOpen, X, Pencil,
     Utensils, Coffee, Beer, ShoppingBag, ShoppingCart, Landmark, TreePine, Mountain, Waves, Umbrella, Dumbbell, Bike,
     Car, Bus, Plane, Music, Star, Heart, Camera, Building2, Sun, Moon, Ticket, BookOpen, Leaf, Fish, Baby, Palette, Flame,
-    Wrench
+    Wrench, UtensilsCrossed
 } from 'lucide-react';
 import {
     DndContext,
@@ -277,6 +277,21 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, onChange, onDelete, groups
         }
     };
 
+    const setLunchMenu = (day: string, val: { bg: string; en: string } | null) => {
+        const lm = { ...(place.lunchMenu || {}) };
+        lm[day] = val;
+        onChange({ ...place, lunchMenu: lm });
+    };
+
+    const toggleLunchMenuDay = (day: string) => {
+        const current = place.lunchMenu?.[day];
+        if (current === null || current === undefined) {
+            setLunchMenu(day, { bg: '', en: '' });
+        } else {
+            setLunchMenu(day, null);
+        }
+    };
+
     const previewSrc = place.image || '';
 
     return (
@@ -539,6 +554,53 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, onChange, onDelete, groups
                                             </>
                                         ) : (
                                             <span className="text-xs text-gray-400 italic">затворено</span>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* lunch menu */}
+                    <div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <UtensilsCrossed size={13} className="text-gray-500" />
+                            <span className="text-xs font-medium text-gray-600">Обедно меню</span>
+                        </div>
+                        <div className="space-y-2">
+                            {DAY_KEYS.map(day => {
+                                const entry = place.lunchMenu?.[day];
+                                const isSet = entry !== null && entry !== undefined;
+                                return (
+                                    <div key={day} className="flex items-start gap-2">
+                                        <button
+                                            onClick={() => toggleLunchMenuDay(day)}
+                                            onPointerDown={e => e.stopPropagation()}
+                                            className={`w-10 flex-shrink-0 text-xs font-medium rounded px-1 py-0.5 border transition-colors mt-0.5 ${isSet ? 'bg-amber-50 border-amber-300 text-amber-700' : 'bg-gray-50 border-gray-200 text-gray-400'}`}
+                                        >
+                                            {DAY_LABELS[day]}
+                                        </button>
+                                        {isSet && entry ? (
+                                            <div className="flex-1 grid grid-cols-2 gap-2">
+                                                <textarea
+                                                    value={entry.bg}
+                                                    onChange={e => setLunchMenu(day, { ...entry, bg: e.target.value })}
+                                                    placeholder={'Меню (БГ)…\n- супа\n- основно'}
+                                                    rows={2}
+                                                    className="w-full border border-gray-200 rounded-md px-2 py-1 text-xs resize-y focus:outline-none focus:ring-1 focus:ring-amber-400"
+                                                    onPointerDown={e => e.stopPropagation()}
+                                                />
+                                                <textarea
+                                                    value={entry.en}
+                                                    onChange={e => setLunchMenu(day, { ...entry, en: e.target.value })}
+                                                    placeholder={'Menu (EN)…\n- soup\n- main'}
+                                                    rows={2}
+                                                    className="w-full border border-gray-200 rounded-md px-2 py-1 text-xs resize-y focus:outline-none focus:ring-1 focus:ring-amber-400"
+                                                    onPointerDown={e => e.stopPropagation()}
+                                                />
+                                            </div>
+                                        ) : (
+                                            <span className="text-xs text-gray-400 italic mt-1">няма меню</span>
                                         )}
                                     </div>
                                 );

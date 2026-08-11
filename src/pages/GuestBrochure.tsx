@@ -8,7 +8,8 @@ import LanguageSwitcher from '../components/LanguageSwitcher';
 import { TimetableEntry } from '../types';
 import { AlertTriangle, ImageOff, MapPin,
     Utensils, Coffee, Beer, ShoppingBag, ShoppingCart, Landmark, TreePine, Mountain, Waves, Umbrella, Dumbbell, Bike,
-    Car, Bus, Plane, Music, Star, Heart, Camera, Building2, Sun, Moon, Ticket, BookOpen, Leaf, Fish, Baby, Palette, Flame
+    Car, Bus, Plane, Music, Star, Heart, Camera, Building2, Sun, Moon, Ticket, BookOpen, Leaf, Fish, Baby, Palette, Flame,
+    UtensilsCrossed
 } from 'lucide-react';
 import { useBrochureApartment } from '../hooks/useBrochureApartment';
 import { brochureBasePath } from '../utils/brochureUrl';
@@ -335,6 +336,8 @@ const GuestBrochure: React.FC = () => {
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                             {section.places.map((place, idx) => {
                                 const name = place.name?.[lang] || place.name?.en || place.name?.bg || '';
+                                const todayMenu = place.lunchMenu?.[todayKey()];
+                                const hasLunchMenuToday = Boolean(todayMenu?.[lang] || todayMenu?.en || todayMenu?.bg);
                                 return (
                                     <button
                                         key={place.id || idx}
@@ -355,6 +358,12 @@ const GuestBrochure: React.FC = () => {
                                             </div>
                                         )}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                                        {hasLunchMenuToday && (
+                                            <span className="absolute top-2 right-2 flex items-center gap-1 bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
+                                                <UtensilsCrossed size={11} />
+                                                {lang === 'bg' ? 'Меню днес' : 'Menu today'}
+                                            </span>
+                                        )}
                                         <div className="absolute bottom-0 left-0 right-0 px-3 pb-3">
                                             <p className="text-white text-xl font-bold leading-snug line-clamp-2 text-left" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
                                                 {name}

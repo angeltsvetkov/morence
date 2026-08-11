@@ -192,6 +192,8 @@ export interface Apartment {
             phone?: string;
             workingHours?: { [day: string]: { open: string; close: string } | null };
             priceList?: { name: { bg: string; en: string }; price: string; unit?: { bg: string; en: string } }[];
+            /** Lunch menu (обедно меню) shown only on the matching day of the week */
+            lunchMenu?: { [day: string]: { bg: string; en: string } | null };
         }[];
     };
     timetable?: {

@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '../hooks/useLanguage';
 import BrochureLoader from '../components/common/BrochureLoader';
 import LanguageSwitcher from '../components/LanguageSwitcher';
-import { AlertTriangle, ArrowLeft, MapPin, Phone, Clock, Tag } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, MapPin, Phone, Clock, Tag, UtensilsCrossed } from 'lucide-react';
 import FormattedText from '../components/common/FormattedText';
 import { useBrochureApartment } from '../hooks/useBrochureApartment';
 import { brochureBasePath } from '../utils/brochureUrl';
@@ -187,6 +187,25 @@ const GuestBrochurePlaceDetail: React.FC = () => {
                     <FormattedText text={description} className="text-sm text-gray-600 leading-relaxed" />
                 )}
 
+                {/* lunch menu (обедно меню) — only shown on its matching day */}
+                {(() => {
+                    const todayKey = DAY_KEYS[new Date().getDay()];
+                    const todayMenu = place.lunchMenu?.[todayKey];
+                    const menuText = todayMenu?.[lang] || todayMenu?.en || todayMenu?.bg || '';
+                    if (!menuText) return null;
+                    return (
+                        <div className="bg-amber-50 rounded-2xl border border-amber-200 p-4 shadow-sm">
+                            <div className="flex items-center gap-2 mb-3">
+                                <UtensilsCrossed className="w-4 h-4 text-amber-600" />
+                                <span className="text-sm font-semibold text-amber-800">
+                                    {lang === 'bg' ? 'Обедно меню · Днес' : "Lunch menu · Today"}
+                                </span>
+                            </div>
+                            <FormattedText text={menuText} className="text-sm text-amber-900 leading-relaxed" />
+                        </div>
+                    );
+                })()}
+
                 {/* pricelist */}
                 {place.priceList && place.priceList.length > 0 && (
                     <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
@@ -213,8 +232,8 @@ const GuestBrochurePlaceDetail: React.FC = () => {
                     </div>
                 )}
 
-                {/* working hours */}
-                {place.workingHours && Object.keys(place.workingHours).length > 0 && (
+                {/* working hours — only shown when at least one day actually has hours set */}
+                {place.workingHours && Object.values(place.workingHours).some(v => v) && (
                     <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
                         <div className="flex items-center gap-2 mb-3">
                             <Clock className="w-4 h-4 text-gray-500" />
