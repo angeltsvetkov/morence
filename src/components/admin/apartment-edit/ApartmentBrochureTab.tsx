@@ -5,7 +5,8 @@ import { BrochureTabProps, BrochurePlaceItem, BrochureGroup } from './types';
 import { useAdminLanguage } from '../../../hooks/useAdminLanguage';
 import { Share2, Check, Trash2, Plus, Phone, MapPin, Clock, ChevronDown, ChevronUp, GripVertical, Tag, Upload, FolderOpen, X, Pencil,
     Utensils, Coffee, Beer, ShoppingBag, ShoppingCart, Landmark, TreePine, Mountain, Waves, Umbrella, Dumbbell, Bike,
-    Car, Bus, Plane, Music, Star, Heart, Camera, Building2, Sun, Moon, Ticket, BookOpen, Leaf, Fish, Baby, Palette, Flame
+    Car, Bus, Plane, Music, Star, Heart, Camera, Building2, Sun, Moon, Ticket, BookOpen, Leaf, Fish, Baby, Palette, Flame,
+    Wrench
 } from 'lucide-react';
 import {
     DndContext,
@@ -64,6 +65,7 @@ const GROUP_ICONS: IconEntry[] = [
     { name: 'Flame',      label: 'Популярни',     component: Flame },
     { name: 'Baby',       label: 'Деца',          component: Baby },
     { name: 'MapPin',     label: 'Общо',          component: MapPin },
+    { name: 'Wrench',     label: 'Майстори',      component: Wrench },
 ];
 
 const ICON_MAP: Record<string, React.FC<{ size?: number; className?: string }>> =
@@ -376,9 +378,9 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, onChange, onDelete, groups
                             <textarea
                                 value={place.description?.bg || ''}
                                 onChange={e => onChange({ ...place, description: { ...(place.description || { bg: '', en: '' }), bg: e.target.value } })}
-                                placeholder="Кратко описание…"
-                                rows={2}
-                                className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                placeholder={'Кратко описание…\n- може да добавите точки\n- всеки нов ред се запазва'}
+                                rows={4}
+                                className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm resize-y focus:outline-none focus:ring-1 focus:ring-blue-400"
                                 onPointerDown={e => e.stopPropagation()}
                             />
                         </div>
@@ -387,9 +389,9 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, onChange, onDelete, groups
                             <textarea
                                 value={place.description?.en || ''}
                                 onChange={e => onChange({ ...place, description: { ...(place.description || { bg: '', en: '' }), en: e.target.value } })}
-                                placeholder="Short description…"
-                                rows={2}
-                                className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                placeholder={'Short description…\n- bullet points supported\n- each new line is preserved'}
+                                rows={4}
+                                className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm resize-y focus:outline-none focus:ring-1 focus:ring-blue-400"
                                 onPointerDown={e => e.stopPropagation()}
                             />
                         </div>

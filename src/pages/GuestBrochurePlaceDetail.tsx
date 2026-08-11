@@ -8,6 +8,7 @@ import BrochureLoader from '../components/common/BrochureLoader';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { Apartment } from '../types';
 import { AlertTriangle, ArrowLeft, MapPin, Phone, Clock, Tag } from 'lucide-react';
+import FormattedText from '../components/common/FormattedText';
 
 const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 
@@ -181,7 +182,7 @@ const GuestBrochurePlaceDetail: React.FC = () => {
 
                 {/* description */}
                 {description && (
-                    <p className="text-sm text-gray-600 leading-relaxed">{description}</p>
+                    <FormattedText text={description} className="text-sm text-gray-600 leading-relaxed" />
                 )}
 
                 {/* pricelist */}
